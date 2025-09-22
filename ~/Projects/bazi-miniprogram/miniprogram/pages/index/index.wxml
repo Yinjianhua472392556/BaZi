@@ -1,0 +1,87 @@
+<!--index.wxml-->
+<view class="container">
+  <view class="title">八字运势测算</view>
+  
+  <view class="card">
+    <view class="subtitle">请输入您的出生信息</view>
+    
+    <!-- 出生日期选择 -->
+    <view class="input-group">
+      <label class="input-label">出生日期</label>
+      <picker mode="date" value="{{birthDate}}" start="1900-01-01" end="{{maxDate}}" bindchange="onDateChange">
+        <view class="picker">
+          {{birthDate || '请选择出生日期'}}
+        </view>
+      </picker>
+    </view>
+
+    <!-- 出生时间选择 -->
+    <view class="input-group">
+      <label class="input-label">出生时间</label>
+      <picker mode="time" value="{{birthTime}}" bindchange="onTimeChange">
+        <view class="picker">
+          {{birthTime || '请选择出生时间'}}
+        </view>
+      </picker>
+    </view>
+
+    <!-- 性别选择 -->
+    <view class="input-group">
+      <label class="input-label">性别</label>
+      <radio-group bindchange="onGenderChange">
+        <label class="radio-item">
+          <radio value="male" checked="{{gender === 'male'}}" color="#C8860D"/>
+          男
+        </label>
+        <label class="radio-item">
+          <radio value="female" checked="{{gender === 'female'}}" color="#C8860D"/>
+          女
+        </label>
+      </radio-group>
+    </view>
+
+    <!-- 姓名输入（可选） -->
+    <view class="input-group">
+      <label class="input-label">姓名（可选）</label>
+      <input class="input-field" 
+             value="{{name}}" 
+             placeholder="请输入您的姓名" 
+             bindinput="onNameInput"
+             maxlength="10"/>
+    </view>
+
+    <!-- 测算按钮 -->
+    <button class="btn-primary" 
+            bindtap="calculateBazi" 
+            disabled="{{!canCalculate}}"
+            loading="{{calculating}}">
+      {{calculating ? '正在测算中...' : '开始测算'}}
+    </button>
+
+    <!-- 示例按钮 -->
+    <button class="btn-secondary" bindtap="fillExample">
+      使用示例数据
+    </button>
+  </view>
+
+  <!-- 快速入口 -->
+  <view class="card">
+    <view class="subtitle">快速功能</view>
+    <view class="quick-actions">
+      <navigator url="/pages/history/history" class="quick-item">
+        <view class="quick-icon">📜</view>
+        <text>历史记录</text>
+      </navigator>
+      <view class="quick-item" bindtap="testApi">
+        <view class="quick-icon">🔧</view>
+        <text>测试连接</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 免责声明 -->
+  <view class="disclaimer">
+    本测算结果仅供娱乐参考，不可作为人生决策依据。
+    请理性对待，切勿迷信。
+  </view>
+</view>

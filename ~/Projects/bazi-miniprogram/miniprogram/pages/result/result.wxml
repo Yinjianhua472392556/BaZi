@@ -1,0 +1,82 @@
+<!--result.wxml-->
+<view class="container">
+  <!-- 页面标题 -->
+  <view class="title">八字运势结果</view>
+
+  <!-- 用户信息卡片 -->
+  <view class="card">
+    <view class="user-info">
+      <view class="user-name">{{resultData.birthInfo.name || '匿名用户'}}</view>
+      <view class="birth-info">
+        <text>出生日期：{{resultData.birthInfo.date}}</text>
+        <text>出生时间：{{resultData.birthInfo.time}}</text>
+        <text>性别：{{resultData.birthInfo.gender === 'male' ? '男' : '女'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 八字排盘 -->
+  <view class="card">
+    <view class="subtitle">八字排盘</view>
+    <view class="bazi-grid">
+      <view class="bazi-column">
+        <view class="bazi-label">年柱</view>
+        <view class="bazi-item">{{resultData.year}}</view>
+      </view>
+      <view class="bazi-column">
+        <view class="bazi-label">月柱</view>
+        <view class="bazi-item">{{resultData.month}}</view>
+      </view>
+      <view class="bazi-column">
+        <view class="bazi-label">日柱</view>
+        <view class="bazi-item">{{resultData.day}}</view>
+      </view>
+      <view class="bazi-column">
+        <view class="bazi-label">时柱</view>
+        <view class="bazi-item">{{resultData.hour}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 五行分析 -->
+  <view class="card">
+    <view class="subtitle">五行分析</view>
+    <view class="wuxing-container">
+      <view class="wuxing-item" wx:for="{{wuxingList}}" wx:key="name">
+        <view class="wuxing-info">
+          <text class="wuxing-name">{{item.name}}</text>
+          <text class="wuxing-count">{{item.count}}</text>
+        </view>
+        <view class="wuxing-bar">
+          <view class="wuxing-progress" style="width: {{item.percentage}}%"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 性格分析 -->
+  <view class="card">
+    <view class="subtitle">性格分析</view>
+    <view class="analysis-content">
+      {{resultData.analysis}}
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <button class="btn-primary" bindtap="saveToHistory">保存到历史</button>
+    <button class="btn-secondary" bindtap="shareResult">分享结果</button>
+    <button class="btn-secondary" bindtap="calculateAgain">重新测算</button>
+  </view>
+
+  <!-- 免责声明 -->
+  <view class="disclaimer">
+    本测算结果基于传统文化理论，仅供娱乐参考。
+    请理性对待，不要将此作为人生重大决策的依据。
+  </view>
+
+  <!-- 返回按钮 -->
+  <view class="back-button" bindtap="goBack">
+    <text>← 返回首页</text>
+  </view>
+</view>

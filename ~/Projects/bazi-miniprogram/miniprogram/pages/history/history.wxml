@@ -1,0 +1,30 @@
+<!--history.wxml-->
+<view class="container">
+  <view class="title">历史记录</view>
+  
+  <view wx:if="{{historyList.length > 0}}">
+    <view class="history-item" wx:for="{{historyList}}" wx:key="id" bindtap="viewResult" data-item="{{item}}">
+      <view class="history-header">
+        <view class="history-name">{{item.birthInfo.name || '匿名用户'}}</view>
+        <view class="history-date">{{item.formattedDate}}</view>
+      </view>
+      <view class="history-birth">{{item.birthInfo.date}} {{item.birthInfo.time}}</view>
+      <view class="history-bazi">
+        <text class="bazi-text">{{item.year}}</text>
+        <text class="bazi-text">{{item.month}}</text>
+        <text class="bazi-text">{{item.day}}</text>
+        <text class="bazi-text">{{item.hour}}</text>
+      </view>
+    </view>
+    
+    <view class="clear-section">
+      <button class="btn-secondary" bindtap="clearHistory">清空历史记录</button>
+    </view>
+  </view>
+  
+  <view wx:else class="empty-state">
+    <view class="empty-icon">📜</view>
+    <view class="empty-text">暂无历史记录</view>
+    <navigator url="/pages/index/index" class="btn-primary">开始测算</navigator>
+  </view>
+</view>

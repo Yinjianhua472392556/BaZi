@@ -1,0 +1,101 @@
+/**history.wxss**/
+
+.container {
+  padding: 40rpx 20rpx;
+  min-height: 100vh;
+}
+
+/* 历史记录项样式 */
+.history-item {
+  background: white;
+  border-radius: 15rpx;
+  padding: 30rpx;
+  margin: 15rpx 0;
+  border-left: 8rpx solid #C8860D;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.history-item:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+
+.history-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #8B4513;
+}
+
+.history-date {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.history-birth {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 15rpx;
+}
+
+.history-bazi {
+  display: flex;
+  gap: 10rpx;
+  flex-wrap: wrap;
+}
+
+.bazi-text {
+  background: #C8860D;
+  color: white;
+  padding: 8rpx 15rpx;
+  border-radius: 10rpx;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+/* 清空按钮区域 */
+.clear-section {
+  margin-top: 40rpx;
+  text-align: center;
+}
+
+/* 空状态样式 */
+.empty-state {
+  text-align: center;
+  padding: 100rpx 40rpx;
+  color: #999;
+}
+
+.empty-icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 40rpx;
+}
+
+/* 动画效果 */
+.history-item {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

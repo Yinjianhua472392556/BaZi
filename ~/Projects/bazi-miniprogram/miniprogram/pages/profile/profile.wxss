@@ -1,0 +1,101 @@
+/**profile.wxss**/
+
+.container {
+  padding: 40rpx 20rpx;
+  min-height: 100vh;
+}
+
+/* 菜单列表样式 */
+.menu-list {
+  margin-top: 20rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 35rpx 30rpx;
+  background: white;
+  border-radius: 15rpx;
+  margin-bottom: 15rpx;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.menu-item:active {
+  background: #F9F9F9;
+  transform: scale(0.98);
+}
+
+.menu-icon {
+  font-size: 48rpx;
+  margin-right: 25rpx;
+  width: 60rpx;
+  text-align: center;
+}
+
+.menu-text {
+  flex: 1;
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.menu-arrow {
+  font-size: 32rpx;
+  color: #C8860D;
+  font-weight: bold;
+}
+
+/* 版本信息样式 */
+.disclaimer {
+  margin-top: 60rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.6;
+  padding: 30rpx;
+  background: #F9F9F9;
+  border-radius: 15rpx;
+}
+
+/* 动画效果 */
+.menu-item {
+  animation: slideInRight 0.6s ease-out;
+}
+
+.menu-item:nth-child(1) { animation-delay: 0.1s; }
+.menu-item:nth-child(2) { animation-delay: 0.2s; }
+.menu-item:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 卡片悬浮效果 */
+.menu-item:hover {
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式优化 */
+@media (max-width: 375px) {
+  .menu-item {
+    padding: 30rpx 25rpx;
+  }
+  
+  .menu-icon {
+    font-size: 42rpx;
+    margin-right: 20rpx;
+    width: 50rpx;
+  }
+  
+  .menu-text {
+    font-size: 28rpx;
+  }
+}

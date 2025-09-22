@@ -1,0 +1,136 @@
+/**index.wxss**/
+
+.container {
+  padding: 40rpx 20rpx;
+  min-height: 100vh;
+}
+
+/* 单选按钮组 */
+.radio-item {
+  display: inline-block;
+  margin-right: 40rpx;
+  margin-top: 15rpx;
+  font-size: 28rpx;
+  color: #8B4513;
+}
+
+.radio-item radio {
+  margin-right: 10rpx;
+}
+
+/* 快速功能区域 */
+.quick-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20rpx;
+}
+
+.quick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30rpx 20rpx;
+  background: #F9F9F9;
+  border-radius: 15rpx;
+  min-width: 200rpx;
+  transition: all 0.3s ease;
+}
+
+.quick-item:active {
+  background: #F0F0F0;
+  transform: scale(0.95);
+}
+
+.quick-icon {
+  font-size: 60rpx;
+  margin-bottom: 10rpx;
+}
+
+.quick-item text {
+  font-size: 24rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 按钮禁用状态 */
+.btn-primary[disabled] {
+  background: #DDD !important;
+  color: #999 !important;
+  box-shadow: none !important;
+}
+
+.btn-primary[disabled]:active {
+  transform: none !important;
+}
+
+/* 日期时间选择器优化 */
+.picker[data-selected="true"] {
+  color: #333;
+  border-color: #C8860D;
+  background: #FFF8DC;
+}
+
+/* 响应式布局优化 */
+@media (max-width: 375px) {
+  .container {
+    padding: 30rpx 15rpx;
+  }
+  
+  .title {
+    font-size: 42rpx;
+  }
+  
+  .quick-actions {
+    flex-direction: column;
+    gap: 20rpx;
+  }
+  
+  .quick-item {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* 加载状态优化 */
+.calculating {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* 输入框焦点状态 */
+.input-field:focus {
+  border-color: #C8860D;
+  box-shadow: 0 0 0 4rpx rgba(200, 134, 13, 0.1);
+}
+
+/* 动画效果 */
+.card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 标签样式优化 */
+.input-label {
+  position: relative;
+}
+
+.input-label::after {
+  content: '';
+  position: absolute;
+  bottom: -5rpx;
+  left: 0;
+  width: 40rpx;
+  height: 4rpx;
+  background: #C8860D;
+  border-radius: 2rpx;
+}
