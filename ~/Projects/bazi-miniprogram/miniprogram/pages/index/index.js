@@ -6,7 +6,6 @@ Page({
     birthDate: '',
     birthTime: '',
     gender: 'male',
-    name: '',
     calculating: false,
     canCalculate: false,
     maxDate: ''
@@ -44,57 +43,11 @@ Page({
     })
   },
 
-  // 姓名输入
-  onNameInput(e) {
-    this.setData({
-      name: e.detail.value
-    })
-  },
-
   // 检查是否可以测算
   checkCanCalculate() {
     const { birthDate, birthTime } = this.data
     this.setData({
       canCalculate: birthDate && birthTime
-    })
-  },
-
-  // 填充示例数据
-  fillExample() {
-    this.setData({
-      birthDate: '1990-01-01',
-      birthTime: '12:00',
-      gender: 'male',
-      name: '张三'
-    })
-    this.checkCanCalculate()
-  },
-
-  // 测试API连接
-  testApi() {
-    wx.showLoading({
-      title: '测试连接中...'
-    })
-
-    app.request({
-      url: '/api/v1/test',
-      method: 'GET',
-      success: (data) => {
-        wx.hideLoading()
-        wx.showModal({
-          title: '连接测试成功',
-          content: `API状态: ${data.data.status}\n功能: ${data.data.features.join(', ')}`,
-          showCancel: false
-        })
-      },
-      fail: () => {
-        wx.hideLoading()
-        wx.showModal({
-          title: '连接测试失败',
-          content: '请检查后端服务是否启动\n确认地址: http://localhost:8000',
-          showCancel: false
-        })
-      }
     })
   },
 
@@ -120,7 +73,7 @@ Page({
       day: birthDateTime.getDate(),
       hour: birthDateTime.getHours(),
       gender: this.data.gender,
-      name: this.data.name || '匿名用户'
+      name: '匿名用户'
     }
 
     wx.showLoading({
@@ -146,7 +99,7 @@ Page({
               date: this.data.birthDate,
               time: this.data.birthTime,
               gender: this.data.gender,
-              name: this.data.name
+              name: '匿名用户'
             }
           }
           app.saveBaziResult(resultData)
