@@ -119,9 +119,11 @@ Page({
    * 生成农历日期字符串
    */
   generateLunarDate(lunarInfo) {
-    if (!lunarInfo.year) return '八月初六';
+    if (!lunarInfo || !lunarInfo.year) {
+      return '八月初六';
+    }
     
-    // 简化的农历月份映射
+    // 农历月份映射
     const lunarMonths = [
       '正月', '二月', '三月', '四月', '五月', '六月',
       '七月', '八月', '九月', '十月', '十一月', '十二月'
@@ -133,14 +135,15 @@ Page({
       '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'
     ];
 
-    // 简化转换，使用公历日期估算农历
-    const month = lunarInfo.month || 8;
-    const day = lunarInfo.day || 6;
+    // 使用真实的农历信息
+    const year = lunarInfo.year;
+    const month = lunarInfo.month || 1;
+    const day = lunarInfo.day || 1;
     
-    const monthStr = lunarMonths[month - 1] || '八月';
-    const dayStr = lunarDays[day] || '初六';
+    const monthStr = lunarMonths[month - 1] || '正月';
+    const dayStr = lunarDays[day] || '初一';
     
-    return `${monthStr}${dayStr}`;
+    return `${year}年${monthStr}${dayStr}`;
   },
 
   /**

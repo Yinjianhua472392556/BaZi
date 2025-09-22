@@ -68,6 +68,12 @@ class BirthData(BaseModel):
     name: str = "匿名用户"
     calendarType: str = "solar"  # "solar" 公历 或 "lunar" 农历
 
+class LunarConvertData(BaseModel):
+    year: int
+    month: int
+    day: int
+    leap: bool = False
+
 # 创建八字计算器实例
 bazi_calculator = BaziCalculator()
 
@@ -142,6 +148,112 @@ async def calculate_bazi(birth_data: BirthData):
         return JSONResponse(
             status_code=500,
             content={"error": f"计算出错: {str(e)}"}
+        )
+
+# 农历转公历接口
+@app.post("/api/v1/lunar-to-solar")
+async def lunar_to_solar(lunar_data: LunarConvertData):
+    """
+    农历转公历接口 - 用于前端实时转换显示
+    """
+    try:
+        # 数据验证
+        if not all([lunar_data.year, lunar_data.month, lunar_data.day]):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "缺少必要的农历日期信息"}
+            )
+        
+        # 年份合理性检查
+        current_year = datetime.now().year
+        if lunar_data.year < 1900 or lunar_data.year > current_year + 1:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "农历年份不在有效范围内"}
+            )
+        
+        # 月份检查
+        if lunar_data.month < 1 or lunar_data.month > 12:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "农历月份必须在1-12之间"}
+            )
+        
+        # 日期检查
+        if lunar_data.day < 1 or lunar_data.day > 30:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "农历日期必须在1-30之间"}
+            )
+        
+        # 调用农历转公历算法
+        solar_result = bazi_calculator.lunar_to_solar(
+            year=lunar_data.year,
+            month=lunar_data.month,
+            day=lunar_data.day,
+            leap=lunar_data.leap
+        )
+        
+        return {
+            "success": True,
+            "data": {
+                "solar_date": solar_result,
+                "lunar_date": {
+                    "year": lunar_data.year,
+                    "month": lunar_data.month,
+                    "day": lunar_data.day,
+                    "leap": lunar_data.leap
+                }
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"农历转公历出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"转换出错: {str(e)}"}
+        )
+
+# 公历转农历接口
+@app.post("/api/v1/solar-to-lunar")
+async def solar_to_lunar(birth_data: BirthData):
+    """
+    公历转农历接口 - 用于显示对应农历日期
+    """
+    try:
+        # 数据验证
+        if not all([birth_data.year, birth_data.month, birth_data.day]):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "缺少必要的公历日期信息"}
+            )
+        
+        # 调用公历转农历算法
+        lunar_result = bazi_calculator.solar_to_lunar(
+            year=birth_data.year,
+            month=birth_data.month,
+            day=birth_data.day
+        )
+        
+        return {
+            "success": True,
+            "data": {
+                "lunar_date": lunar_result,
+                "solar_date": {
+                    "year": birth_data.year,
+                    "month": birth_data.month,
+                    "day": birth_data.day
+                }
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"公历转农历出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"转换出错: {str(e)}"}
         )
 
 # 异常处理

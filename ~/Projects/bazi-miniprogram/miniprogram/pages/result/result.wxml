@@ -34,13 +34,21 @@
     <!-- 信息展示表格 -->
     <view class="info-table">
       <view class="table-row">
-        <view class="table-label">公历生日</view>
-        <view class="table-value">{{resultData.user_info.birth_date || '2020-09-22'}}</view>
+        <view class="table-label">
+          {{resultData.calendar_type === 'lunar' ? '输入农历' : '公历生日'}}
+        </view>
+        <view class="table-value">
+          {{resultData.calendar_type === 'lunar' ? lunarDate : (resultData.user_info.birth_date || '2020-09-22')}}
+        </view>
       </view>
       
       <view class="table-row">
-        <view class="table-label">农历生日</view>
-        <view class="table-value">{{lunarDate || '八月初六'}}</view>
+        <view class="table-label">
+          {{resultData.calendar_type === 'lunar' ? '对应公历' : '对应农历'}}
+        </view>
+        <view class="table-value">
+          {{resultData.calendar_type === 'lunar' ? (resultData.user_info.birth_date || '2020-09-22') : lunarDate}}
+        </view>
       </view>
       
       <view class="table-row">

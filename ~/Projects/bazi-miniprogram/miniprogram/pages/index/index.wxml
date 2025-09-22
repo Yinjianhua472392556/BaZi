@@ -51,13 +51,53 @@
     <!-- 出生日期选择 -->
     <view class="input-group">
       <label class="input-label">出生日期</label>
-      <picker mode="date" value="{{birthDate}}" start="1900-01-01" end="{{maxDate}}" bindchange="onDateChange">
-        <view class="picker">
-          {{birthDate || (calendarType === 'solar' ? '请选择公历出生日期' : '请选择农历出生日期')}}
+      
+      <!-- 公历日期选择器 -->
+      <view wx:if="{{calendarType === 'solar'}}" class="date-picker-container">
+        <picker mode="date" value="{{birthDate}}" start="1900-01-01" end="{{maxDate}}" bindchange="onDateChange">
+          <view class="picker">
+            {{birthDate || '请选择公历出生日期'}}
+          </view>
+        </picker>
+        <view class="date-type-hint">
+          选择公历日期（如：1990-01-15）
+          <view wx:if="{{birthDate && correspondingLunarDate}}" class="corresponding-date">
+            对应农历：{{correspondingLunarDate}}
+          </view>
         </view>
-      </picker>
-      <view class="date-type-hint">
-        {{calendarType === 'solar' ? '选择公历日期（如：1990-01-15）' : '选择农历日期（请按对应公历日期选择）'}}
+      </view>
+      
+      <!-- 农历日期选择器 -->
+      <view wx:if="{{calendarType === 'lunar'}}" class="lunar-picker-container">
+        <view class="lunar-pickers">
+          <!-- 农历年选择器 -->
+          <picker class="lunar-year-picker" value="{{lunarYearIndex}}" range="{{lunarYears}}" bindchange="onLunarYearChange">
+            <view class="picker">
+              {{lunarYear ? lunarYear + '年' : '年'}}
+            </view>
+          </picker>
+          
+          <!-- 农历月选择器 -->
+          <picker class="lunar-month-picker" value="{{lunarMonthIndex}}" range="{{lunarMonths}}" bindchange="onLunarMonthChange">
+            <view class="picker">
+              {{lunarMonth || '月'}}
+            </view>
+          </picker>
+          
+          <!-- 农历日选择器 -->
+          <picker class="lunar-day-picker" value="{{lunarDayIndex}}" range="{{lunarDays}}" bindchange="onLunarDayChange">
+            <view class="picker">
+              {{lunarDay || '日'}}
+            </view>
+          </picker>
+        </view>
+        
+        <view class="date-type-hint">
+          选择农历日期
+          <view wx:if="{{lunarYear && lunarMonth && lunarDay && correspondingSolarDate}}" class="corresponding-date">
+            对应公历：{{correspondingSolarDate}}
+          </view>
+        </view>
       </view>
     </view>
 
