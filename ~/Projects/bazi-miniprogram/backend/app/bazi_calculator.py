@@ -1,11 +1,8 @@
 """
-八字计算模块 - 真实算法实现
+八字计算模块 - 简化算法实现
 使用传统八字理论进行计算
 """
-import sxtwl
 from datetime import datetime
-from lunardate import LunarDate
-import zhdate
 
 class BaziCalculator:
     """八字计算器"""
@@ -34,8 +31,7 @@ class BaziCalculator:
             17: '酉', 18: '酉', 19: '戌', 20: '戌', 21: '亥', 22: '亥'
         }
         
-        # 初始化寿星万年历
-        self.lunar = sxtwl.Lunar()
+        # 简化版本，不使用外部万年历库
     
     def calculate_bazi(self, year, month, day, hour, gender="male"):
         """

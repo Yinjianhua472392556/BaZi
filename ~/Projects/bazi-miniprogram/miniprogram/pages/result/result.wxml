@@ -1,82 +1,145 @@
 <!--result.wxml-->
 <view class="container">
-  <!-- 页面标题 -->
-  <view class="title">八字运势结果</view>
-
-  <!-- 用户信息卡片 -->
-  <view class="card">
-    <view class="user-info">
-      <view class="user-name">{{resultData.birthInfo.name || '匿名用户'}}</view>
-      <view class="birth-info">
-        <text>出生日期：{{resultData.birthInfo.date}}</text>
-        <text>出生时间：{{resultData.birthInfo.time}}</text>
-        <text>性别：{{resultData.birthInfo.gender === 'male' ? '男' : '女'}}</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 八字排盘 -->
-  <view class="card">
-    <view class="subtitle">八字排盘</view>
-    <view class="bazi-grid">
-      <view class="bazi-column">
-        <view class="bazi-label">年柱</view>
-        <view class="bazi-item">{{resultData.year}}</view>
-      </view>
-      <view class="bazi-column">
-        <view class="bazi-label">月柱</view>
-        <view class="bazi-item">{{resultData.month}}</view>
-      </view>
-      <view class="bazi-column">
-        <view class="bazi-label">日柱</view>
-        <view class="bazi-item">{{resultData.day}}</view>
-      </view>
-      <view class="bazi-column">
-        <view class="bazi-label">时柱</view>
-        <view class="bazi-item">{{resultData.hour}}</view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 五行分析 -->
-  <view class="card">
-    <view class="subtitle">五行分析</view>
-    <view class="wuxing-container">
-      <view class="wuxing-item" wx:for="{{wuxingList}}" wx:key="name">
-        <view class="wuxing-info">
-          <text class="wuxing-name">{{item.name}}</text>
-          <text class="wuxing-count">{{item.count}}</text>
-        </view>
-        <view class="wuxing-bar">
-          <view class="wuxing-progress" style="width: {{item.percentage}}%"></view>
+  <!-- 顶部背景插画区域 -->
+  <view class="header-illustration">
+    <view class="illustration-content">
+      <!-- 中国风装饰元素 -->
+      <view class="cloud cloud-1"></view>
+      <view class="cloud cloud-2"></view>
+      <view class="mountain mountain-1"></view>
+      <view class="mountain mountain-2"></view>
+      <!-- 亭台楼阁 -->
+      <view class="pavilion">
+        <view class="pavilion-roof"></view>
+        <view class="pavilion-body"></view>
+        <view class="pavilion-pillars">
+          <view class="pillar"></view>
+          <view class="pillar"></view>
+          <view class="pillar"></view>
         </view>
       </view>
+      <!-- 静坐人物 -->
+      <view class="character">
+        <view class="character-body"></view>
+        <view class="character-head"></view>
+      </view>
     </view>
   </view>
 
-  <!-- 性格分析 -->
-  <view class="card">
-    <view class="subtitle">性格分析</view>
-    <view class="analysis-content">
-      {{resultData.analysis}}
+  <!-- 结果内容区域 -->
+  <view class="result-content">
+    <!-- 标题 -->
+    <view class="result-title">计算结果</view>
+    
+    <!-- 信息展示表格 -->
+    <view class="info-table">
+      <view class="table-row">
+        <view class="table-label">公历生日</view>
+        <view class="table-value">{{resultData.user_info.birth_date || '2020-09-22'}}</view>
+      </view>
+      
+      <view class="table-row">
+        <view class="table-label">农历生日</view>
+        <view class="table-value">{{lunarDate || '八月初六'}}</view>
+      </view>
+      
+      <view class="table-row">
+        <view class="table-label">天干地支</view>
+        <view class="table-value">{{baziString || '庚子-乙酉-戊辰-壬子'}}</view>
+      </view>
+      
+      <view class="table-row">
+        <view class="table-label">所属五行</view>
+        <view class="table-value">{{wuxingString || '金水-木金-土土-水水'}}</view>
+      </view>
+      
+      <view class="table-row">
+        <view class="table-label">五行缺陷</view>
+        <view class="table-value">{{wuxingLack || '火'}}</view>
+      </view>
+      
+      <view class="table-row">
+        <view class="table-label">所属生肖</view>
+        <view class="table-value">{{shengxiao || '鼠'}}</view>
+      </view>
+    </view>
+    
+    <!-- 八字详解说明 -->
+    <view class="bazi-explanation">
+      天干地支即生辰八字
+    </view>
+    
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <!-- 主要按钮 - 八字解读 -->
+      <button class="btn-primary" bindtap="showAnalysis">八字解读</button>
+      
+      <!-- 次要按钮 - 重新计算 -->
+      <button class="btn-secondary" bindtap="calculateAgain">重新计算</button>
+    </view>
+    
+    <!-- 广告位 -->
+    <view class="ad-section">
+      <view class="ad-content">
+        <image class="ad-image" src="/images/ad-placeholder.png" mode="aspectFit" binderror="onImageError" bindload="onImageLoad"></image>
+        <view class="ad-placeholder {{showAdPlaceholder ? 'show' : ''}}" wx:if="{{showAdPlaceholder}}">
+          <view class="placeholder-text">广告位</view>
+        </view>
+        <view class="ad-text">
+          <view class="ad-title">2025时尚百搭运动鞋，适配多样运动场景</view>
+          <view class="ad-subtitle">劲步运动潮鞋工厂</view>
+        </view>
+        <button class="ad-button">立即购买</button>
+      </view>
     </view>
   </view>
+</view>
 
-  <!-- 操作按钮 -->
-  <view class="action-buttons">
-    <button class="btn-primary" bindtap="saveToHistory">保存到历史</button>
-    <button class="btn-secondary" bindtap="shareResult">分享结果</button>
-    <button class="btn-secondary" bindtap="calculateAgain">重新测算</button>
-  </view>
-
-  <!-- 免责声明 -->
-  <view class="disclaimer">
-    本测算结果基于传统文化理论，仅供娱乐参考。
-    请理性对待，不要将此作为人生重大决策的依据。
-  </view>
-
-  <!-- 返回按钮 -->
-  <view class="back-button" bindtap="goBack">
-    <text>← 返回首页</text>
+<!-- 分析结果弹窗 -->
+<view class="analysis-modal {{showAnalysisModal ? 'show' : ''}}" bindtap="hideAnalysis">
+  <view class="modal-content" catchtap="preventClose">
+    <view class="modal-header">
+      <view class="modal-title">八字分析结果</view>
+      <view class="modal-close" bindtap="hideAnalysis">×</view>
+    </view>
+    
+    <scroll-view class="modal-body" scroll-y="true">
+      <!-- 性格分析 -->
+      <view class="analysis-section">
+        <view class="analysis-title">性格特点</view>
+        <view class="analysis-content">{{resultData.analysis.personality || '性格分析内容...'}}</view>
+      </view>
+      
+      <!-- 五行分析 -->
+      <view class="analysis-section">
+        <view class="analysis-title">五行平衡</view>
+        <view class="analysis-content">{{resultData.analysis.wuxing_analysis || '五行分析内容...'}}</view>
+      </view>
+      
+      <!-- 事业运势 -->
+      <view class="analysis-section">
+        <view class="analysis-title">事业运势</view>
+        <view class="analysis-content">{{resultData.analysis.career || '事业分析内容...'}}</view>
+      </view>
+      
+      <!-- 感情运势 -->
+      <view class="analysis-section">
+        <view class="analysis-title">感情运势</view>
+        <view class="analysis-content">{{resultData.analysis.love || '感情分析内容...'}}</view>
+      </view>
+      
+      <!-- 今日运势 -->
+      <view class="analysis-section">
+        <view class="analysis-title">今日运势</view>
+        <view class="analysis-content">
+          <view class="fortune-score">运势评分：{{resultData.today_fortune.score || 8}}/10</view>
+          <view class="fortune-desc">{{resultData.today_fortune.description || '今日运势不错...'}}</view>
+        </view>
+      </view>
+    </scroll-view>
+    
+    <view class="modal-footer">
+      <button class="btn-save" bindtap="saveToHistory">保存到历史</button>
+    </view>
   </view>
 </view>

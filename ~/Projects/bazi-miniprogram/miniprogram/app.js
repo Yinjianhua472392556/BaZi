@@ -17,8 +17,9 @@ App({
   
   globalData: {
     userInfo: null,
-    apiBaseUrl: 'http://localhost:8001',  // 后端API地址
+    apiBaseUrl: 'http://localhost:8000',  // 后端API地址
     baziHistory: [],  // 八字测算历史记录
+    baziResult: null,  // 当前八字测算结果
     currentUser: null
   },
 
@@ -50,6 +51,13 @@ App({
 
   // 保存八字测算结果到本地
   saveBaziResult(result) {
+    // 保存当前结果到全局数据
+    this.globalData.baziResult = result
+    
+    // 同时保存到缓存，供结果页面使用
+    wx.setStorageSync('lastBaziResult', result)
+    
+    // 保存到历史记录
     const history = wx.getStorageSync('baziHistory') || []
     const newRecord = {
       id: Date.now(),
@@ -65,6 +73,8 @@ App({
     
     wx.setStorageSync('baziHistory', history)
     this.globalData.baziHistory = history
+    
+    console.log('八字结果已保存:', result)
   },
 
   // 获取八字历史记录

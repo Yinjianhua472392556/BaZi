@@ -1,226 +1,384 @@
 // result.js
-const app = getApp()
-
 Page({
+  /**
+   * 页面的初始数据
+   */
   data: {
-    resultData: {},
-    wuxingList: []
+    resultData: null,
+    showAnalysisModal: false,
+    showAdPlaceholder: false,
+    lunarDate: '',
+    baziString: '',
+    wuxingString: '',
+    wuxingLack: '',
+    shengxiao: ''
   },
 
+  /**
+   * 生命周期函数--监听页面加载
+   */
   onLoad(options) {
-    // 从页面参数获取结果数据
+    console.log('result页面加载，参数:', options);
+    
+    let resultData = null;
+    
+    // 1. 首先尝试从URL参数中获取数据
     if (options.data) {
       try {
-        const resultData = JSON.parse(decodeURIComponent(options.data))
-        console.log('接收到的结果数据:', resultData)
-        
-        this.setData({
-          resultData: resultData
-        })
-        
-        // 处理新的数据结构
-        if (resultData.wuxing) {
-          this.processWuxingData(resultData.wuxing)
-        } else {
-          console.warn('五行数据缺失')
-        }
+        resultData = JSON.parse(decodeURIComponent(options.data));
+        console.log('从URL参数获取数据成功:', resultData);
       } catch (error) {
-        console.error('解析结果数据失败:', error)
-        this.handleDataError()
+        console.error('解析URL参数失败:', error);
       }
+    }
+    
+    // 2. 从全局数据中获取
+    if (!resultData) {
+      const app = getApp();
+      if (app.globalData.baziResult) {
+        resultData = app.globalData.baziResult;
+        console.log('从全局数据获取数据成功:', resultData);
+      }
+    }
+    
+    // 3. 从缓存中获取
+    if (!resultData) {
+      const cachedResult = wx.getStorageSync('lastBaziResult');
+      if (cachedResult) {
+        resultData = cachedResult;
+        console.log('从缓存获取数据成功:', resultData);
+      }
+    }
+    
+    // 4. 处理获取到的数据
+    if (resultData) {
+      this.setData({
+        resultData: resultData
+      });
+      this.processResultData();
     } else {
-      this.handleDataError()
+      // 如果没有数据，显示提示并返回首页
+      console.error('未找到计算结果数据');
+      wx.showModal({
+        title: '提示',
+        content: '未找到计算结果，请重新进行八字测算',
+        showCancel: false,
+        success: () => {
+          wx.switchTab({
+            url: '/pages/index/index'
+          });
+        }
+      });
     }
   },
 
-  // 处理五行数据
-  processWuxingData(wuxing) {
-    if (!wuxing) return
+  /**
+   * 处理结果数据，生成显示用的字符串
+   */
+  processResultData() {
+    const { resultData } = this.data;
+    if (!resultData) return;
 
-    const wuxingNames = ['木', '火', '土', '金', '水']
-    const wuxingColors = {
-      '木': '#22C55E',  // 绿色
-      '火': '#EF4444',  // 红色
-      '土': '#A3A3A3',  // 灰色
-      '金': '#F59E0B',  // 金色
-      '水': '#3B82F6'   // 蓝色
-    }
-
-    // 计算总数
-    const total = Object.values(wuxing).reduce((sum, count) => sum + count, 0)
-
-    const wuxingList = wuxingNames.map(name => {
-      const count = wuxing[name] || 0
-      const percentage = total > 0 ? Math.round((count / total) * 100) : 0
-      
-      return {
-        name: name,
-        count: count,
-        percentage: percentage,
-        color: wuxingColors[name]
-      }
-    })
-
-    this.setData({
-      wuxingList: wuxingList
-    })
-  },
-
-  // 处理数据错误
-  handleDataError() {
-    wx.showModal({
-      title: '数据加载失败',
-      content: '未能获取到测算结果，请重新测算',
-      showCancel: false,
-      success: () => {
-        wx.navigateBack()
-      }
-    })
-  },
-
-  // 保存到历史记录
-  saveToHistory() {
     try {
-      app.saveBaziResult(this.data.resultData)
-      wx.showToast({
-        title: '已保存到历史记录',
-        icon: 'success'
-      })
+      // 处理农历日期
+      const lunarInfo = resultData.lunar_info || {};
+      const lunarDate = this.generateLunarDate(lunarInfo);
+
+      // 处理八字字符串
+      const bazi = resultData.bazi || {};
+      const baziString = `${bazi.year || '庚子'}-${bazi.month || '乙酉'}-${bazi.day || '戊辰'}-${bazi.hour || '壬子'}`;
+
+      // 处理五行字符串
+      const wuxing = resultData.wuxing || {};
+      const wuxingString = this.generateWuxingString(bazi);
+
+      // 计算五行缺陷
+      const wuxingLack = this.calculateWuxingLack(wuxing);
+
+      // 计算生肖
+      const shengxiao = this.calculateShengxiao(resultData.user_info?.birth_date);
+
+      this.setData({
+        lunarDate,
+        baziString,
+        wuxingString,
+        wuxingLack,
+        shengxiao
+      });
+
     } catch (error) {
-      console.error('保存历史记录失败:', error)
+      console.error('处理结果数据出错:', error);
+      wx.showToast({
+        title: '数据处理出错',
+        icon: 'none'
+      });
+    }
+  },
+
+  /**
+   * 生成农历日期字符串
+   */
+  generateLunarDate(lunarInfo) {
+    if (!lunarInfo.year) return '八月初六';
+    
+    // 简化的农历月份映射
+    const lunarMonths = [
+      '正月', '二月', '三月', '四月', '五月', '六月',
+      '七月', '八月', '九月', '十月', '十一月', '十二月'
+    ];
+    
+    const lunarDays = [
+      '', '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+      '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+      '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'
+    ];
+
+    // 简化转换，使用公历日期估算农历
+    const month = lunarInfo.month || 8;
+    const day = lunarInfo.day || 6;
+    
+    const monthStr = lunarMonths[month - 1] || '八月';
+    const dayStr = lunarDays[day] || '初六';
+    
+    return `${monthStr}${dayStr}`;
+  },
+
+  /**
+   * 生成五行字符串
+   */
+  generateWuxingString(bazi) {
+    if (!bazi) return '金水-木金-土土-水水';
+
+    const wuxingMap = {
+      '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土',
+      '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水',
+      '子': '水', '丑': '土', '寅': '木', '卯': '木', '辰': '土', '巳': '火',
+      '午': '火', '未': '土', '申': '金', '酉': '金', '戌': '土', '亥': '水'
+    };
+
+    const result = [];
+    ['year', 'month', 'day', 'hour'].forEach(key => {
+      const zhu = bazi[key] || '甲子';
+      const gan = zhu[0];
+      const zhi = zhu[1];
+      const ganWuxing = wuxingMap[gan] || '木';
+      const zhiWuxing = wuxingMap[zhi] || '水';
+      result.push(`${ganWuxing}${zhiWuxing}`);
+    });
+
+    return result.join('-');
+  },
+
+  /**
+   * 计算五行缺陷
+   */
+  calculateWuxingLack(wuxing) {
+    if (!wuxing) return '火';
+
+    const wuxingElements = ['木', '火', '土', '金', '水'];
+    const lackElements = [];
+
+    wuxingElements.forEach(element => {
+      if (!wuxing[element] || wuxing[element] === 0) {
+        lackElements.push(element);
+      }
+    });
+
+    return lackElements.length > 0 ? lackElements.join('、') : '无';
+  },
+
+  /**
+   * 计算生肖
+   */
+  calculateShengxiao(birthDate) {
+    if (!birthDate) return '鼠';
+
+    const year = parseInt(birthDate.split('-')[0]);
+    const shengxiaoList = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+    const index = (year - 1900) % 12;
+    return shengxiaoList[index] || '鼠';
+  },
+
+  /**
+   * 显示分析结果弹窗
+   */
+  showAnalysis() {
+    console.log('显示分析结果');
+    this.setData({
+      showAnalysisModal: true
+    });
+  },
+
+  /**
+   * 隐藏分析结果弹窗
+   */
+  hideAnalysis() {
+    this.setData({
+      showAnalysisModal: false
+    });
+  },
+
+  /**
+   * 防止弹窗关闭
+   */
+  preventClose() {
+    // 阻止事件冒泡，防止点击内容区域关闭弹窗
+  },
+
+  /**
+   * 重新计算
+   */
+  calculateAgain() {
+    console.log('重新计算');
+    wx.switchTab({
+      url: '/pages/index/index'
+    });
+  },
+
+  /**
+   * 图片加载错误处理
+   */
+  onImageError(e) {
+    console.log('图片加载失败:', e.detail);
+    this.setData({
+      showAdPlaceholder: true
+    });
+  },
+
+  /**
+   * 图片加载成功处理
+   */
+  onImageLoad(e) {
+    console.log('图片加载成功:', e.detail);
+    this.setData({
+      showAdPlaceholder: false
+    });
+  },
+
+  /**
+   * 保存到历史记录
+   */
+  saveToHistory() {
+    const { resultData } = this.data;
+    if (!resultData) {
+      wx.showToast({
+        title: '没有可保存的数据',
+        icon: 'none'
+      });
+      return;
+    }
+
+    try {
+      // 获取现有历史记录
+      let history = wx.getStorageSync('baziHistory') || [];
+      
+      // 添加当前记录
+      const newRecord = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        resultData: resultData,
+        displayInfo: {
+          lunarDate: this.data.lunarDate,
+          baziString: this.data.baziString,
+          wuxingString: this.data.wuxingString,
+          wuxingLack: this.data.wuxingLack,
+          shengxiao: this.data.shengxiao
+        }
+      };
+      
+      // 添加到历史记录开头
+      history.unshift(newRecord);
+      
+      // 限制历史记录数量（最多50条）
+      if (history.length > 50) {
+        history = history.slice(0, 50);
+      }
+      
+      // 保存到缓存
+      wx.setStorageSync('baziHistory', history);
+      
+      wx.showToast({
+        title: '保存成功',
+        icon: 'success'
+      });
+      
+      // 关闭弹窗
+      this.hideAnalysis();
+      
+    } catch (error) {
+      console.error('保存历史记录出错:', error);
       wx.showToast({
         title: '保存失败',
         icon: 'none'
-      })
+      });
     }
   },
 
-  // 分享结果
-  shareResult() {
-    const { resultData } = this.data
-    const shareData = {
-      title: `${resultData.birthInfo.name || '我'}的八字运势测算结果`,
-      path: `/pages/result/result?data=${encodeURIComponent(JSON.stringify(resultData))}`,
-      imageUrl: '' // 可以添加分享图片
-    }
-
-    // 触发分享
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline']
-    })
-
-    wx.showToast({
-      title: '点击右上角分享',
-      icon: 'none'
-    })
-  },
-
-  // 重新测算
-  calculateAgain() {
-    wx.navigateBack()
-  },
-
-  // 返回首页
-  goBack() {
-    wx.switchTab({
-      url: '/pages/index/index'
-    })
-  },
-
-  // 分享给朋友
+  /**
+   * 分享功能
+   */
   onShareAppMessage() {
-    const { resultData } = this.data
-    let name = '我'
-    
-    // 处理新的数据结构
-    if (resultData.user_info?.name) {
-      name = resultData.user_info.name
-    } else if (resultData.birthInfo?.name) {
-      name = resultData.birthInfo.name
-    }
-    
+    const { lunarDate, baziString } = this.data;
     return {
-      title: `${name}的八字运势测算结果`,
-      path: `/pages/result/result?data=${encodeURIComponent(JSON.stringify(resultData))}`,
-      imageUrl: ''
-    }
+      title: `我的八字运势：${baziString}`,
+      path: '/pages/index/index',
+      imageUrl: '/images/share-bg.png'
+    };
   },
 
-  // 分享到朋友圈
+  /**
+   * 分享到朋友圈
+   */
   onShareTimeline() {
-    const { resultData } = this.data
-    let name = '我'
-    
-    // 处理新的数据结构
-    if (resultData.user_info?.name) {
-      name = resultData.user_info.name
-    } else if (resultData.birthInfo?.name) {
-      name = resultData.birthInfo.name
-    }
-    
+    const { lunarDate, baziString } = this.data;
     return {
-      title: `${name}的八字运势测算 - 八字运势小程序`,
-      query: `data=${encodeURIComponent(JSON.stringify(resultData))}`,
-      imageUrl: ''
-    }
+      title: `八字运势测算：${baziString}`,
+      query: 'from=timeline',
+      imageUrl: '/images/share-bg.png'
+    };
   },
 
-  // 页面显示时的处理
+  /**
+   * 生命周期函数--监听页面初次渲染完成
+   */
+  onReady() {
+    // 页面渲染完成后的逻辑
+    console.log('result页面渲染完成');
+  },
+
+  /**
+   * 生命周期函数--监听页面显示
+   */
   onShow() {
-    // 设置页面标题
-    const resultData = this.data.resultData
-    let name = '匿名用户'
-    
-    // 处理新的数据结构
-    if (resultData.user_info?.name) {
-      name = resultData.user_info.name
-    } else if (resultData.birthInfo?.name) {
-      // 兼容老格式
-      name = resultData.birthInfo.name
-    }
-    
-    wx.setNavigationBarTitle({
-      title: `${name}的八字结果`
-    })
+    // 页面显示时的逻辑
   },
 
-  // 复制八字到剪贴板
-  copyBazi() {
-    const { resultData } = this.data
-    let baziText = ''
-    
-    // 处理新的数据结构
-    if (resultData.bazi) {
-      baziText = `${resultData.bazi.year} ${resultData.bazi.month} ${resultData.bazi.day} ${resultData.bazi.hour}`
-    } else if (resultData.year) {
-      // 兼容老格式
-      baziText = `${resultData.year} ${resultData.month} ${resultData.day} ${resultData.hour}`
-    }
-    
-    if (baziText) {
-      wx.setClipboardData({
-        data: baziText,
-        success: () => {
-          wx.showToast({
-            title: '八字已复制',
-            icon: 'success'
-          })
-        }
-      })
-    } else {
-      wx.showToast({
-        title: '八字数据缺失',
-        icon: 'none'
-      })
-    }
+  /**
+   * 生命周期函数--监听页面隐藏
+   */
+  onHide() {
+    // 页面隐藏时的逻辑
   },
 
-  // 查看详细分析（预留功能）
-  viewDetailAnalysis() {
-    wx.showToast({
-      title: '详细分析功能开发中',
-      icon: 'none'
-    })
+  /**
+   * 生命周期函数--监听页面卸载
+   */
+  onUnload() {
+    // 页面卸载时的逻辑
+  },
+
+  /**
+   * 页面相关事件处理函数--监听用户下拉动作
+   */
+  onPullDownRefresh() {
+    // 下拉刷新
+    wx.stopPullDownRefresh();
+  },
+
+  /**
+   * 页面上拉触底事件的处理函数
+   */
+  onReachBottom() {
+    // 上拉触底
   }
-})
+});

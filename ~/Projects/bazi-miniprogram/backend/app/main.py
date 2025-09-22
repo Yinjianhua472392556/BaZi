@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import uvicorn
 import os
 from datetime import datetime
-from .bazi_calculator import BaziCalculator
+from bazi_calculator import BaziCalculator
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
