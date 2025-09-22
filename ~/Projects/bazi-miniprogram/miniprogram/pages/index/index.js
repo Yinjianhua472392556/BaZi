@@ -6,6 +6,7 @@ Page({
     birthDate: '',
     birthTime: '',
     gender: 'male',
+    calendarType: 'solar', // 默认选择公历
     calculating: false,
     canCalculate: false,
     maxDate: ''
@@ -43,6 +44,15 @@ Page({
     })
   },
 
+  // 日历类型选择
+  onCalendarTypeChange(e) {
+    this.setData({
+      calendarType: e.detail.value,
+      birthDate: '' // 切换日历类型时重置日期选择
+    })
+    this.checkCanCalculate()
+  },
+
   // 检查是否可以测算
   checkCanCalculate() {
     const { birthDate, birthTime } = this.data
@@ -73,7 +83,8 @@ Page({
       day: birthDateTime.getDate(),
       hour: birthDateTime.getHours(),
       gender: this.data.gender,
-      name: '匿名用户'
+      name: '匿名用户',
+      calendarType: this.data.calendarType // 添加日历类型信息
     }
 
     wx.showLoading({

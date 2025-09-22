@@ -455,3 +455,12 @@
     padding: 20rpx;
   }
 }
+
+/* 日期类型提示样式 */
+.date-type-hint {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 10rpx;
+  padding-left: 10rpx;
+  font-style: italic;
+}

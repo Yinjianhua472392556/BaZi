@@ -66,6 +66,7 @@ class BirthData(BaseModel):
     hour: int = 12
     gender: str = "male"
     name: str = "匿名用户"
+    calendarType: str = "solar"  # "solar" 公历 或 "lunar" 农历
 
 # 创建八字计算器实例
 bazi_calculator = BaziCalculator()
@@ -117,7 +118,8 @@ async def calculate_bazi(birth_data: BirthData):
             month=birth_data.month,
             day=birth_data.day,
             hour=birth_data.hour,
-            gender=birth_data.gender
+            gender=birth_data.gender,
+            calendar_type=birth_data.calendarType
         )
         
         # 添加用户信息

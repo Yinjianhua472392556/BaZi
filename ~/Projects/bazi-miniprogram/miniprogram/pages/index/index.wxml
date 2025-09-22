@@ -33,14 +33,32 @@
     <view class="card">
     <view class="subtitle">请输入您的出生信息</view>
     
+    <!-- 日历类型选择 -->
+    <view class="input-group">
+      <label class="input-label">日期类型</label>
+      <radio-group bindchange="onCalendarTypeChange">
+        <label class="radio-item">
+          <radio value="solar" checked="{{calendarType === 'solar'}}" color="#40E0D0"/>
+          公历
+        </label>
+        <label class="radio-item">
+          <radio value="lunar" checked="{{calendarType === 'lunar'}}" color="#40E0D0"/>
+          农历
+        </label>
+      </radio-group>
+    </view>
+
     <!-- 出生日期选择 -->
     <view class="input-group">
       <label class="input-label">出生日期</label>
       <picker mode="date" value="{{birthDate}}" start="1900-01-01" end="{{maxDate}}" bindchange="onDateChange">
         <view class="picker">
-          {{birthDate || '请选择出生日期'}}
+          {{birthDate || (calendarType === 'solar' ? '请选择公历出生日期' : '请选择农历出生日期')}}
         </view>
       </picker>
+      <view class="date-type-hint">
+        {{calendarType === 'solar' ? '选择公历日期（如：1990-01-15）' : '选择农历日期（请按对应公历日期选择）'}}
+      </view>
     </view>
 
     <!-- 出生时间选择 -->
