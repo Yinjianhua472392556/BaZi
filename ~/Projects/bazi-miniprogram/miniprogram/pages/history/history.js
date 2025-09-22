@@ -24,6 +24,9 @@ Page({
       formattedDate: this.formatTimestamp(item.timestamp)
     }))
 
+    // 按时间排序，最新的在前
+    formattedHistory.sort((a, b) => b.timestamp - a.timestamp)
+
     this.setData({
       historyList: formattedHistory
     })
@@ -41,12 +44,15 @@ Page({
       return `${Math.floor(diff / 60000)}分钟前`
     } else if (diff < 86400000) { // 1天内
       return `${Math.floor(diff / 3600000)}小时前`
+    } else if (diff < 604800000) { // 1周内
+      const days = Math.floor(diff / 86400000)
+      return `${days}天前`
     } else {
-      return `${date.getMonth() + 1}月${date.getDate()}日`
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
     }
   },
 
-  // 查看结果
+  // 查看结果详情
   viewResult(e) {
     const item = e.currentTarget.dataset.item
     wx.navigateTo({
@@ -54,8 +60,48 @@ Page({
     })
   },
 
-  // 清空历史记录
-  clearHistory() {
+  // 查看详情（操作按钮）
+  viewDetail(e) {
+    // 在小程序中使用 e.detail 来阻止冒泡
+    const item = e.currentTarget.dataset.item
+    wx.navigateTo({
+      url: `/pages/result/result?data=${encodeURIComponent(JSON.stringify(item))}`
+    })
+  },
+
+  // 删除单个记录
+  deleteItem(e) {
+    // 移除 stopPropagation 调用，在小程序中不支持
+    const item = e.currentTarget.dataset.item
+    
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这条历史记录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          this.removeHistoryItem(item.id)
+          wx.showToast({
+            title: '删除成功',
+            icon: 'success'
+          })
+        }
+      }
+    })
+  },
+
+  // 从存储中移除历史记录项
+  removeHistoryItem(itemId) {
+    const history = app.getBaziHistory()
+    const filteredHistory = history.filter(item => item.id !== itemId)
+    
+    wx.setStorageSync('baziHistory', filteredHistory)
+    app.globalData.baziHistory = filteredHistory
+    
+    this.loadHistory()
+  },
+
+  // 清空全部历史记录
+  clearAllHistory() {
     wx.showModal({
       title: '确认清空',
       content: '确定要清空所有历史记录吗？此操作不可恢复。',
@@ -67,11 +113,32 @@ Page({
             historyList: []
           })
           wx.showToast({
-            title: '已清空历史记录',
+            title: '已清空所有历史记录',
             icon: 'success'
           })
         }
       }
+    })
+  },
+
+  // 页面分享
+  onShareAppMessage() {
+    return {
+      title: '八字运势测算 - 我的历史记录',
+      path: '/pages/index/index'
+    }
+  },
+
+  // 下拉刷新
+  onPullDownRefresh() {
+    this.loadHistory()
+    wx.stopPullDownRefresh()
+  },
+
+  // 跳转到首页
+  goToIndex() {
+    wx.switchTab({
+      url: '/pages/index/index'
     })
   }
 })

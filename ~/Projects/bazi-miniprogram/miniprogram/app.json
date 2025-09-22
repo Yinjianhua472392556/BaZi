@@ -23,10 +23,6 @@
         "text": "八字测算"
       },
       {
-        "pagePath": "pages/history/history", 
-        "text": "历史记录"
-      },
-      {
         "pagePath": "pages/profile/profile",
         "text": "个人中心"
       }

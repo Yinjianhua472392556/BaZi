@@ -1,30 +1,71 @@
 <!--history.wxml-->
 <view class="container">
-  <view class="title">历史记录</view>
-  
-  <view wx:if="{{historyList.length > 0}}">
-    <view class="history-item" wx:for="{{historyList}}" wx:key="id" bindtap="viewResult" data-item="{{item}}">
-      <view class="history-header">
-        <view class="history-name">{{item.birthInfo.name || '匿名用户'}}</view>
-        <view class="history-date">{{item.formattedDate}}</view>
+  <!-- 顶部背景插画区域 -->
+  <view class="header-illustration">
+    <view class="illustration-content">
+      <!-- 中国风装饰元素 -->
+      <view class="cloud cloud-1"></view>
+      <view class="cloud cloud-2"></view>
+      <view class="mountain mountain-1"></view>
+      <view class="mountain mountain-2"></view>
+      <!-- 简化版装饰元素 -->
+      <view class="scroll-decoration">
+        <view class="scroll-body"></view>
+        <view class="scroll-text">📜</view>
       </view>
-      <view class="history-birth">{{item.birthInfo.date}} {{item.birthInfo.time}}</view>
-      <view class="history-bazi">
-        <text class="bazi-text">{{item.year}}</text>
-        <text class="bazi-text">{{item.month}}</text>
-        <text class="bazi-text">{{item.day}}</text>
-        <text class="bazi-text">{{item.hour}}</text>
+    </view>
+  </view>
+
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    <view class="page-title">历史记录</view>
+    
+    <!-- 历史记录列表 -->
+    <view wx:if="{{historyList.length > 0}}">
+      <view class="card history-item" wx:for="{{historyList}}" wx:key="id" bindtap="viewResult" data-item="{{item}}">
+        <!-- 头部信息 -->
+        <view class="history-header">
+          <view class="history-name">{{item.user_info.name || item.birthInfo.name || '匿名用户'}}</view>
+          <view class="history-date">{{item.formattedDate}}</view>
+        </view>
+        
+        <!-- 八字信息 -->
+        <view class="history-bazi">
+          <text class="bazi-text">{{item.bazi.year || item.year || '甲子'}}</text>
+          <text class="bazi-text">{{item.bazi.month || item.month || '乙丑'}}</text>
+          <text class="bazi-text">{{item.bazi.day || item.day || '丙寅'}}</text>
+          <text class="bazi-text">{{item.bazi.hour || item.hour || '丁卯'}}</text>
+        </view>
+        
+        <!-- 操作按钮 -->
+        <view class="action-buttons">
+          <view class="action-btn primary" catchtap="viewDetail" data-item="{{item}}">
+            <text>查看详情</text>
+          </view>
+          <view class="action-btn danger" catchtap="deleteItem" data-item="{{item}}">
+            <text>删除</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 清空按钮区域 -->
+      <view class="card clear-section">
+        <button class="btn-danger" bindtap="clearAllHistory">清空全部历史记录</button>
       </view>
     </view>
     
-    <view class="clear-section">
-      <button class="btn-secondary" bindtap="clearHistory">清空历史记录</button>
+    <!-- 空状态 -->
+    <view wx:else class="card empty-state">
+      <view class="empty-icon">📜</view>
+      <view class="empty-text">暂无历史记录</view>
+      <view class="empty-desc">开始您的第一次八字测算吧</view>
+      <button class="btn-primary" bindtap="goToIndex">开始测算</button>
     </view>
-  </view>
-  
-  <view wx:else class="empty-state">
-    <view class="empty-icon">📜</view>
-    <view class="empty-text">暂无历史记录</view>
-    <navigator url="/pages/index/index" class="btn-primary">开始测算</navigator>
+
+    <!-- 免责声明 -->
+    <view class="disclaimer">
+      历史记录仅保存在本地，卸载应用或清除数据将会丢失。<br/>
+      建议及时备份重要的测算结果。
+    </view>
   </view>
 </view>

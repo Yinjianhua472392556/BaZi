@@ -135,16 +135,6 @@
     </button>
   </view>
 
-    <!-- 快速入口 -->
-    <view class="card">
-      <view class="subtitle">快速功能</view>
-      <view class="quick-actions">
-        <navigator url="/pages/history/history" class="quick-item">
-          <view class="quick-icon">📜</view>
-          <text>历史记录</text>
-        </navigator>
-      </view>
-    </view>
 
     <!-- 免责声明 -->
     <view class="disclaimer">
