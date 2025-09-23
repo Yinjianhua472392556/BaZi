@@ -1,0 +1,151 @@
+<!--festival.wxml-->
+<view class="container">
+  <!-- 顶部背景插画区域 -->
+  <view class="header-illustration">
+    <view class="illustration-content">
+      <!-- 中国风装饰元素 -->
+      <view class="cloud cloud-1"></view>
+      <view class="cloud cloud-2"></view>
+      <view class="mountain mountain-1"></view>
+      <view class="mountain mountain-2"></view>
+      
+      <!-- 新增装饰元素 -->
+      <view class="lantern lantern-left"></view>
+      <view class="lantern lantern-right"></view>
+      <view class="star star-1"></view>
+      <view class="star star-2"></view>
+      <view class="star star-3"></view>
+      <view class="moon"></view>
+      
+      <!-- 页面标题 -->
+      <view class="page-title-container">
+        <view class="page-title">最近节日</view>
+        <view class="page-subtitle">未来13个月 · 黄历宜忌</view>
+      </view>
+      
+      <!-- 更新时间 -->
+      <view wx:if="{{lastUpdateTime}}" class="update-time">
+        最后更新：{{lastUpdateTime}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    <!-- 加载状态 -->
+    <view wx:if="{{loading}}" class="loading-container">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">加载节日数据中...</text>
+    </view>
+
+    <!-- 错误状态 -->
+    <view wx:elif="{{error}}" class="error-container">
+      <view class="error-icon">⚠️</view>
+      <text class="error-text">{{error}}</text>
+      <button class="retry-button" bindtap="onRetry">重试</button>
+    </view>
+
+    <!-- 节日列表 -->
+    <view wx:elif="{{festivals.length > 0}}" class="festival-list">
+      <view 
+        wx:for="{{festivals}}" 
+        wx:key="id" 
+        class="festival-card"
+        data-festival="{{item}}"
+        bindtap="onFestivalTap"
+      >
+        <!-- 装饰角 -->
+        <view class="corner-decoration top-left"></view>
+        <view class="corner-decoration top-right"></view>
+        <view class="corner-decoration bottom-left"></view>
+        <view class="corner-decoration bottom-right"></view>
+        <!-- 节日名称装饰边框 -->
+        <view class="festival-header">
+          <view 
+            class="festival-name-border {{item.type}}"
+            style="border-color: {{item.decoration.borderColor}}; background-color: {{item.decoration.backgroundColor}};"
+          >
+            <text 
+              class="festival-name"
+              style="color: {{item.decoration.textColor}};"
+            >
+              {{item.name}}
+            </text>
+          </view>
+        </view>
+        
+        <!-- 日期信息 -->
+        <view class="date-info">
+          <view class="lunar-date">{{item.lunarDate}}</view>
+          <view class="solar-date">{{item.date}}</view>
+          <view class="day-of-week">{{item.dayOfWeek}}</view>
+          <view class="countdown">{{item.countdownText}}</view>
+        </view>
+        
+        <!-- 传统信息 -->
+        <view class="traditional-info">
+          <view class="info-row">
+            <view class="info-item">
+              <text class="info-label">值神</text>
+              <text class="info-value">{{item.ganZhi}}</text>
+            </view>
+            <view class="info-item">
+              <text class="info-label">十二神</text>
+              <text class="info-value">{{item.shierShen}}</text>
+            </view>
+          </view>
+          <view class="info-row">
+            <view class="info-item full-width">
+              <text class="info-label">星宿</text>
+              <text class="info-value">{{item.xingXiu}}</text>
+            </view>
+          </view>
+        </view>
+        
+        <!-- 宜忌活动 -->
+        <view class="activities">
+          <view class="activity-row">
+            <view class="activity-label suitable">宜</view>
+            <view class="activity-content">
+              <text 
+                wx:for="{{item.activities.suitable}}" 
+                wx:for-item="activity"
+                wx:key="*this" 
+                class="activity-item"
+              >
+                {{activity}}
+              </text>
+            </view>
+          </view>
+          <view class="activity-row">
+            <view class="activity-label unsuitable">忌</view>
+            <view class="activity-content">
+              <text 
+                wx:for="{{item.activities.unsuitable}}" 
+                wx:for-item="activity"
+                wx:key="*this" 
+                class="activity-item"
+              >
+                {{activity}}
+              </text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:else class="empty-container">
+      <view class="empty-icon">📅</view>
+      <text class="empty-text">暂无节日数据</text>
+      <button class="retry-button" bindtap="onRetry">重新加载</button>
+    </view>
+
+    <!-- 底部说明 -->
+    <view wx:if="{{festivals.length > 0}}" class="disclaimer">
+      <text class="disclaimer-text">
+        * 节日数据基于动态历法计算，确保长期准确性至2035年，宜忌内容仅供参考
+      </text>
+    </view>
+  </view>
+</view>

@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/festival/festival",
     "pages/result/result",
     "pages/profile/profile",
     "pages/history/history"
@@ -21,6 +22,10 @@
       {
         "pagePath": "pages/index/index",
         "text": "八字测算"
+      },
+      {
+        "pagePath": "pages/festival/festival",
+        "text": "节日"
       },
       {
         "pagePath": "pages/profile/profile",

@@ -1,0 +1,900 @@
+/**festival.wxss**/
+
+/* 页面容器 */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #E8F5E8 0%, #F0F8FF 30%, #FFF8DC 70%, #FFE4E1 100%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 背景装饰粒子 */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 192, 203, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(175, 238, 238, 0.1) 0%, transparent 50%);
+  animation: particleFloat 20s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes particleFloat {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-20px) rotate(5deg); }
+}
+
+/* 顶部插画区域 */
+.header-illustration {
+  height: 400rpx;
+  background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 40%, #F0F8FF 100%);
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 50rpx 50rpx;
+}
+
+.illustration-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* 云朵装饰 */
+.cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50rpx;
+  opacity: 0.7;
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50rpx;
+}
+
+.cloud-1 {
+  width: 80rpx;
+  height: 40rpx;
+  top: 60rpx;
+  left: 100rpx;
+  animation: cloudFloat 20s infinite linear;
+}
+
+.cloud-1::before {
+  width: 60rpx;
+  height: 60rpx;
+  top: -30rpx;
+  left: 10rpx;
+}
+
+.cloud-1::after {
+  width: 80rpx;
+  height: 40rpx;
+  top: -20rpx;
+  right: 15rpx;
+}
+
+.cloud-2 {
+  width: 100rpx;
+  height: 50rpx;
+  top: 100rpx;
+  right: 80rpx;
+  animation: cloudFloat 25s infinite linear reverse;
+}
+
+.cloud-2::before {
+  width: 70rpx;
+  height: 70rpx;
+  top: -35rpx;
+  left: 15rpx;
+}
+
+.cloud-2::after {
+  width: 90rpx;
+  height: 50rpx;
+  top: -25rpx;
+  right: 20rpx;
+}
+
+/* 山峦装饰 */
+.mountain {
+  position: absolute;
+  bottom: 80rpx;
+  background: linear-gradient(45deg, #8FBC8F 0%, #9ACD32 100%);
+  opacity: 0.6;
+}
+
+.mountain-1 {
+  width: 200rpx;
+  height: 120rpx;
+  left: 50rpx;
+  border-radius: 100rpx 100rpx 0 0;
+  transform: skew(-10deg);
+}
+
+.mountain-2 {
+  width: 150rpx;
+  height: 80rpx;
+  right: 100rpx;
+  border-radius: 80rpx 80rpx 0 0;
+  transform: skew(15deg);
+}
+
+/* 灯笼装饰 */
+.lantern {
+  position: absolute;
+  width: 40rpx;
+  height: 60rpx;
+  top: 40rpx;
+  z-index: 5;
+}
+
+.lantern::before {
+  content: '';
+  position: absolute;
+  width: 40rpx;
+  height: 50rpx;
+  background: linear-gradient(45deg, #DC143C 0%, #FF6347 100%);
+  border-radius: 20rpx;
+  border: 2rpx solid #8B0000;
+  box-shadow: inset 0 4rpx 8rpx rgba(255, 255, 255, 0.3);
+}
+
+.lantern::after {
+  content: '';
+  position: absolute;
+  top: -8rpx;
+  left: 15rpx;
+  width: 10rpx;
+  height: 16rpx;
+  background: #8B4513;
+  border-radius: 5rpx;
+}
+
+.lantern-left {
+  left: 30rpx;
+  animation: lanternSwing 4s ease-in-out infinite;
+}
+
+.lantern-right {
+  right: 30rpx;
+  animation: lanternSwing 4s ease-in-out infinite reverse;
+}
+
+@keyframes lanternSwing {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* 星星装饰 */
+.star {
+  position: absolute;
+  width: 16rpx;
+  height: 16rpx;
+  background: #FFD700;
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  animation: starTwinkle 2s ease-in-out infinite;
+}
+
+.star-1 {
+  top: 30rpx;
+  left: 150rpx;
+  animation-delay: 0s;
+}
+
+.star-2 {
+  top: 80rpx;
+  right: 120rpx;
+  animation-delay: 0.7s;
+}
+
+.star-3 {
+  top: 60rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  animation-delay: 1.4s;
+}
+
+@keyframes starTwinkle {
+  0%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* 月亮装饰 */
+.moon {
+  position: absolute;
+  top: 25rpx;
+  right: 50rpx;
+  width: 50rpx;
+  height: 50rpx;
+  background: linear-gradient(45deg, #F5F5DC 0%, #FFFACD 100%);
+  border-radius: 50%;
+  box-shadow: 
+    0 0 20rpx rgba(255, 250, 205, 0.6),
+    inset -8rpx -8rpx 0 rgba(240, 230, 140, 0.3);
+  animation: moonGlow 3s ease-in-out infinite alternate;
+}
+
+.moon::before {
+  content: '';
+  position: absolute;
+  top: 15rpx;
+  left: 10rpx;
+  width: 8rpx;
+  height: 8rpx;
+  background: rgba(240, 230, 140, 0.5);
+  border-radius: 50%;
+}
+
+.moon::after {
+  content: '';
+  position: absolute;
+  top: 25rpx;
+  left: 20rpx;
+  width: 6rpx;
+  height: 6rpx;
+  background: rgba(240, 230, 140, 0.3);
+  border-radius: 50%;
+}
+
+@keyframes moonGlow {
+  0% { 
+    box-shadow: 
+      0 0 20rpx rgba(255, 250, 205, 0.6),
+      inset -8rpx -8rpx 0 rgba(240, 230, 140, 0.3);
+  }
+  100% { 
+    box-shadow: 
+      0 0 30rpx rgba(255, 250, 205, 0.8),
+      inset -8rpx -8rpx 0 rgba(240, 230, 140, 0.5);
+  }
+}
+
+/* 页面标题 */
+.page-title-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+}
+
+.page-title {
+  font-size: 56rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+  margin-bottom: 10rpx;
+  text-shadow: 2rpx 2rpx 4rpx rgba(255, 255, 255, 0.8);
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  color: #708090;
+  opacity: 0.8;
+}
+
+/* 更新时间 */
+.update-time {
+  position: absolute;
+  bottom: 20rpx;
+  right: 30rpx;
+  font-size: 22rpx;
+  color: #708090;
+  opacity: 0.7;
+}
+
+/* 主要内容区域 */
+.main-content {
+  padding: 40rpx 20rpx;
+  background: white;
+  margin: -30rpx 20rpx 0;
+  border-radius: 30rpx;
+  box-shadow: 0 -10rpx 30rpx rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
+  min-height: 600rpx;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid #E0E0E0;
+  border-top: 6rpx solid #C8860D;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20rpx;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 错误状态和空状态 */
+.error-container,
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+}
+
+.error-icon,
+.empty-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.error-text,
+.empty-text {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+.retry-button {
+  background: linear-gradient(45deg, #C8860D 0%, #DAA520 100%) !important;
+  color: white !important;
+  font-size: 28rpx;
+  padding: 20rpx 40rpx;
+  border-radius: 30rpx;
+  border: none;
+  box-shadow: 0 6rpx 20rpx rgba(200, 134, 13, 0.3);
+}
+
+.retry-button::after {
+  border: none;
+}
+
+/* 节日列表 */
+.festival-list {
+  padding: 20rpx 0;
+}
+
+/* 节日卡片 */
+.festival-card {
+  background: white;
+  border-radius: 20rpx;
+  margin-bottom: 30rpx;
+  padding: 30rpx;
+  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1);
+  border: 2rpx solid #F0F0F0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.festival-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6rpx;
+  background: linear-gradient(90deg, 
+    #FFD700 0%, #FF6347 25%, #32CD32 50%, #1E90FF 75%, #FFD700 100%);
+  opacity: 0.8;
+}
+
+.festival-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+  transform: scale(0);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.festival-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.15);
+}
+
+.festival-card:active::after {
+  transform: scale(1);
+}
+
+.festival-card:last-child {
+  margin-bottom: 0;
+}
+
+/* 节日卡片装饰角 */
+.festival-card .corner-decoration {
+  position: absolute;
+  width: 30rpx;
+  height: 30rpx;
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  opacity: 0.6;
+}
+
+.festival-card .corner-decoration.top-left {
+  top: 10rpx;
+  left: 10rpx;
+  border-radius: 0 0 20rpx 0;
+}
+
+.festival-card .corner-decoration.top-right {
+  top: 10rpx;
+  right: 10rpx;
+  border-radius: 0 0 0 20rpx;
+}
+
+.festival-card .corner-decoration.bottom-left {
+  bottom: 10rpx;
+  left: 10rpx;
+  border-radius: 0 20rpx 0 0;
+}
+
+.festival-card .corner-decoration.bottom-right {
+  bottom: 10rpx;
+  right: 10rpx;
+  border-radius: 20rpx 0 0 0;
+}
+
+/* 节日标题区域 */
+.festival-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+
+.festival-name-border {
+  position: relative;
+  padding: 15rpx 40rpx;
+  border: 3rpx solid #C8860D;
+  border-radius: 50rpx;
+  background: #FFF8DC;
+  
+  /* 装饰边框效果 */
+  box-shadow: 
+    0 0 0 2rpx white,
+    0 0 0 5rpx #C8860D,
+    0 4rpx 15rpx rgba(200, 134, 13, 0.2);
+}
+
+.festival-name-border::before {
+  content: '';
+  position: absolute;
+  top: -8rpx;
+  left: 20rpx;
+  right: 20rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, transparent 0%, #C8860D 50%, transparent 100%);
+  border-radius: 2rpx;
+}
+
+.festival-name-border::after {
+  content: '';
+  position: absolute;
+  bottom: -8rpx;
+  left: 20rpx;
+  right: 20rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, transparent 0%, #C8860D 50%, transparent 100%);
+  border-radius: 2rpx;
+}
+
+.festival-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #8B4513;
+  text-shadow: 1rpx 1rpx 2rpx rgba(255, 255, 255, 0.8);
+}
+
+/* 不同类型节日的样式 */
+.festival-name-border.traditional {
+  border-color: #C8860D;
+  background: #FFF8DC;
+}
+
+.festival-name-border.modern {
+  border-color: #DC143C;
+  background: #FFE4E1;
+}
+
+.festival-name-border.western {
+  border-color: #228B22;
+  background: #F0FFF0;
+}
+
+/* 日期信息 */
+.date-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  border-radius: 15rpx;
+  border-left: 6rpx solid #C8860D;
+}
+
+.lunar-date {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+}
+
+.solar-date {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.day-of-week {
+  font-size: 26rpx;
+  color: #888;
+}
+
+.countdown {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #DC143C;
+  background: linear-gradient(45deg, #FFE4E1 0%, #FFF0F5 100%);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  border: 2rpx solid #DC143C;
+}
+
+/* 传统信息 */
+.traditional-info {
+  margin-bottom: 30rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #F0FFFF 0%, #E0F6FF 100%);
+  border-radius: 15rpx;
+  border-left: 6rpx solid #40E0D0;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 15rpx;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.info-item.full-width {
+  flex: 2;
+}
+
+.info-label {
+  font-size: 24rpx;
+  color: #708090;
+  margin-right: 10rpx;
+  min-width: 60rpx;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #2F4F4F;
+  font-weight: 500;
+}
+
+/* 宜忌活动 */
+.activities {
+  border-top: 2rpx dashed #E0E0E0;
+  padding-top: 20rpx;
+}
+
+.activity-row {
+  display: flex;
+  margin-bottom: 15rpx;
+  align-items: flex-start;
+}
+
+.activity-row:last-child {
+  margin-bottom: 0;
+}
+
+.activity-label {
+  width: 60rpx;
+  height: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: bold;
+  border-radius: 8rpx;
+  margin-right: 15rpx;
+  flex-shrink: 0;
+}
+
+.activity-label.suitable {
+  background: linear-gradient(45deg, #E8F5E8 0%, #F0FFF0 100%);
+  color: #2E7D2E;
+  border: 2rpx solid #4CAF50;
+}
+
+.activity-label.unsuitable {
+  background: linear-gradient(45deg, #FFE8E8 0%, #FFF0F0 100%);
+  color: #C62828;
+  border: 2rpx solid #F44336;
+}
+
+.activity-content {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  align-items: center;
+}
+
+.activity-item {
+  font-size: 24rpx;
+  color: #333;
+  background: #F8F9FA;
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #E0E0E0;
+  white-space: nowrap;
+}
+
+/* 底部说明 */
+.disclaimer {
+  margin-top: 40rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #FFFAF0 0%, #FFF8DC 100%);
+  border-radius: 15rpx;
+  border-left: 6rpx solid #DAA520;
+}
+
+.disclaimer-text {
+  font-size: 22rpx;
+  color: #B8860B;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* 动画效果 */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes cloudFloat {
+  0% { transform: translateX(-20rpx); }
+  100% { transform: translateX(100vw); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 卡片入场动画 */
+.festival-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.festival-card:nth-child(1) { animation-delay: 0.1s; }
+.festival-card:nth-child(2) { animation-delay: 0.2s; }
+.festival-card:nth-child(3) { animation-delay: 0.3s; }
+.festival-card:nth-child(4) { animation-delay: 0.4s; }
+.festival-card:nth-child(5) { animation-delay: 0.5s; }
+
+/* 高级视觉效果 */
+.festival-card .festival-name-border {
+  animation: nameGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes nameGlow {
+  0% { 
+    box-shadow: 
+      0 0 0 2rpx white,
+      0 0 0 5rpx #C8860D,
+      0 4rpx 15rpx rgba(200, 134, 13, 0.2);
+  }
+  100% { 
+    box-shadow: 
+      0 0 0 2rpx white,
+      0 0 0 5rpx #C8860D,
+      0 4rpx 20rpx rgba(200, 134, 13, 0.4),
+      0 0 30rpx rgba(255, 215, 0, 0.3);
+  }
+}
+
+/* 装饰角动画 */
+.festival-card .corner-decoration {
+  animation: cornerPulse 4s ease-in-out infinite;
+}
+
+.festival-card .corner-decoration:nth-child(1) { animation-delay: 0s; }
+.festival-card .corner-decoration:nth-child(2) { animation-delay: 1s; }
+.festival-card .corner-decoration:nth-child(3) { animation-delay: 2s; }
+.festival-card .corner-decoration:nth-child(4) { animation-delay: 3s; }
+
+@keyframes cornerPulse {
+  0%, 80%, 100% { 
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  40% { 
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* 倒计时特效 */
+.countdown {
+  animation: countdownPulse 2s ease-in-out infinite;
+}
+
+@keyframes countdownPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.4);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10rpx rgba(220, 20, 60, 0);
+  }
+}
+
+/* 宜忌标签动画 */
+.activity-label.suitable {
+  animation: suitableGlow 3s ease-in-out infinite alternate;
+}
+
+.activity-label.unsuitable {
+  animation: unsuitableGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes suitableGlow {
+  0% { 
+    box-shadow: 0 0 5rpx rgba(76, 175, 80, 0.3);
+  }
+  100% { 
+    box-shadow: 0 0 15rpx rgba(76, 175, 80, 0.6);
+  }
+}
+
+@keyframes unsuitableGlow {
+  0% { 
+    box-shadow: 0 0 5rpx rgba(244, 67, 54, 0.3);
+  }
+  100% { 
+    box-shadow: 0 0 15rpx rgba(244, 67, 54, 0.6);
+  }
+}
+
+/* 页面标题特效 */
+.page-title {
+  animation: titleShine 4s ease-in-out infinite;
+}
+
+@keyframes titleShine {
+  0%, 100% { 
+    text-shadow: 2rpx 2rpx 4rpx rgba(255, 255, 255, 0.8);
+  }
+  50% { 
+    text-shadow: 
+      2rpx 2rpx 4rpx rgba(255, 255, 255, 0.8),
+      0 0 20rpx rgba(47, 79, 79, 0.3);
+  }
+}
+
+/* 加载动画增强 */
+.loading-spinner {
+  animation: spin 1s linear infinite, spinGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes spinGlow {
+  0% { 
+    box-shadow: 0 0 10rpx rgba(200, 134, 13, 0.3);
+  }
+  100% { 
+    box-shadow: 0 0 25rpx rgba(200, 134, 13, 0.6);
+  }
+}
+
+/* 活动项悬浮效果 */
+.activity-item {
+  transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+  transform: translateY(-2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式适配 */
+@media (max-width: 375px) {
+  .main-content {
+    margin: -30rpx 15rpx 0;
+    padding: 30rpx 15rpx;
+  }
+  
+  .festival-card {
+    padding: 20rpx;
+  }
+  
+  .page-title {
+    font-size: 48rpx;
+  }
+  
+  .date-info {
+    flex-direction: column;
+    gap: 10rpx;
+    text-align: center;
+  }
+  
+  .festival-name-border {
+    padding: 12rpx 30rpx;
+  }
+  
+  .festival-name {
+    font-size: 32rpx;
+  }
+  
+  .activity-content {
+    gap: 6rpx;
+  }
+  
+  .activity-item {
+    font-size: 22rpx;
+    padding: 4rpx 8rpx;
+  }
+}
+
+/* 下拉刷新优化 */
+.main-content {
+  padding-top: 40rpx;
+}
+
+/* 节日卡片悬浮效果 */
+.festival-card:hover {
+  box-shadow: 0 12rpx 35rpx rgba(0, 0, 0, 0.15);
+}
+
+/* 优化小屏幕显示 */
+@media (max-height: 667px) {
+  .header-illustration {
+    height: 300rpx;
+  }
+  
+  .page-title {
+    font-size: 48rpx;
+  }
+}
