@@ -2,6 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/festival/festival",
+    "pages/zodiac-matching/zodiac-matching",
     "pages/result/result",
     "pages/profile/profile",
     "pages/history/history"
@@ -26,6 +27,10 @@
       {
         "pagePath": "pages/festival/festival",
         "text": "节日"
+      },
+      {
+        "pagePath": "pages/zodiac-matching/zodiac-matching",
+        "text": "生肖配对"
       },
       {
         "pagePath": "pages/profile/profile",

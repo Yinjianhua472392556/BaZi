@@ -219,7 +219,7 @@
   transform: translateX(-50%);
   width: 60rpx;
   height: 4rpx;
-  background: linear-gradient(90deg, #40E0D0 0%, #48D1CC 100%);
+  background: linear-gradient(90deg, #C8860D 0%, #DAA520 100%);
   border-radius: 2rpx;
 }
 
@@ -235,14 +235,14 @@
 
 /* 按钮样式更新 */
 .btn-primary {
-  background: linear-gradient(45deg, #40E0D0 0%, #00CED1 100%) !important;
+  background: linear-gradient(135deg, #C8860D 0%, #DAA520 100%) !important;
   color: white !important;
   font-size: 36rpx;
   font-weight: bold;
   padding: 25rpx;
   border-radius: 50rpx;
   border: none;
-  box-shadow: 0 8rpx 25rpx rgba(64, 224, 208, 0.4);
+  box-shadow: 0 8rpx 20rpx rgba(200, 134, 13, 0.3);
   margin: 20rpx 0;
   position: relative;
   overflow: hidden;
@@ -253,19 +253,20 @@
 }
 
 .btn-primary:active {
+  background: linear-gradient(135deg, #B8760C 0%, #CA9510 100%) !important;
   transform: scale(0.98);
-  box-shadow: 0 4rpx 15rpx rgba(64, 224, 208, 0.6);
+  box-shadow: 0 4rpx 15rpx rgba(200, 134, 13, 0.5);
 }
 
 .btn-secondary {
   background: white !important;
-  color: #40E0D0 !important;
+  color: #C8860D !important;
   font-size: 34rpx;
   font-weight: 600;
   padding: 25rpx;
-  border: 3rpx solid #40E0D0;
+  border: 3rpx solid #C8860D;
   border-radius: 50rpx;
-  box-shadow: 0 4rpx 15rpx rgba(64, 224, 208, 0.2);
+  box-shadow: 0 4rpx 15rpx rgba(200, 134, 13, 0.2);
   margin: 20rpx 0;
 }
 
@@ -274,7 +275,7 @@
 }
 
 .btn-secondary:active {
-  background: #F0FFFF !important;
+  background: #FFF8DC !important;
   transform: scale(0.98);
 }
 
@@ -410,7 +411,7 @@
   left: 0;
   width: 40rpx;
   height: 4rpx;
-  background: linear-gradient(90deg, #40E0D0 0%, #48D1CC 100%);
+  background: linear-gradient(90deg, #C8860D 0%, #DAA520 100%);
   border-radius: 2rpx;
 }
 
@@ -505,7 +506,7 @@
 .lunar-month-picker .picker:active,
 .lunar-day-picker .picker:active {
   background: #E9ECEF;
-  border-color: #40E0D0;
+  border-color: #C8860D;
   transform: scale(0.98);
 }
 
@@ -513,8 +514,8 @@
 .corresponding-date {
   margin-top: 8rpx;
   padding: 8rpx 12rpx;
-  background: linear-gradient(90deg, #F0FFFF 0%, #E0F6FF 100%);
-  border-left: 4rpx solid #40E0D0;
+  background: linear-gradient(90deg, #FFF8DC 0%, #F5DEB3 100%);
+  border-left: 4rpx solid #C8860D;
   border-radius: 8rpx;
   font-size: 22rpx;
   color: #2F4F4F;
@@ -539,7 +540,7 @@
 
 .date-picker-container .picker:active {
   background: #E9ECEF;
-  border-color: #40E0D0;
+  border-color: #C8860D;
   transform: scale(0.98);
 }
 
