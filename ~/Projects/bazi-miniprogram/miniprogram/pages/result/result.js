@@ -271,35 +271,23 @@ Page({
       return;
     }
 
-    try {
-      // 获取现有历史记录
-      let history = wx.getStorageSync('baziHistory') || [];
-      
-      // 添加当前记录
-      const newRecord = {
-        id: Date.now(),
-        timestamp: new Date().toISOString(),
-        resultData: resultData,
-        displayInfo: {
-          lunarDate: this.data.lunarDate,
-          baziString: this.data.baziString,
-          wuxingString: this.data.wuxingString,
-          wuxingLack: this.data.wuxingLack,
-          shengxiao: this.data.shengxiao
-        }
-      };
-      
-      // 添加到历史记录开头
-      history.unshift(newRecord);
-      
-      // 限制历史记录数量（最多50条）
-      if (history.length > 50) {
-        history = history.slice(0, 50);
+    // 准备保存的数据，包含显示信息
+    const saveData = {
+      ...resultData,
+      displayInfo: {
+        lunarDate: this.data.lunarDate,
+        baziString: this.data.baziString,
+        wuxingString: this.data.wuxingString,
+        wuxingLack: this.data.wuxingLack,
+        shengxiao: this.data.shengxiao
       }
-      
-      // 保存到缓存
-      wx.setStorageSync('baziHistory', history);
-      
+    };
+
+    // 调用全局的保存方法
+    const app = getApp();
+    const success = app.saveToHistory(saveData);
+    
+    if (success) {
       wx.showToast({
         title: '保存成功',
         icon: 'success'
@@ -307,9 +295,7 @@ Page({
       
       // 关闭弹窗
       this.hideAnalysis();
-      
-    } catch (error) {
-      console.error('保存历史记录出错:', error);
+    } else {
       wx.showToast({
         title: '保存失败',
         icon: 'none'

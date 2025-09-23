@@ -49,7 +49,7 @@ App({
     })
   },
 
-  // 保存八字测算结果到本地
+  // 保存八字测算结果到本地（不自动保存到历史记录）
   saveBaziResult(result) {
     // 保存当前结果到全局数据
     this.globalData.baziResult = result
@@ -57,24 +57,40 @@ App({
     // 同时保存到缓存，供结果页面使用
     wx.setStorageSync('lastBaziResult', result)
     
-    // 保存到历史记录
-    const history = wx.getStorageSync('baziHistory') || []
-    const newRecord = {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      ...result
+    console.log('八字结果已保存到缓存:', result)
+  },
+
+  // 手动保存到历史记录
+  saveToHistory(result) {
+    try {
+      // 获取现有历史记录
+      const history = wx.getStorageSync('baziHistory') || []
+      
+      // 创建新的历史记录
+      const newRecord = {
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        ...result
+      }
+      
+      // 添加到历史记录开头
+      history.unshift(newRecord)
+      
+      // 限制历史记录数量（最多50条）
+      if (history.length > 50) {
+        history.splice(50)
+      }
+      
+      // 保存到缓存
+      wx.setStorageSync('baziHistory', history)
+      this.globalData.baziHistory = history
+      
+      console.log('已保存到历史记录:', newRecord)
+      return true
+    } catch (error) {
+      console.error('保存历史记录失败:', error)
+      return false
     }
-    history.unshift(newRecord)
-    
-    // 只保留最近20条记录
-    if (history.length > 20) {
-      history.splice(20)
-    }
-    
-    wx.setStorageSync('baziHistory', history)
-    this.globalData.baziHistory = history
-    
-    console.log('八字结果已保存:', result)
   },
 
   // 获取八字历史记录
