@@ -1,35 +1,7 @@
 <!--result.wxml-->
 <view class="container">
-  <!-- 顶部背景插画区域 -->
-  <view class="header-illustration">
-    <view class="illustration-content">
-      <!-- 中国风装饰元素 -->
-      <view class="cloud cloud-1"></view>
-      <view class="cloud cloud-2"></view>
-      <view class="mountain mountain-1"></view>
-      <view class="mountain mountain-2"></view>
-      <!-- 亭台楼阁 -->
-      <view class="pavilion">
-        <view class="pavilion-roof"></view>
-        <view class="pavilion-body"></view>
-        <view class="pavilion-pillars">
-          <view class="pillar"></view>
-          <view class="pillar"></view>
-          <view class="pillar"></view>
-        </view>
-      </view>
-      <!-- 静坐人物 -->
-      <view class="character">
-        <view class="character-body"></view>
-        <view class="character-head"></view>
-      </view>
-    </view>
-  </view>
-
   <!-- 结果内容区域 -->
-  <view class="result-content">
-    <!-- 标题 -->
-    <view class="result-title">计算结果</view>
+  <view class="main-content">
     
     <!-- 信息展示表格 -->
     <view class="info-table">

@@ -1,24 +1,7 @@
 <!--history.wxml-->
 <view class="container">
-  <!-- 顶部背景插画区域 -->
-  <view class="header-illustration">
-    <view class="illustration-content">
-      <!-- 中国风装饰元素 -->
-      <view class="cloud cloud-1"></view>
-      <view class="cloud cloud-2"></view>
-      <view class="mountain mountain-1"></view>
-      <view class="mountain mountain-2"></view>
-      <!-- 简化版装饰元素 -->
-      <view class="scroll-decoration">
-        <view class="scroll-body"></view>
-        <view class="scroll-text">📜</view>
-      </view>
-    </view>
-  </view>
-
   <!-- 主要内容区域 -->
   <view class="main-content">
-    <view class="page-title">历史记录</view>
     
     <!-- 历史记录列表 -->
     <view wx:if="{{historyList.length > 0}}">

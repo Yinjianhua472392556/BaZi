@@ -9,9 +9,9 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#C8860D",
-    "navigationBarTitleText": "八字运势",
-    "navigationBarTextStyle": "white",
+    "navigationBarBackgroundColor": "#E8F5E8",
+    "navigationBarTitleText": "",
+    "navigationBarTextStyle": "black",
     "backgroundColor": "#FFF8DC"
   },
   "tabBar": {

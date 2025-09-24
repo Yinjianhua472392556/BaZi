@@ -1,37 +1,20 @@
 <!--festival.wxml-->
 <view class="container">
-  <!-- 顶部背景插画区域 -->
-  <view class="header-illustration">
-    <view class="illustration-content">
-      <!-- 中国风装饰元素 -->
-      <view class="cloud cloud-1"></view>
-      <view class="cloud cloud-2"></view>
-      <view class="mountain mountain-1"></view>
-      <view class="mountain mountain-2"></view>
-      
-      <!-- 新增装饰元素 -->
-      <view class="lantern lantern-left"></view>
-      <view class="lantern lantern-right"></view>
-      <view class="star star-1"></view>
-      <view class="star star-2"></view>
-      <view class="star star-3"></view>
-      <view class="moon"></view>
-      
-      <!-- 页面标题 -->
-      <view class="page-title-container">
-        <view class="page-title">最近节日</view>
-        <view class="page-subtitle">未来13个月 · 黄历宜忌</view>
-      </view>
-      
-      <!-- 更新时间 -->
-      <view wx:if="{{lastUpdateTime}}" class="update-time">
-        最后更新：{{lastUpdateTime}}
-      </view>
+  <!-- 简化的页面头部 -->
+  <view class="page-header">
+    <view class="page-title-container">
+      <view class="page-title">最近节日 🎊</view>
+      <view class="page-subtitle">未来13个月 · 黄历宜忌</view>
     </view>
+    <view class="page-decoration">☯︎</view>
   </view>
 
   <!-- 主要内容区域 -->
   <view class="main-content">
+    <!-- 更新时间 -->
+    <view wx:if="{{lastUpdateTime}}" class="update-time">
+      最后更新：{{lastUpdateTime}}
+    </view>
     <!-- 加载状态 -->
     <view wx:if="{{loading}}" class="loading-container">
       <view class="loading-spinner"></view>

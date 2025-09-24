@@ -1,35 +1,16 @@
 <!--index.wxml-->
 <view class="container">
-  <!-- 顶部背景插画区域 -->
-  <view class="header-illustration">
-    <view class="illustration-content">
-      <!-- 中国风装饰元素 -->
-      <view class="cloud cloud-1"></view>
-      <view class="cloud cloud-2"></view>
-      <view class="mountain mountain-1"></view>
-      <view class="mountain mountain-2"></view>
-      <!-- 亭台楼阁 -->
-      <view class="pavilion">
-        <view class="pavilion-roof"></view>
-        <view class="pavilion-body"></view>
-        <view class="pavilion-pillars">
-          <view class="pillar"></view>
-          <view class="pillar"></view>
-          <view class="pillar"></view>
-        </view>
-      </view>
-      <!-- 静坐人物 -->
-      <view class="character">
-        <view class="character-body"></view>
-        <view class="character-head"></view>
-      </view>
+  <!-- 简化的页面头部 -->
+  <view class="page-header">
+    <view class="page-title-container">
+      <view class="page-title">八字运势测算 🔮</view>
+      <view class="page-subtitle">预测未来 · 指导人生</view>
     </view>
+    <view class="page-decoration">⚊⚋</view>
   </view>
 
   <!-- 主要内容区域 -->
   <view class="main-content">
-    <view class="page-title">八字运势测算</view>
-    
     <view class="card">
     <view class="subtitle">请输入您的出生信息</view>
     
