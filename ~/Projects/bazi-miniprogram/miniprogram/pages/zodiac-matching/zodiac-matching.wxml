@@ -1,0 +1,106 @@
+<!--zodiac-matching.wxml-->
+<view class="container">
+  <!-- 简化的页面头部 -->
+  <view class="page-header">
+    <view class="page-title-container">
+      <view class="page-title">生肖配对 💕</view>
+      <view class="page-subtitle">测试生肖缘分匹配</view>
+    </view>
+    <view class="page-decoration">♥</view>
+  </view>
+
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    <!-- 配对选择区域 -->
+    <view class="matching-section">
+      <!-- 男生生肖选择 -->
+      <view class="zodiac-row">
+        <text class="zodiac-label">男生</text>
+        <picker class="zodiac-picker" 
+                value="{{maleZodiacIndex}}" 
+                range="{{zodiacOptions}}" 
+                bindchange="onMaleZodiacChange">
+          <view class="picker-display">
+            <text class="zodiac-text">{{maleZodiac || '牛'}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 女生生肖选择 -->
+      <view class="zodiac-row">
+        <text class="zodiac-label">女生</text>
+        <picker class="zodiac-picker" 
+                value="{{femaleZodiacIndex}}" 
+                range="{{zodiacOptions}}" 
+                bindchange="onFemaleZodiacChange">
+          <view class="picker-display">
+            <text class="zodiac-text">{{femaleZodiac || '猪'}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+
+      <!-- 配对按钮 -->
+      <button class="match-button" bindtap="performMatching">
+        配对
+      </button>
+    </view>
+
+    <!-- 结果展示区域 -->
+    <view class="result-section">
+      <view class="result-header">
+        <text class="result-icon">|</text>
+        <text class="result-title">结果</text>
+      </view>
+      
+      <view class="result-content" wx:if="{{matchResult}}">
+        <!-- 配对评分 -->
+        <view class="score-container">
+          <view class="score-circle">
+            <text class="score-number">{{matchResult.score}}</text>
+            <text class="score-unit">分</text>
+          </view>
+          <view class="score-info">
+            <text class="score-level">{{matchResult.level}}</text>
+            <text class="score-emoji">{{matchResult.emoji}}</text>
+          </view>
+        </view>
+
+        <!-- 配对分析 -->
+        <view class="analysis-section">
+          <view class="analysis-title">配对分析</view>
+          <text class="analysis-content">{{matchResult.analysis}}</text>
+        </view>
+
+        <!-- 优势特点 -->
+        <view class="advantages-section" wx:if="{{matchResult.advantages}}">
+          <view class="section-title">✨ 优势特点</view>
+          <text class="section-content">{{matchResult.advantages}}</text>
+        </view>
+
+        <!-- 注意事项 -->
+        <view class="challenges-section" wx:if="{{matchResult.challenges}}">
+          <view class="section-title">⚠️ 注意事项</view>
+          <text class="section-content">{{matchResult.challenges}}</text>
+        </view>
+
+        <!-- 相处建议 -->
+        <view class="suggestions-section" wx:if="{{matchResult.suggestions}}">
+          <view class="section-title">💡 相处建议</view>
+          <text class="section-content">{{matchResult.suggestions}}</text>
+        </view>
+      </view>
+
+      <!-- 默认空状态 -->
+      <view class="empty-result" wx:else>
+        <text class="empty-text">请选择生肖进行配对分析</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 免责声明 -->
+  <view class="disclaimer">
+    本测算结果仅供娱乐参考，请理性对待。
+  </view>
+</view>

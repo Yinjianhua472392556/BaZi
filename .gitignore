@@ -26,6 +26,9 @@ MANIFEST
 venv/
 env/
 ENV/
+~/**/venv/
+**/venv/
+__pycache__/
 
 # System files
 .DS_Store
