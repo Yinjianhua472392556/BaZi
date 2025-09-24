@@ -1,0 +1,372 @@
+/**result.wxss**/
+
+/* 页面容器 */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #E8F5E8 0%, #F0F8FF 50%, #FFF8DC 100%);
+  position: relative;
+}
+
+
+/* 主要内容区域 */
+.main-content {
+  padding: 40rpx 30rpx;
+  background: white;
+  margin: -30rpx 20rpx 0;
+  border-radius: 30rpx;
+  box-shadow: 0 -10rpx 30rpx rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+/* 标题 */
+.result-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+  text-align: left;
+  margin-bottom: 40rpx;
+  position: relative;
+}
+
+.result-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10rpx;
+  left: 0;
+  width: 60rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, #40E0D0 0%, #48D1CC 100%);
+  border-radius: 2rpx;
+}
+
+/* 信息表格 */
+.info-table {
+  margin-bottom: 30rpx;
+}
+
+.table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25rpx 0;
+  border-bottom: 1rpx solid #F0F0F0;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-label {
+  font-size: 32rpx;
+  color: #666;
+  font-weight: 500;
+  min-width: 120rpx;
+}
+
+.table-value {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+  text-align: right;
+  flex: 1;
+  margin-left: 20rpx;
+}
+
+/* 八字详解说明 */
+.bazi-explanation {
+  text-align: center;
+  font-size: 28rpx;
+  color: #999;
+  margin: 20rpx 0 40rpx;
+  padding: 15rpx;
+  background: #F8F8F8;
+  border-radius: 15rpx;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  margin: 40rpx 0;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #40E0D0 0%, #00CED1 100%);
+  color: white;
+  font-size: 36rpx;
+  font-weight: bold;
+  padding: 25rpx;
+  border-radius: 50rpx;
+  border: none;
+  box-shadow: 0 8rpx 25rpx rgba(64, 224, 208, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 15rpx rgba(64, 224, 208, 0.6);
+}
+
+.btn-secondary {
+  background: white;
+  color: #40E0D0;
+  font-size: 34rpx;
+  font-weight: 600;
+  padding: 25rpx;
+  border: 3rpx solid #40E0D0;
+  border-radius: 50rpx;
+  box-shadow: 0 4rpx 15rpx rgba(64, 224, 208, 0.2);
+}
+
+.btn-secondary::after {
+  border: none;
+}
+
+.btn-secondary:active {
+  background: #F0FFFF;
+  transform: scale(0.98);
+}
+
+/* 广告区域 */
+.ad-section {
+  margin-top: 40rpx;
+  padding: 20rpx;
+  background: #FAFAFA;
+  border-radius: 20rpx;
+  border: 1rpx solid #E0E0E0;
+}
+
+.ad-content {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.ad-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 15rpx;
+  background: #F0F0F0;
+}
+
+.ad-placeholder {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 15rpx;
+  background: #F0F0F0;
+  border: 2rpx dashed #CCCCCC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ad-placeholder.show {
+  opacity: 1;
+}
+
+.placeholder-text {
+  font-size: 24rpx;
+  color: #999999;
+  text-align: center;
+}
+
+.ad-text {
+  flex: 1;
+}
+
+.ad-title {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 8rpx;
+}
+
+.ad-subtitle {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.ad-button {
+  background: #4CAF50;
+  color: white;
+  font-size: 24rpx;
+  padding: 15rpx 25rpx;
+  border-radius: 25rpx;
+  border: none;
+  min-width: 120rpx;
+}
+
+.ad-button::after {
+  border: none;
+}
+
+/* 分析结果弹窗 */
+.analysis-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.analysis-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 650rpx;
+  max-height: 80%;
+  background: white;
+  border-radius: 30rpx;
+  overflow: hidden;
+  transform: scale(0.8);
+  transition: transform 0.3s ease;
+}
+
+.analysis-modal.show .modal-content {
+  transform: scale(1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  background: linear-gradient(45deg, #40E0D0 0%, #00CED1 100%);
+  color: white;
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+.modal-close {
+  font-size: 40rpx;
+  width: 50rpx;
+  height: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+  max-height: 600rpx;
+  padding: 30rpx;
+}
+
+.analysis-section {
+  margin-bottom: 40rpx;
+}
+
+.analysis-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15rpx;
+  padding-bottom: 10rpx;
+  border-bottom: 2rpx solid #E0E0E0;
+}
+
+.analysis-content {
+  font-size: 28rpx;
+  line-height: 1.6;
+  color: #666;
+}
+
+.fortune-score {
+  color: #FF6B6B;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+
+.fortune-desc {
+  color: #666;
+}
+
+.modal-footer {
+  padding: 20rpx 30rpx 30rpx;
+  border-top: 1rpx solid #E0E0E0;
+}
+
+.btn-save {
+  width: 100%;
+  background: linear-gradient(45deg, #4CAF50 0%, #45A049 100%);
+  color: white;
+  font-size: 32rpx;
+  font-weight: bold;
+  padding: 25rpx;
+  border-radius: 25rpx;
+  border: none;
+}
+
+.btn-save::after {
+  border: none;
+}
+
+/* 动画效果 */
+@keyframes cloudFloat {
+  0% {
+    transform: translateX(-20rpx);
+  }
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+/* 加载动画 */
+.main-content {
+  animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 响应式适配 */
+@media (max-width: 375px) {
+  .main-content {
+    margin: -30rpx 15rpx 0;
+    padding: 30rpx 20rpx;
+  }
+  
+  .result-title {
+    font-size: 42rpx;
+  }
+  
+  .table-label,
+  .table-value {
+    font-size: 28rpx;
+  }
+}

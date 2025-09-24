@@ -1,0 +1,126 @@
+<!--index.wxml-->
+<view class="container">
+  <!-- 简化的页面头部 -->
+  <view class="page-header">
+    <view class="page-title-container">
+      <view class="page-title">八字运势测算 🔮</view>
+      <view class="page-subtitle">预测未来 · 指导人生</view>
+    </view>
+    <view class="page-decoration">⚊⚋</view>
+  </view>
+
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    <view class="card">
+    <view class="subtitle">请输入您的出生信息</view>
+    
+    <!-- 日历类型选择 -->
+    <view class="input-group">
+      <label class="input-label">日期类型</label>
+      <radio-group bindchange="onCalendarTypeChange">
+        <label class="radio-item">
+          <radio value="solar" checked="{{calendarType === 'solar'}}" color="#40E0D0"/>
+          公历
+        </label>
+        <label class="radio-item">
+          <radio value="lunar" checked="{{calendarType === 'lunar'}}" color="#40E0D0"/>
+          农历
+        </label>
+      </radio-group>
+    </view>
+
+    <!-- 出生日期选择 -->
+    <view class="input-group">
+      <label class="input-label">出生日期</label>
+      
+      <!-- 公历日期选择器 -->
+      <view wx:if="{{calendarType === 'solar'}}" class="date-picker-container">
+        <picker mode="date" value="{{birthDate}}" start="1900-01-01" end="{{maxDate}}" bindchange="onDateChange">
+          <view class="picker">
+            {{birthDate || '请选择公历出生日期'}}
+          </view>
+        </picker>
+        <view class="date-type-hint">
+          选择公历日期（如：1990-01-15）
+          <view wx:if="{{birthDate && correspondingLunarDate}}" class="corresponding-date">
+            对应农历：{{correspondingLunarDate}}
+          </view>
+        </view>
+      </view>
+      
+      <!-- 农历日期选择器 -->
+      <view wx:if="{{calendarType === 'lunar'}}" class="lunar-picker-container">
+        <view class="lunar-pickers">
+          <!-- 农历年选择器 -->
+          <picker class="lunar-year-picker" value="{{lunarYearIndex}}" range="{{lunarYears}}" bindchange="onLunarYearChange">
+            <view class="picker">
+              {{lunarYear ? lunarYear + '年' : '年'}}
+            </view>
+          </picker>
+          
+          <!-- 农历月选择器 -->
+          <picker class="lunar-month-picker" value="{{lunarMonthIndex}}" range="{{lunarMonths}}" bindchange="onLunarMonthChange">
+            <view class="picker">
+              {{lunarMonth || '月'}}
+            </view>
+          </picker>
+          
+          <!-- 农历日选择器 -->
+          <picker class="lunar-day-picker" value="{{lunarDayIndex}}" range="{{lunarDays}}" bindchange="onLunarDayChange">
+            <view class="picker">
+              {{lunarDay || '日'}}
+            </view>
+          </picker>
+        </view>
+        
+        <view class="date-type-hint">
+          选择农历日期
+          <view wx:if="{{lunarYear && lunarMonth && lunarDay && correspondingSolarDate}}" class="corresponding-date">
+            对应公历：{{correspondingSolarDate}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 出生时间选择 -->
+    <view class="input-group">
+      <label class="input-label">出生时间</label>
+      <picker mode="time" value="{{birthTime}}" bindchange="onTimeChange">
+        <view class="picker">
+          {{birthTime || '请选择出生时间'}}
+        </view>
+      </picker>
+    </view>
+
+    <!-- 性别选择 -->
+    <view class="input-group">
+      <label class="input-label">性别</label>
+      <radio-group bindchange="onGenderChange">
+        <label class="radio-item">
+          <radio value="male" checked="{{gender === 'male'}}" color="#40E0D0"/>
+          男
+        </label>
+        <label class="radio-item">
+          <radio value="female" checked="{{gender === 'female'}}" color="#40E0D0"/>
+          女
+        </label>
+      </radio-group>
+    </view>
+
+    <!-- 测算按钮 -->
+    <button class="btn-primary" 
+            bindtap="calculateBazi" 
+            disabled="{{!canCalculate}}"
+            loading="{{calculating}}">
+      {{calculating ? '正在测算中...' : '开始测算'}}
+    </button>
+  </view>
+
+
+    <!-- 免责声明 -->
+    <view class="disclaimer">
+      本测算结果仅供娱乐参考，不可作为人生决策依据。
+      请理性对待，切勿迷信。
+    </view>
+  </view>
+</view>

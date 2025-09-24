@@ -1,0 +1,328 @@
+/**history.wxss**/
+
+/* 页面容器 */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #E8F5E8 0%, #F0F8FF 50%, #FFF8DC 100%);
+  position: relative;
+}
+
+/* 主要内容区域 */
+.main-content {
+  padding: 40rpx 30rpx;
+  background: white;
+  margin: -30rpx 20rpx 0;
+  border-radius: 30rpx;
+  box-shadow: 0 -10rpx 30rpx rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+/* 页面标题 */
+.page-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+  text-align: center;
+  margin-bottom: 40rpx;
+  position: relative;
+}
+
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, #40E0D0 0%, #48D1CC 100%);
+  border-radius: 2rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin: 20rpx 0;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.1);
+  border: 1rpx solid #F0F0F0;
+}
+
+/* 历史记录项样式 */
+.history-item {
+  margin: 25rpx 0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.history-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6rpx;
+  height: 100%;
+  background: linear-gradient(180deg, #40E0D0 0%, #48D1CC 100%);
+  border-radius: 0 3rpx 3rpx 0;
+}
+
+.history-item:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.15);
+}
+
+/* 头部信息 */
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.history-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+}
+
+.history-date {
+  font-size: 24rpx;
+  color: #999;
+  text-align: right;
+}
+
+/* 八字信息 */
+.history-bazi {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-bottom: 20rpx;
+}
+
+.bazi-text {
+  background: linear-gradient(45deg, #C8860D 0%, #DAA520 100%);
+  color: white;
+  padding: 10rpx 18rpx;
+  border-radius: 15rpx;
+  font-size: 24rpx;
+  font-weight: bold;
+  min-width: 60rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 8rpx rgba(200, 134, 13, 0.3);
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+  padding-top: 25rpx;
+  border-top: 1rpx solid #F5F5F5;
+  margin-top: 20rpx;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 25rpx;
+  border-radius: 25rpx;
+  font-size: 26rpx;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.action-btn:active::before {
+  left: 100%;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #40E0D0 0%, #20B2AA 50%, #008B8B 100%);
+  color: white;
+  box-shadow: 0 4rpx 15rpx rgba(64, 224, 208, 0.4);
+}
+
+.action-btn.primary:active {
+  background: linear-gradient(135deg, #20B2AA 0%, #008B8B 50%, #006666 100%);
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(64, 224, 208, 0.3);
+}
+
+.action-btn.danger {
+  background: linear-gradient(135deg, #FF8A80 0%, #FF7043 50%, #FF5722 100%);
+  color: white;
+  box-shadow: 0 4rpx 15rpx rgba(255, 138, 128, 0.4);
+}
+
+.action-btn.danger:active {
+  background: linear-gradient(135deg, #FF7043 0%, #FF5722 50%, #E64A19 100%);
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 8rpx rgba(255, 138, 128, 0.3);
+}
+
+/* 清空按钮区域 */
+.clear-section {
+  margin-top: 30rpx;
+  text-align: center;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  background: linear-gradient(45deg, #40E0D0 0%, #00CED1 100%) !important;
+  color: white !important;
+  font-size: 32rpx;
+  font-weight: bold;
+  padding: 25rpx;
+  border-radius: 50rpx;
+  border: none;
+  box-shadow: 0 8rpx 25rpx rgba(64, 224, 208, 0.4);
+  margin: 20rpx 0;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+.btn-danger {
+  background: white !important;
+  color: #FF6B6B !important;
+  font-size: 28rpx;
+  font-weight: 600;
+  padding: 20rpx;
+  border: 3rpx solid #FF6B6B;
+  border-radius: 50rpx;
+  box-shadow: 0 4rpx 15rpx rgba(255, 107, 107, 0.2);
+}
+
+.btn-danger::after {
+  border: none;
+}
+
+/* 空状态样式 */
+.empty-state {
+  text-align: center;
+  padding: 80rpx 40rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 30rpx;
+  opacity: 0.6;
+}
+
+.empty-text {
+  font-size: 32rpx;
+  color: #666;
+  margin-bottom: 15rpx;
+  font-weight: 500;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #999;
+  margin-bottom: 40rpx;
+  line-height: 1.5;
+}
+
+/* 免责声明样式 */
+.disclaimer {
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+  padding: 30rpx;
+  line-height: 1.6;
+  background: #F9F9F9;
+  border-radius: 15rpx;
+  margin: 40rpx 0 20rpx;
+}
+
+/* 动画效果 */
+.card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cloudFloat {
+  0% {
+    transform: translateX(-20rpx);
+  }
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+/* 响应式适配 */
+@media (max-width: 375px) {
+  .main-content {
+    margin: -30rpx 15rpx 0;
+    padding: 30rpx 20rpx;
+  }
+  
+  .page-title {
+    font-size: 42rpx;
+  }
+  
+  .card {
+    padding: 20rpx;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 10rpx;
+  }
+  
+  .action-btn {
+    flex-direction: row;
+    justify-content: center;
+    gap: 10rpx;
+  }
+}
+
+/* 加载和过渡效果 */
+.main-content {
+  animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 历史记录项渐入动画 */
+.history-item:nth-child(1) { animation-delay: 0.1s; }
+.history-item:nth-child(2) { animation-delay: 0.2s; }
+.history-item:nth-child(3) { animation-delay: 0.3s; }
+.history-item:nth-child(4) { animation-delay: 0.4s; }
+.history-item:nth-child(5) { animation-delay: 0.5s; }

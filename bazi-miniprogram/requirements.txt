@@ -1,0 +1,32 @@
+# 核心框架依赖
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+Pillow==10.1.0
+requests==2.31.0
+pydantic==2.5.0
+
+# 日期和时间处理
+python-dateutil==2.8.2
+pytz==2023.3
+
+# 数据库相关（暂时使用SQLite，跳过MySQL/Redis）
+sqlalchemy==2.0.23
+aiofiles==23.2.1
+
+# 安全相关
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# 八字计算专用库
+sxtwl==2.0.7
+zhdate==0.1
+chinese-calendar==1.8.0
+lunardate==0.2.0
+
+# 开发和测试工具
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+black==23.11.0
+flake8==6.1.0
