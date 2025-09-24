@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-09-24T15:21:11.271145",
+  "theme": {
+    "normal": "#666666",
+    "selected": "#C8860D"
+  },
+  "description": "Default tab icons for offline use",
+  "icons": {
+    "bazi": {
+      "normal": "bazi_normal.png",
+      "selected": "bazi_selected.png",
+      "description": "太极八卦图标"
+    },
+    "festival": {
+      "normal": "festival_normal.png",
+      "selected": "festival_selected.png",
+      "description": "日历图标"
+    },
+    "zodiac": {
+      "normal": "zodiac_normal.png",
+      "selected": "zodiac_selected.png",
+      "description": "心形图标"
+    },
+    "profile": {
+      "normal": "profile_normal.png",
+      "selected": "profile_selected.png",
+      "description": "用户图标"
+    }
+  }
+}
