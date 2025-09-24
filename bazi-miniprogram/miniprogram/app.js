@@ -40,7 +40,7 @@ App({
   
   globalData: {
     userInfo: null,
-    apiBaseUrl: 'http://localhost:8001',  // 后端API地址
+    apiBaseUrl: 'http://localhost:8000',  // 后端API地址
     baziHistory: [],  // 八字测算历史记录
     baziResult: null,  // 当前八字测算结果
     currentUser: null

@@ -4,7 +4,7 @@
 
 class IconManager {
   constructor() {
-    this.baseUrl = 'http://localhost:8001/api/v1/tab-icons'
+    this.baseUrl = 'http://localhost:8000/api/v1/tab-icons'
     this.cacheKey = 'bazi_app_icons'
     this.configKey = 'bazi_app_icon_config'
     this.version = '1.0.0'
