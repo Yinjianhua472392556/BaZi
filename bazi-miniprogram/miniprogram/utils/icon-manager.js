@@ -9,12 +9,24 @@ class IconManager {
     this.configKey = 'bazi_app_icon_config'
     this.version = '1.0.0'
     
-    // 默认图标配置
+    // 默认图标配置 - 离线备用图标
     this.defaultIcons = {
-      bazi: { normal: '', selected: '' },
-      festival: { normal: '', selected: '' },
-      zodiac: { normal: '', selected: '' },
-      profile: { normal: '', selected: '' }
+      bazi: { 
+        normal: '/images/tab-icons/bazi_normal.png', 
+        selected: '/images/tab-icons/bazi_selected.png' 
+      },
+      festival: { 
+        normal: '/images/tab-icons/festival_normal.png', 
+        selected: '/images/tab-icons/festival_selected.png' 
+      },
+      zodiac: { 
+        normal: '/images/tab-icons/zodiac_normal.png', 
+        selected: '/images/tab-icons/zodiac_selected.png' 
+      },
+      profile: { 
+        normal: '/images/tab-icons/profile_normal.png', 
+        selected: '/images/tab-icons/profile_selected.png' 
+      }
     }
     
     // 支持的主题
@@ -240,11 +252,13 @@ class IconManager {
   async applyIconsToTabBar() {
     try {
       // 获取缓存的图标路径
-      const iconPaths = wx.getStorageSync(this.cacheKey)
+      let iconPaths = wx.getStorageSync(this.cacheKey)
+      let useDefaultIcons = false
       
       if (!iconPaths || Object.keys(iconPaths).length === 0) {
-        console.log('[IconManager] 没有缓存图标，保持文字模式')
-        return false
+        console.log('[IconManager] 没有缓存图标，使用默认图标')
+        iconPaths = this.defaultIcons
+        useDefaultIcons = true
       }
       
       // tabBar配置映射
@@ -256,31 +270,66 @@ class IconManager {
       ]
       
       // 应用图标到每个tab
+      let successCount = 0
       for (const config of tabConfig) {
         const { index, iconType } = config
         const iconData = iconPaths[iconType]
         
         if (iconData && iconData.normal && iconData.selected) {
           try {
-            // 检查文件是否存在
-            if (this.checkFileExists(iconData.normal) && this.checkFileExists(iconData.selected)) {
+            // 对于默认图标，直接使用路径；对于缓存图标，检查文件是否存在
+            const canUseIcons = useDefaultIcons || 
+              (this.checkFileExists(iconData.normal) && this.checkFileExists(iconData.selected))
+            
+            if (canUseIcons) {
               wx.setTabBarItem({
                 index: index,
                 iconPath: iconData.normal,
                 selectedIconPath: iconData.selected
               })
               
-              console.log(`[IconManager] Tab ${index} (${iconType}) 图标应用成功`)
+              const iconSource = useDefaultIcons ? '默认图标' : '缓存图标'
+              console.log(`[IconManager] Tab ${index} (${iconType}) ${iconSource}应用成功`)
+              successCount++
             } else {
-              console.warn(`[IconManager] Tab ${index} 图标文件不存在`)
+              console.warn(`[IconManager] Tab ${index} 图标文件不存在，尝试使用默认图标`)
+              // 缓存图标不存在时，回退到默认图标
+              const defaultIconData = this.defaultIcons[iconType]
+              if (defaultIconData) {
+                wx.setTabBarItem({
+                  index: index,
+                  iconPath: defaultIconData.normal,
+                  selectedIconPath: defaultIconData.selected
+                })
+                console.log(`[IconManager] Tab ${index} (${iconType}) 默认图标应用成功`)
+                successCount++
+              }
             }
           } catch (error) {
             console.error(`[IconManager] 应用Tab ${index} 图标失败:`, error)
+            // 尝试使用默认图标作为最后的回退
+            try {
+              const defaultIconData = this.defaultIcons[iconType]
+              if (defaultIconData) {
+                wx.setTabBarItem({
+                  index: index,
+                  iconPath: defaultIconData.normal,
+                  selectedIconPath: defaultIconData.selected
+                })
+                console.log(`[IconManager] Tab ${index} (${iconType}) 回退到默认图标成功`)
+                successCount++
+              }
+            } catch (fallbackError) {
+              console.error(`[IconManager] Tab ${index} 默认图标回退也失败:`, fallbackError)
+            }
           }
         }
       }
       
-      return true
+      const iconSource = useDefaultIcons ? '默认图标' : '缓存图标'
+      console.log(`[IconManager] 图标应用完成: ${successCount}/${tabConfig.length} 个tab使用${iconSource}`)
+      
+      return successCount > 0
       
     } catch (error) {
       console.error('[IconManager] 应用图标失败:', error)
