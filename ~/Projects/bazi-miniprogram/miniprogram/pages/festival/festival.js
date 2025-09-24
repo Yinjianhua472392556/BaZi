@@ -19,10 +19,6 @@ Page({
   onShow() {
     // 每次显示页面时更新倒计时
     this.updateCountdown();
-    // 设置导航栏标题
-    wx.setNavigationBarTitle({
-      title: '节日列表'
-    });
   },
 
   onPullDownRefresh() {
