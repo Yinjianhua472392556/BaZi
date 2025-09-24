@@ -1,10 +1,15 @@
 // app.js
+const { iconManager } = require('./utils/icon-manager.js')
+
 App({
   onLaunch() {
     // 展示本地存储能力
     const logs = wx.getStorageSync('logs') || []
     logs.unshift(Date.now())
     wx.setStorageSync('logs', logs)
+
+    // 初始化图标管理器
+    this.initIcons()
 
     // 登录
     wx.login({
@@ -14,10 +19,28 @@ App({
       }
     })
   },
+
+  // 初始化图标系统
+  async initIcons() {
+    try {
+      console.log('开始初始化动态图标系统...')
+      const success = await iconManager.init()
+      
+      if (success) {
+        console.log('动态图标系统初始化成功')
+        // 将图标管理器添加到全局数据
+        this.globalData.iconManager = iconManager
+      } else {
+        console.log('动态图标系统初始化失败，使用文字模式')
+      }
+    } catch (error) {
+      console.error('图标系统初始化出错:', error)
+    }
+  },
   
   globalData: {
     userInfo: null,
-    apiBaseUrl: 'http://localhost:8000',  // 后端API地址
+    apiBaseUrl: 'http://localhost:8001',  // 后端API地址
     baziHistory: [],  // 八字测算历史记录
     baziResult: null,  // 当前八字测算结果
     currentUser: null

@@ -9,6 +9,8 @@ import uvicorn
 import os
 from datetime import datetime
 from bazi_calculator import BaziCalculator
+from icon_generator import icon_generator
+from fastapi.responses import Response
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
@@ -254,6 +256,216 @@ async def solar_to_lunar(birth_data: BirthData):
         return JSONResponse(
             status_code=500,
             content={"error": f"转换出错: {str(e)}"}
+        )
+
+# ==================== 图标服务接口 ====================
+
+# 图标主题配置模型
+class IconThemeData(BaseModel):
+    normal_color: str = "#666666"
+    selected_color: str = "#C8860D"
+    theme_name: str = "default"
+
+@app.get("/api/v1/tab-icons/config")
+async def get_tab_icons_config():
+    """
+    获取Tab图标配置信息
+    
+    Returns:
+        图标配置信息，包括版本、颜色、支持的图标类型等
+    """
+    try:
+        config = icon_generator.get_icon_config()
+        return {
+            "success": True,
+            "data": config,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        print(f"获取图标配置出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"获取图标配置失败: {str(e)}"}
+        )
+
+@app.get("/api/v1/tab-icons/{icon_name}")
+async def get_tab_icon(icon_name: str, style: str = "normal", theme_color: str = None):
+    """
+    获取指定的Tab图标文件
+    
+    Args:
+        icon_name: 图标名称 (bazi, festival, zodiac, profile)
+        style: 图标样式 (normal, selected)
+        theme_color: 自定义主题色 (可选)
+    
+    Returns:
+        PNG格式的图标文件
+    """
+    try:
+        # 验证图标名称
+        valid_icons = ['bazi', 'festival', 'zodiac', 'profile']
+        if icon_name not in valid_icons:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"不支持的图标类型，支持的类型: {valid_icons}"}
+            )
+        
+        # 验证样式
+        valid_styles = ['normal', 'selected']
+        if style not in valid_styles:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"不支持的样式，支持的样式: {valid_styles}"}
+            )
+        
+        # 生成图标
+        icon_bytes = icon_generator.generate_icon(
+            icon_type=icon_name,
+            style=style,
+            theme_color=theme_color
+        )
+        
+        # 返回PNG图片
+        return Response(
+            content=icon_bytes,
+            media_type="image/png",
+            headers={
+                "Cache-Control": "public, max-age=3600",  # 缓存1小时
+                "Content-Disposition": f'inline; filename="{icon_name}_{style}.png"'
+            }
+        )
+        
+    except Exception as e:
+        print(f"生成图标出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"生成图标失败: {str(e)}"}
+        )
+
+@app.post("/api/v1/tab-icons/batch-download")
+async def batch_download_icons(theme_data: IconThemeData = None):
+    """
+    批量获取所有Tab图标的下载链接
+    
+    Args:
+        theme_data: 主题配置 (可选)
+    
+    Returns:
+        所有图标的下载链接和配置信息
+    """
+    try:
+        # 获取主题色配置
+        theme_colors = {
+            'normal': theme_data.normal_color if theme_data else "#666666",
+            'selected': theme_data.selected_color if theme_data else "#C8860D"
+        }
+        
+        # 生成所有图标的下载链接
+        base_url = "/api/v1/tab-icons"
+        icon_types = ['bazi', 'festival', 'zodiac', 'profile']
+        styles = ['normal', 'selected']
+        
+        icons = {}
+        for icon_type in icon_types:
+            icons[icon_type] = {}
+            for style in styles:
+                # 构建下载URL
+                url = f"{base_url}/{icon_type}?style={style}"
+                if theme_data:
+                    url += f"&theme_color={theme_colors[style]}"
+                
+                icons[icon_type][style] = {
+                    "url": url,
+                    "filename": f"{icon_type}_{style}.png",
+                    "color": theme_colors[style]
+                }
+        
+        return {
+            "success": True,
+            "data": {
+                "icons": icons,
+                "theme": {
+                    "name": theme_data.theme_name if theme_data else "default",
+                    "colors": theme_colors
+                },
+                "config": {
+                    "icon_size": "40x40",
+                    "format": "PNG",
+                    "cache_duration": 3600
+                }
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"批量下载图标出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"批量下载失败: {str(e)}"}
+        )
+
+@app.get("/api/v1/tab-icons/themes/available")
+async def get_available_themes():
+    """
+    获取可用的图标主题列表
+    
+    Returns:
+        可用的主题配置列表
+    """
+    try:
+        themes = [
+            {
+                "name": "default",
+                "display_name": "默认主题",
+                "colors": {
+                    "normal": "#666666",
+                    "selected": "#C8860D"
+                },
+                "description": "经典金色主题，适合传统文化应用"
+            },
+            {
+                "name": "dark",
+                "display_name": "深色主题", 
+                "colors": {
+                    "normal": "#888888",
+                    "selected": "#FFD700"
+                },
+                "description": "深色模式适配主题"
+            },
+            {
+                "name": "spring",
+                "display_name": "春节主题",
+                "colors": {
+                    "normal": "#8B4513",
+                    "selected": "#FF6B6B"
+                },
+                "description": "春节红色喜庆主题"
+            },
+            {
+                "name": "autumn",
+                "display_name": "秋季主题",
+                "colors": {
+                    "normal": "#A0522D",
+                    "selected": "#FF8C00"
+                },
+                "description": "秋季橙色温暖主题"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "data": {
+                "themes": themes,
+                "default_theme": "default"
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"获取主题列表出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"获取主题列表失败: {str(e)}"}
         )
 
 # 异常处理
