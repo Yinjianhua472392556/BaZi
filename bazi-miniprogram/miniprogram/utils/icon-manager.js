@@ -17,8 +17,8 @@ class IconManager {
         selected: '/images/tab-icons/bazi_selected.png' 
       },
       naming: { 
-        normal: '/images/tab-icons/bazi_normal.png', 
-        selected: '/images/tab-icons/bazi_selected.png' 
+        normal: '/images/tab-icons/naming_normal.png', 
+        selected: '/images/tab-icons/naming_selected.png' 
       },
       festival: { 
         normal: '/images/tab-icons/festival_normal.png', 
@@ -276,93 +276,35 @@ class IconManager {
   }
 
   /**
-   * 应用图标到tabBar
+   * 应用图标到tabBar (简化版本 - 不动态修改TabBar)
    */
   async applyIconsToTabBar() {
     try {
-      // 获取缓存的图标路径
-      let iconPaths = wx.getStorageSync(this.cacheKey)
-      let useDefaultIcons = false
+      // 注意：app.json 中已经配置了默认图标路径
+      // 为了避免兼容性问题，我们不再动态修改TabBar图标
+      // 而是将下载的图标保存供其他用途使用
       
-      if (!iconPaths || Object.keys(iconPaths).length === 0) {
-        console.log('[IconManager] 没有缓存图标，使用默认图标')
-        iconPaths = this.defaultIcons
-        useDefaultIcons = true
+      console.log('[IconManager] 使用app.json中配置的静态图标，不进行动态替换')
+      console.log('[IconManager] 静态图标配置:')
+      console.log('  - 八字测算: /images/tab-icons/bazi_normal.png | bazi_selected.png')
+      console.log('  - 智能起名: /images/tab-icons/naming_normal.png | naming_selected.png') 
+      console.log('  - 节日列表: /images/tab-icons/festival_normal.png | festival_selected.png')
+      console.log('  - 生肖配对: /images/tab-icons/zodiac_normal.png | zodiac_selected.png')
+      console.log('  - 个人中心: /images/tab-icons/profile_normal.png | profile_selected.png')
+      
+      // 获取缓存的图标信息用于记录
+      const iconPaths = wx.getStorageSync(this.cacheKey)
+      if (iconPaths && Object.keys(iconPaths).length > 0) {
+        console.log('[IconManager] 动态图标已缓存，可用于主题切换等高级功能')
+      } else {
+        console.log('[IconManager] 使用静态图标，所有TabBar图标应正常显示')
       }
       
-      // tabBar配置映射 - 对应app.json中的5个tab页面
-      const tabConfig = [
-        { index: 0, iconType: 'bazi' },      // pages/index/index - 八字测算
-        { index: 1, iconType: 'naming' },    // pages/naming/naming - 智能起名
-        { index: 2, iconType: 'festival' },  // pages/festival/festival - 节日列表
-        { index: 3, iconType: 'zodiac' },    // pages/zodiac-matching/zodiac-matching - 生肖配对
-        { index: 4, iconType: 'profile' }    // pages/profile/profile - 个人中心
-      ]
-      
-      // 应用图标到每个tab
-      let successCount = 0
-      for (const config of tabConfig) {
-        const { index, iconType } = config
-        const iconData = iconPaths[iconType]
-        
-        if (iconData && iconData.normal && iconData.selected) {
-          try {
-            // 对于默认图标，直接使用路径；对于缓存图标，检查文件是否存在
-            const canUseIcons = useDefaultIcons || 
-              (this.checkFileExists(iconData.normal) && this.checkFileExists(iconData.selected))
-            
-            if (canUseIcons) {
-              wx.setTabBarItem({
-                index: index,
-                iconPath: iconData.normal,
-                selectedIconPath: iconData.selected
-              })
-              
-              const iconSource = useDefaultIcons ? '默认图标' : '缓存图标'
-              console.log(`[IconManager] Tab ${index} (${iconType}) ${iconSource}应用成功`)
-              successCount++
-            } else {
-              console.warn(`[IconManager] Tab ${index} 图标文件不存在，尝试使用默认图标`)
-              // 缓存图标不存在时，回退到默认图标
-              const defaultIconData = this.defaultIcons[iconType]
-              if (defaultIconData) {
-                wx.setTabBarItem({
-                  index: index,
-                  iconPath: defaultIconData.normal,
-                  selectedIconPath: defaultIconData.selected
-                })
-                console.log(`[IconManager] Tab ${index} (${iconType}) 默认图标应用成功`)
-                successCount++
-              }
-            }
-          } catch (error) {
-            console.error(`[IconManager] 应用Tab ${index} 图标失败:`, error)
-            // 尝试使用默认图标作为最后的回退
-            try {
-              const defaultIconData = this.defaultIcons[iconType]
-              if (defaultIconData) {
-                wx.setTabBarItem({
-                  index: index,
-                  iconPath: defaultIconData.normal,
-                  selectedIconPath: defaultIconData.selected
-                })
-                console.log(`[IconManager] Tab ${index} (${iconType}) 回退到默认图标成功`)
-                successCount++
-              }
-            } catch (fallbackError) {
-              console.error(`[IconManager] Tab ${index} 默认图标回退也失败:`, fallbackError)
-            }
-          }
-        }
-      }
-      
-      const iconSource = useDefaultIcons ? '默认图标' : '缓存图标'
-      console.log(`[IconManager] 图标应用完成: ${successCount}/${tabConfig.length} 个tab使用${iconSource}`)
-      
-      return successCount > 0
+      // 返回成功，表示图标系统工作正常
+      return true
       
     } catch (error) {
-      console.error('[IconManager] 应用图标失败:', error)
+      console.error('[IconManager] 图标系统检查失败:', error)
       return false
     }
   }

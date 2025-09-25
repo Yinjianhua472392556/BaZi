@@ -23,23 +23,33 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "八字测算"
+        "text": "八字测算",
+        "iconPath": "images/tab-icons/bazi_normal.png",
+        "selectedIconPath": "images/tab-icons/bazi_selected.png"
       },
       {
         "pagePath": "pages/naming/naming",
-        "text": "智能起名"
+        "text": "智能起名",
+        "iconPath": "images/tab-icons/naming_normal.png",
+        "selectedIconPath": "images/tab-icons/naming_selected.png"
       },
       {
         "pagePath": "pages/festival/festival",
-        "text": "节日列表"
+        "text": "节日列表",
+        "iconPath": "images/tab-icons/festival_normal.png",
+        "selectedIconPath": "images/tab-icons/festival_selected.png"
       },
       {
         "pagePath": "pages/zodiac-matching/zodiac-matching",
-        "text": "生肖配对"
+        "text": "生肖配对",
+        "iconPath": "images/tab-icons/zodiac_normal.png",
+        "selectedIconPath": "images/tab-icons/zodiac_selected.png"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "个人中心"
+        "text": "个人中心",
+        "iconPath": "images/tab-icons/profile_normal.png",
+        "selectedIconPath": "images/tab-icons/profile_selected.png"
       }
     ]
   },

@@ -25,6 +25,11 @@ class IconGenerator:
                 'type': 'taiji',
                 'description': '太极八卦图标'
             },
+            'naming': {
+                'name': '智能起名',
+                'type': 'baby_star',
+                'description': '婴儿+星星图标'
+            },
             'festival': {
                 'name': '节日列表',
                 'type': 'calendar',
@@ -148,6 +153,84 @@ class IconGenerator:
         
         return img
     
+    def create_brush_icon(self, color: str, selected: bool = False) -> Image.Image:
+        """创建婴儿+星星图标 - 用于智能起名"""
+        img = Image.new('RGBA', self.icon_size, (255, 255, 255, 0))
+        draw = ImageDraw.Draw(img)
+        
+        # 温馨的配色方案
+        baby_color = '#FFB6C1' if selected else color  # 选中时使用粉色
+        star_color = '#FFD700'  # 金色星星
+        
+        if selected:
+            # 选中状态 - 填充效果
+            # 婴儿头部 - 圆形
+            draw.ellipse([14, 10, 26, 22], fill=baby_color, outline='#FF69B4', width=1)
+            
+            # 婴儿身体 - 小椭圆
+            draw.ellipse([16, 20, 24, 28], fill=baby_color, outline='#FF69B4', width=1)
+            
+            # 婴儿眼睛 - 小点
+            draw.ellipse([17, 14, 19, 16], fill='#4169E1')  # 蓝色眼睛
+            draw.ellipse([21, 14, 23, 16], fill='#4169E1')
+            
+            # 婴儿嘴巴 - 小弧线
+            draw.arc([18, 17, 22, 19], 0, 180, fill='#FF69B4', width=1)
+            
+            # 星星装饰 - 五角星形状（简化为菱形+小点）
+            # 左上星星
+            draw.polygon([(8, 8), (10, 12), (6, 12)], fill=star_color)
+            draw.ellipse([7, 9, 9, 11], fill=star_color)
+            
+            # 右上星星
+            draw.polygon([(32, 8), (34, 12), (30, 12)], fill=star_color)
+            draw.ellipse([31, 9, 33, 11], fill=star_color)
+            
+            # 左下星星
+            draw.polygon([(6, 30), (8, 34), (4, 34)], fill=star_color)
+            draw.ellipse([5, 31, 7, 33], fill=star_color)
+            
+            # 右下星星
+            draw.polygon([(34, 30), (36, 34), (32, 34)], fill=star_color)
+            draw.ellipse([33, 31, 35, 33], fill=star_color)
+            
+            # 中心闪光效果
+            draw.ellipse([19, 12, 21, 14], fill='#FFFFFF')  # 小亮点
+            
+        else:
+            # 普通状态 - 线条效果
+            # 婴儿头部 - 圆形轮廓
+            draw.ellipse([14, 10, 26, 22], outline=color, width=2)
+            
+            # 婴儿身体 - 小椭圆轮廓
+            draw.ellipse([16, 20, 24, 28], outline=color, width=2)
+            
+            # 婴儿眼睛 - 小点
+            draw.ellipse([17, 14, 19, 16], fill=color)
+            draw.ellipse([21, 14, 23, 16], fill=color)
+            
+            # 婴儿嘴巴 - 小弧线
+            draw.arc([18, 17, 22, 19], 0, 180, fill=color, width=1)
+            
+            # 星星装饰 - 简化星形
+            # 左上星星
+            draw.polygon([(8, 8), (10, 12), (6, 12)], outline=color, width=1)
+            draw.ellipse([7, 9, 9, 11], fill=color)
+            
+            # 右上星星
+            draw.polygon([(32, 8), (34, 12), (30, 12)], outline=color, width=1)
+            draw.ellipse([31, 9, 33, 11], fill=color)
+            
+            # 左下星星
+            draw.polygon([(6, 30), (8, 34), (4, 34)], outline=color, width=1)
+            draw.ellipse([5, 31, 7, 33], fill=color)
+            
+            # 右下星星
+            draw.polygon([(34, 30), (36, 34), (32, 34)], outline=color, width=1)
+            draw.ellipse([33, 31, 35, 33], fill=color)
+        
+        return img
+    
     def generate_icon(self, icon_type: str, style: str = 'normal', 
                      theme_color: Optional[str] = None) -> bytes:
         """
@@ -167,6 +250,8 @@ class IconGenerator:
         # 根据图标类型创建对应图标
         if icon_type == 'bazi':
             img = self.create_taiji_icon(color, selected)
+        elif icon_type == 'naming':
+            img = self.create_brush_icon(color, selected)
         elif icon_type == 'festival':
             img = self.create_calendar_icon(color, selected)
         elif icon_type == 'zodiac':
