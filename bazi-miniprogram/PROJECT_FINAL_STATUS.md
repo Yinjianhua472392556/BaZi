@@ -36,7 +36,7 @@ bazi-miniprogram/
 │   └── requirements.txt                     # 项目依赖
 │
 ├── 🖥️ 服务器代码
-│   └── real_algorithm_server.py             # 最终版本API服务器
+│   └── main.py                              # 标准API服务器入口
 │
 ├── 📱 小程序代码
 │   └── miniprogram/                         # 微信小程序源码
@@ -146,7 +146,7 @@ const API_BASE_URL = 'http://10.60.20.222:8001/api/v1';
 ```bash
 cd bazi-miniprogram
 source venv/bin/activate
-python3 real_algorithm_server.py
+python3 main.py
 ```
 
 ### 2. 微信开发者工具

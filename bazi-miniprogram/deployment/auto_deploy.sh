@@ -312,8 +312,8 @@ create_production_config() {
 import uvicorn
 
 if __name__ == \"__main__\":
-    uvicorn.run(
-        \"real_algorithm_server:app\",  # 直接使用 real_algorithm_server
+        uvicorn.run(
+        \"main:app\",  # 使用标准的 main.py 入口文件
         host=\"127.0.0.1\",  # 只监听本地，通过Nginx代理
         port=$SERVICE_PORT,
         workers=2,          # 生产环境使用多进程

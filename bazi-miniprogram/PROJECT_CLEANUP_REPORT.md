@@ -39,7 +39,7 @@
 - `requirements-extra.txt` - 已合并到 `requirements.txt`
 
 ### 5. 被替代的核心文件 (1个)
-- `backend/app/main.py` - 旧版API服务器，已被 `real_algorithm_server.py` 完全替代
+- `backend/app/main.py` - 旧版API服务器，已被主目录 `main.py` 完全替代
 
 ## 🔧 部署脚本修复
 
@@ -53,7 +53,7 @@ uvicorn.run("production_server:app", ...)  # 会导致循环导入错误
 
 **修复后**:
 ```python
-uvicorn.run("real_algorithm_server:app", ...)  # 直接使用正确的服务器
+uvicorn.run("main:app", ...)  # 使用标准的main.py入口文件
 ```
 
 ### 影响
@@ -89,7 +89,7 @@ bazi-miniprogram/
 │   └── requirements.txt                     # 统一依赖配置
 │
 ├── 🖥️ 服务器代码
-│   └── real_algorithm_server.py             # 唯一API服务器 (端口8001)
+│   └── main.py                              # 标准API服务器入口 (端口8001)
 │
 ├── 📱 小程序代码
 │   └── miniprogram/                         # 微信小程序源码
