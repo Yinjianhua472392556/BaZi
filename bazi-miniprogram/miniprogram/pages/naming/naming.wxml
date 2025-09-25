@@ -1,0 +1,267 @@
+<view class="container">
+  <view class="page-header">
+    <view class="page-title-container">
+      <view class="page-title">智能起名</view>
+      <view class="page-subtitle">基于八字五行的专业起名</view>
+    </view>
+    <view class="page-decoration">🌟</view>
+  </view>
+
+  <view class="main-content" wx:if="{{!showResults}}">
+    <view class="form-card">
+      <view class="form-group">
+        <view class="form-title">基本信息</view>
+        
+        <view class="input-row">
+          <view class="input-label">姓氏</view>
+          <input 
+            class="input-field" 
+            placeholder="请输入姓氏"
+            value="{{surname}}"
+            bindinput="onSurnameInput"
+            maxlength="3"
+          />
+        </view>
+
+        <view class="input-row">
+          <view class="input-label">性别</view>
+          <picker 
+            bindchange="onGenderChange" 
+            range="{{genderOptions}}"
+            range-key="text"
+          >
+            <view class="picker-display">
+              {{genderOptions[0].text}}
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <view class="form-title">出生信息</view>
+        
+        <view class="input-row">
+          <view class="input-label">历法</view>
+          <picker 
+            bindchange="onCalendarTypeChange" 
+            range="{{calendarOptions}}"
+            range-key="text"
+          >
+            <view class="picker-display">
+              {{calendarOptions[0].text}}
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="date-inputs">
+          <view class="date-input-group">
+            <input 
+              class="date-input" 
+              placeholder="年"
+              value="{{birthYear}}"
+              bindinput="onBirthYearInput"
+              type="number"
+            />
+            <text class="date-label">年</text>
+          </view>
+          <view class="date-input-group">
+            <input 
+              class="date-input" 
+              placeholder="月"
+              value="{{birthMonth}}"
+              bindinput="onBirthMonthInput"
+              type="number"
+            />
+            <text class="date-label">月</text>
+          </view>
+          <view class="date-input-group">
+            <input 
+              class="date-input" 
+              placeholder="日"
+              value="{{birthDay}}"
+              bindinput="onBirthDayInput"
+              type="number"
+            />
+            <text class="date-label">日</text>
+          </view>
+        </view>
+
+        <view class="input-row">
+          <view class="input-label">时辰</view>
+          <picker 
+            bindchange="onHourChange" 
+            range="{{hourOptions}}"
+            range-key="text"
+          >
+            <view class="picker-display">
+              {{hourOptions[6].text}}
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <view class="form-title">起名偏好</view>
+        
+        <view class="input-row">
+          <view class="input-label">字数</view>
+          <picker 
+            bindchange="onNameLengthChange" 
+            range="{{nameLengthOptions}}"
+            range-key="text"
+          >
+            <view class="picker-display">
+              {{nameLengthOptions[1].text}}
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="action-section">
+        <button 
+          class="start-naming-btn {{analyzing ? 'loading' : ''}}"
+          bindtap="startNaming"
+          disabled="{{analyzing}}"
+        >
+          <text wx:if="{{!analyzing}}">开始起名</text>
+          <text wx:else>正在分析中...</text>
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <view class="results-section" wx:if="{{showResults}}">
+    <view class="analysis-card">
+      <view class="analysis-title">八字五行分析</view>
+      <view class="analysis-content">{{analysisSummary}}</view>
+      <view class="naming-suggestions">{{namingSuggestions}}</view>
+    </view>
+
+    <view class="names-list">
+      <view class="list-title">推荐名字</view>
+      <view 
+        class="name-item"
+        wx:for="{{recommendations}}"
+        wx:key="full_name"
+        bindtap="viewNameDetail"
+        data-index="{{index}}"
+      >
+        <view class="name-main">
+          <view class="name-text">{{item.full_name}}</view>
+          <view class="name-score">
+            <text class="score-number">{{item.overall_score}}</text>
+            <text class="score-label">分</text>
+          </view>
+        </view>
+        <view class="name-info">
+          <view class="name-pronunciation">{{item.pronunciation}}</view>
+          <view class="name-luck">{{item.luck_level}}</view>
+        </view>
+        <view class="name-meaning">{{item.meaning_explanation}}</view>
+        
+        <view class="name-actions">
+          <button 
+            class="action-btn collect-btn"
+            bindtap="collectName"
+            data-index="{{index}}"
+            catchtap="true"
+          >
+            收藏
+          </button>
+          <button 
+            class="action-btn share-btn"
+            bindtap="shareName"
+            data-index="{{index}}"
+            catchtap="true"
+          >
+            分享
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <view class="restart-section">
+      <button class="restart-btn" bindtap="restartNaming">
+        重新起名
+      </button>
+    </view>
+  </view>
+
+  <view class="name-detail-modal" wx:if="{{showNameDetail}}" bindtap="closeNameDetail">
+    <view class="modal-content" catchtap="true">
+      <view class="modal-header">
+        <view class="modal-title">{{selectedName.full_name}}</view>
+        <view class="modal-close" bindtap="closeNameDetail">×</view>
+      </view>
+      
+      <view class="modal-body">
+        <view class="detail-section">
+          <view class="detail-title">基本信息</view>
+          <view class="detail-row">
+            <text class="detail-label">完整姓名：</text>
+            <text class="detail-value">{{selectedName.full_name}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">拼音：</text>
+            <text class="detail-value">{{selectedName.pronunciation}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">综合评分：</text>
+            <text class="detail-value score">{{selectedName.overall_score}}分</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">吉凶等级：</text>
+            <text class="detail-value luck">{{selectedName.luck_level}}</text>
+          </view>
+        </view>
+
+        <view class="detail-section">
+          <view class="detail-title">五行分析</view>
+          <view class="wuxing-chars">
+            <view 
+              class="wuxing-char"
+              wx:for="{{selectedName.wuxing_analysis.chars_wuxing}}"
+              wx:key="char"
+            >
+              <view class="char-text">{{item.char}}</view>
+              <view class="char-wuxing">{{item.wuxing}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section">
+          <view class="detail-title">三才五格</view>
+          <view class="wuge-grid">
+            <view 
+              class="wuge-item"
+              wx:for="{{selectedName.sancai_wuge.wuge_analysis}}"
+              wx:for-item="wuge"
+              wx:for-index="wugeName"
+              wx:key="*this"
+            >
+              <view class="wuge-name">{{wugeName}}</view>
+              <view class="wuge-value">{{wuge.value}}</view>
+              <view class="wuge-wuxing">{{wuge.wuxing}}</view>
+              <view class="wuge-luck">{{wuge.luck.luck}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section">
+          <view class="detail-title">寓意解释</view>
+          <view class="meaning-text">{{selectedName.meaning_explanation}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="disclaimer" wx:if="{{showResults}}">
+    <text class="disclaimer-text">
+      * 起名结果基于传统五行理论和姓名学计算，仅供娱乐参考，不可作为人生决策依据
+    </text>
+  </view>
+</view>

@@ -1,6 +1,7 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/naming/naming",
     "pages/festival/festival",
     "pages/zodiac-matching/zodiac-matching",
     "pages/result/result",
@@ -23,6 +24,10 @@
       {
         "pagePath": "pages/index/index",
         "text": "八字测算"
+      },
+      {
+        "pagePath": "pages/naming/naming",
+        "text": "智能起名"
       },
       {
         "pagePath": "pages/festival/festival",

@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 from bazi_calculator import BaziCalculator
 from icon_generator import icon_generator
+from naming_calculator import NamingCalculator
 from fastapi.responses import Response
 
 # 创建 FastAPI 应用实例
@@ -76,8 +77,9 @@ class LunarConvertData(BaseModel):
     day: int
     leap: bool = False
 
-# 创建八字计算器实例
+# 创建计算器实例
 bazi_calculator = BaziCalculator()
+naming_calculator = NamingCalculator()
 
 # 八字计算接口（使用真实算法）
 @app.post("/api/v1/calculate-bazi")
@@ -466,6 +468,273 @@ async def get_available_themes():
         return JSONResponse(
             status_code=500,
             content={"error": f"获取主题列表失败: {str(e)}"}
+        )
+
+# ==================== 起名服务接口 ====================
+
+# 起名请求数据模型
+class NamingRequest(BaseModel):
+    surname: str
+    gender: str = "male"
+    year: int
+    month: int
+    day: int
+    hour: int = 12
+    calendar_type: str = "solar"
+    name_length: int = 2
+    count: int = 10
+
+class EvaluateNameRequest(BaseModel):
+    surname: str
+    given_name: str
+    gender: str = "male"
+    year: int
+    month: int
+    day: int
+    hour: int = 12
+    calendar_type: str = "solar"
+
+@app.post("/api/v1/naming/generate-names")
+async def generate_names(naming_data: NamingRequest):
+    """
+    智能起名接口 - 根据八字五行生成推荐名字
+    """
+    try:
+        # 数据验证
+        if not naming_data.surname or len(naming_data.surname) > 3:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "姓氏不能为空且不能超过3个字"}
+            )
+        
+        if naming_data.gender not in ["male", "female"]:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "性别必须为male或female"}
+            )
+        
+        if naming_data.name_length not in [1, 2]:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "名字长度只支持1或2个字"}
+            )
+        
+        if naming_data.count < 1 or naming_data.count > 20:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "生成数量必须在1-20之间"}
+            )
+        
+        # 年份合理性检查
+        current_year = datetime.now().year
+        if naming_data.year < 1900 or naming_data.year > current_year:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "出生年份不在有效范围内(1900-当前年份)"}
+            )
+        
+        # 构建出生信息
+        birth_info = {
+            'year': naming_data.year,
+            'month': naming_data.month,
+            'day': naming_data.day,
+            'hour': naming_data.hour,
+            'calendar_type': naming_data.calendar_type
+        }
+        
+        # 调用起名算法
+        result = naming_calculator.analyze_and_generate_names(
+            surname=naming_data.surname,
+            gender=naming_data.gender,
+            birth_info=birth_info,
+            name_length=naming_data.name_length,
+            count=naming_data.count
+        )
+        
+        if result['success']:
+            return {
+                "success": True,
+                "data": {
+                    "bazi_analysis": result['bazi_analysis'],
+                    "recommendations": result['recommendations'],
+                    "analysis_summary": result['analysis_summary'],
+                    "naming_suggestions": result['naming_suggestions'],
+                    "input_info": {
+                        "surname": naming_data.surname,
+                        "gender": naming_data.gender,
+                        "birth_date": f"{naming_data.year}-{naming_data.month:02d}-{naming_data.day:02d}",
+                        "name_length": naming_data.name_length
+                    }
+                },
+                "timestamp": datetime.now().isoformat(),
+                "disclaimer": "起名结果基于传统五行理论和姓名学计算，仅供娱乐参考"
+            }
+        else:
+            return JSONResponse(
+                status_code=500,
+                content={"error": result.get('error', '起名生成失败')}
+            )
+        
+    except Exception as e:
+        print(f"起名生成出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"起名生成失败: {str(e)}"}
+        )
+
+@app.post("/api/v1/naming/evaluate-name")
+async def evaluate_name(evaluate_data: EvaluateNameRequest):
+    """
+    名字评估接口 - 评估指定名字的吉凶
+    """
+    try:
+        # 数据验证
+        if not evaluate_data.surname or not evaluate_data.given_name:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "姓氏和名字不能为空"}
+            )
+        
+        if len(evaluate_data.surname) > 3 or len(evaluate_data.given_name) > 2:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "姓氏不能超过3个字，名字不能超过2个字"}
+            )
+        
+        # 构建出生信息
+        birth_info = {
+            'year': evaluate_data.year,
+            'month': evaluate_data.month,
+            'day': evaluate_data.day,
+            'hour': evaluate_data.hour,
+            'calendar_type': evaluate_data.calendar_type
+        }
+        
+        # 调用名字评估算法
+        result = naming_calculator.evaluate_specific_name(
+            surname=evaluate_data.surname,
+            given_name=evaluate_data.given_name,
+            gender=evaluate_data.gender,
+            birth_info=birth_info
+        )
+        
+        if result['success']:
+            return {
+                "success": True,
+                "data": {
+                    "evaluation": result['evaluation'],
+                    "bazi_analysis": result['bazi_analysis'],
+                    "input_info": {
+                        "full_name": evaluate_data.surname + evaluate_data.given_name,
+                        "gender": evaluate_data.gender,
+                        "birth_date": f"{evaluate_data.year}-{evaluate_data.month:02d}-{evaluate_data.day:02d}"
+                    }
+                },
+                "timestamp": datetime.now().isoformat(),
+                "disclaimer": "名字评估基于传统五行理论和姓名学计算，仅供娱乐参考"
+            }
+        else:
+            return JSONResponse(
+                status_code=500,
+                content={"error": result.get('error', '名字评估失败')}
+            )
+        
+    except Exception as e:
+        print(f"名字评估出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"名字评估失败: {str(e)}"}
+        )
+
+@app.get("/api/v1/naming/wuxing-chars")
+async def get_wuxing_chars(wuxing: str = "木", gender: str = "neutral"):
+    """
+    获取指定五行属性的汉字列表
+    
+    Args:
+        wuxing: 五行属性 (金、木、水、火、土)
+        gender: 性别偏好 (male、female、neutral)
+    
+    Returns:
+        符合条件的汉字列表
+    """
+    try:
+        # 验证五行属性
+        valid_wuxing = ['金', '木', '水', '火', '土']
+        if wuxing not in valid_wuxing:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"五行属性必须是: {valid_wuxing}"}
+            )
+        
+        # 验证性别参数
+        valid_genders = ['male', 'female', 'neutral']
+        if gender not in valid_genders:
+            return JSONResponse(
+                status_code=400,
+                content={"error": f"性别参数必须是: {valid_genders}"}
+            )
+        
+        # 获取汉字列表
+        from naming_calculator import ChineseCharDatabase
+        char_db = ChineseCharDatabase()
+        chars = char_db.get_chars_by_wuxing(wuxing, gender=gender)
+        
+        return {
+            "success": True,
+            "data": {
+                "wuxing": wuxing,
+                "gender": gender,
+                "chars": chars,
+                "count": len(chars)
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"获取五行汉字出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"获取汉字列表失败: {str(e)}"}
+        )
+
+@app.get("/api/v1/naming/char-info/{char}")
+async def get_char_info(char: str):
+    """
+    获取指定汉字的详细信息
+    
+    Args:
+        char: 汉字
+    
+    Returns:
+        汉字的五行、笔画、寓意等信息
+    """
+    try:
+        if not char or len(char) != 1:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "请提供一个有效的汉字"}
+            )
+        
+        # 获取汉字信息
+        from naming_calculator import ChineseCharDatabase
+        char_db = ChineseCharDatabase()
+        char_info = char_db.get_char_properties(char)
+        
+        return {
+            "success": True,
+            "data": {
+                "char": char,
+                "info": char_info
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        print(f"获取汉字信息出错: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"获取汉字信息失败: {str(e)}"}
         )
 
 # 异常处理
