@@ -8,8 +8,10 @@ App({
     logs.unshift(Date.now())
     wx.setStorageSync('logs', logs)
 
-    // 初始化图标管理器
-    this.initIcons()
+    // 延迟初始化图标管理器，确保 globalData 已设置
+    setTimeout(() => {
+      this.initIcons()
+    }, 100)
 
     // 登录
     wx.login({
@@ -24,6 +26,13 @@ App({
   async initIcons() {
     try {
       console.log('开始初始化动态图标系统...')
+      
+      // 确保 globalData 已初始化
+      if (!this.globalData) {
+        console.warn('globalData 未初始化，跳过图标系统初始化')
+        return
+      }
+      
       const success = await iconManager.init()
       
       if (success) {
@@ -31,10 +40,10 @@ App({
         // 将图标管理器添加到全局数据
         this.globalData.iconManager = iconManager
       } else {
-        console.log('动态图标系统初始化失败，使用文字模式')
+        console.log('动态图标系统初始化失败，使用默认图标')
       }
     } catch (error) {
-      console.error('图标系统初始化出错:', error)
+      console.error('图标系统初始化出错，将使用默认图标:', error)
     }
   },
   

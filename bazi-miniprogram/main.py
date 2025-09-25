@@ -114,6 +114,17 @@ class NameEvaluationRequest(BaseModel):
     birth_hour: int = 12
     calendar_type: str = "solar"
 
+class LunarToSolarRequest(BaseModel):
+    year: int
+    month: int
+    day: int
+    leap: bool = False
+
+class SolarToLunarRequest(BaseModel):
+    year: int
+    month: int
+    day: int
+
 # 健康检查接口
 @app.get("/")
 async def root():
@@ -461,7 +472,83 @@ async def get_festivals():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"节日查询失败: {str(e)}")
 
-# 图标生成接口
+# Tab图标配置接口
+@app.get("/api/v1/tab-icons/config")
+async def get_tab_icons_config():
+    """获取Tab图标配置信息"""
+    try:
+        return {
+            "success": True,
+            "data": {
+                "version": "1.0.0",
+                "last_updated": datetime.now().isoformat(),
+                "available_icons": ["bazi", "naming", "festival", "zodiac", "profile"],
+                "themes": ["default", "dark", "spring", "autumn"],
+                "styles": ["normal", "selected"],
+                "cache_duration": 86400  # 24小时缓存
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取图标配置失败: {str(e)}")
+
+# Tab图标获取接口
+@app.get("/api/v1/tab-icons/{icon_type}")
+async def get_tab_icon(icon_type: str, style: str = "normal", theme_color: str = "#666666"):
+    """获取具体的Tab图标"""
+    try:
+        # 验证参数
+        valid_icons = ["bazi", "naming", "festival", "zodiac", "profile"]
+        valid_styles = ["normal", "selected"]
+        
+        if icon_type not in valid_icons:
+            raise HTTPException(status_code=400, detail=f"不支持的图标类型: {icon_type}")
+        
+        if style not in valid_styles:
+            raise HTTPException(status_code=400, detail=f"不支持的样式: {style}")
+        
+        if ALGORITHMS_AVAILABLE and icon_generator:
+            # 使用真实图标生成器
+            icon_data = icon_generator.create_base64_icon(icon_type, style, theme_color)
+            return {
+                "success": True,
+                "data": {
+                    "icon_type": icon_type,
+                    "style": style,
+                    "theme_color": theme_color,
+                    "format": "base64_png",
+                    "icon_data": icon_data
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+        else:
+            # 降级方案：返回默认图标路径
+            icon_map = {
+                "bazi": {"normal": "/images/tab-icons/bazi_normal.png", "selected": "/images/tab-icons/bazi_selected.png"},
+                "naming": {"normal": "/images/tab-icons/bazi_normal.png", "selected": "/images/tab-icons/bazi_selected.png"},
+                "festival": {"normal": "/images/tab-icons/festival_normal.png", "selected": "/images/tab-icons/festival_selected.png"},
+                "zodiac": {"normal": "/images/tab-icons/zodiac_normal.png", "selected": "/images/tab-icons/zodiac_selected.png"},
+                "profile": {"normal": "/images/tab-icons/profile_normal.png", "selected": "/images/tab-icons/profile_selected.png"}
+            }
+            
+            return {
+                "success": True,
+                "data": {
+                    "icon_type": icon_type,
+                    "style": style,
+                    "fallback": True,
+                    "local_path": icon_map.get(icon_type, {}).get(style, ""),
+                    "message": "使用本地默认图标"
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取Tab图标失败: {str(e)}")
+
+# 图标生成接口 (保留原有功能)
 @app.get("/api/v1/icons/{icon_type}")
 async def get_icon(icon_type: str, style: str = "normal"):
     """获取生成的图标"""
@@ -486,6 +573,183 @@ async def get_icon(icon_type: str, style: str = "normal"):
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"图标生成失败: {str(e)}")
+
+# 农历转公历接口
+@app.post("/api/v1/lunar-to-solar")
+async def lunar_to_solar(request_data: LunarToSolarRequest):
+    """农历转公历接口"""
+    try:
+        year = request_data.year
+        month = request_data.month
+        day = request_data.day
+        leap = request_data.leap
+        
+        # 数据验证
+        if year < 1900 or year > 2100:
+            raise HTTPException(status_code=400, detail="年份超出支持范围(1900-2100)")
+        if month < 1 or month > 12:
+            raise HTTPException(status_code=400, detail="月份无效(1-12)")
+        if day < 1 or day > 30:
+            raise HTTPException(status_code=400, detail="日期无效(1-30)")
+        
+        if ALGORITHMS_AVAILABLE and bazi_calculator:
+            # 使用真实算法转换
+            try:
+                solar_date = bazi_calculator.lunar_to_solar(year, month, day, leap)
+                return {
+                    "success": True,
+                    "data": {
+                        "lunar_date": {
+                            "year": year,
+                            "month": month, 
+                            "day": day,
+                            "leap": leap
+                        },
+                        "solar_date": solar_date,
+                        "conversion_type": "lunar_to_solar"
+                    },
+                    "timestamp": datetime.now().isoformat(),
+                    "algorithm_version": "真实算法v2.0"
+                }
+            except Exception as algo_error:
+                print(f"农历转公历算法出错: {str(algo_error)}")
+                # 使用降级方案
+                pass
+        
+        # 降级方案：简单的近似转换
+        from datetime import date, timedelta
+        try:
+            # 简化的转换逻辑：农历大约比公历早20-50天
+            approx_offset = 30  # 平均偏移量
+            solar_year = year
+            solar_month = month
+            solar_day = day + approx_offset
+            
+            # 处理日期溢出
+            if solar_day > 30:
+                solar_month += 1
+                solar_day -= 30
+            if solar_month > 12:
+                solar_year += 1
+                solar_month -= 12
+            
+            # 确保日期有效
+            solar_day = min(solar_day, 28)  # 保守取值
+            
+            return {
+                "success": True,
+                "data": {
+                    "lunar_date": {
+                        "year": year,
+                        "month": month,
+                        "day": day,
+                        "leap": leap
+                    },
+                    "solar_date": {
+                        "year": solar_year,
+                        "month": solar_month,
+                        "day": solar_day
+                    },
+                    "conversion_type": "lunar_to_solar",
+                    "note": "使用简化转换算法"
+                },
+                "timestamp": datetime.now().isoformat(),
+                "algorithm_version": "简化算法"
+            }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"日期转换失败: {str(e)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"农历转公历失败: {str(e)}")
+
+# 公历转农历接口
+@app.post("/api/v1/solar-to-lunar")
+async def solar_to_lunar(request_data: SolarToLunarRequest):
+    """公历转农历接口"""
+    try:
+        year = request_data.year
+        month = request_data.month
+        day = request_data.day
+        
+        # 数据验证
+        if year < 1900 or year > 2100:
+            raise HTTPException(status_code=400, detail="年份超出支持范围(1900-2100)")
+        if month < 1 or month > 12:
+            raise HTTPException(status_code=400, detail="月份无效(1-12)")
+        if day < 1 or day > 31:
+            raise HTTPException(status_code=400, detail="日期无效(1-31)")
+        
+        if ALGORITHMS_AVAILABLE and bazi_calculator:
+            # 使用真实算法转换
+            try:
+                lunar_date = bazi_calculator.solar_to_lunar(year, month, day)
+                return {
+                    "success": True,
+                    "data": {
+                        "solar_date": {
+                            "year": year,
+                            "month": month,
+                            "day": day
+                        },
+                        "lunar_date": lunar_date,
+                        "conversion_type": "solar_to_lunar"
+                    },
+                    "timestamp": datetime.now().isoformat(),
+                    "algorithm_version": "真实算法v2.0"
+                }
+            except Exception as algo_error:
+                print(f"公历转农历算法出错: {str(algo_error)}")
+                # 使用降级方案
+                pass
+        
+        # 降级方案：简单的近似转换
+        try:
+            # 简化的转换逻辑：公历大约比农历晚20-50天
+            approx_offset = 30  # 平均偏移量
+            lunar_year = year
+            lunar_month = month
+            lunar_day = day - approx_offset
+            
+            # 处理日期下溢
+            if lunar_day <= 0:
+                lunar_month -= 1
+                lunar_day += 30
+            if lunar_month <= 0:
+                lunar_year -= 1
+                lunar_month += 12
+            
+            # 确保日期有效
+            lunar_day = max(lunar_day, 1)
+            
+            return {
+                "success": True,
+                "data": {
+                    "solar_date": {
+                        "year": year,
+                        "month": month,
+                        "day": day
+                    },
+                    "lunar_date": {
+                        "year": lunar_year,
+                        "month": lunar_month,
+                        "day": lunar_day,
+                        "leap": False
+                    },
+                    "conversion_type": "solar_to_lunar",
+                    "note": "使用简化转换算法"
+                },
+                "timestamp": datetime.now().isoformat(),
+                "algorithm_version": "简化算法"
+            }
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"日期转换失败: {str(e)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"公历转农历失败: {str(e)}")
 
 # 名字评估接口
 @app.post("/api/v1/naming/evaluate")

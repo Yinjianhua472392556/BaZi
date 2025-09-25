@@ -4,9 +4,8 @@
 
 class IconManager {
   constructor() {
-    // 获取app实例并使用统一的API地址
-    const app = getApp()
-    this.baseUrl = app.globalData.apiBaseUrl + '/api/v1/tab-icons'
+    // 延迟初始化，避免 getApp() 在 app 未完全初始化时调用
+    this.baseUrl = null
     this.cacheKey = 'bazi_app_icons'
     this.configKey = 'bazi_app_icon_config'
     this.version = '1.0.0'
@@ -14,6 +13,10 @@ class IconManager {
     // 默认图标配置 - 离线备用图标
     this.defaultIcons = {
       bazi: { 
+        normal: '/images/tab-icons/bazi_normal.png', 
+        selected: '/images/tab-icons/bazi_selected.png' 
+      },
+      naming: { 
         normal: '/images/tab-icons/bazi_normal.png', 
         selected: '/images/tab-icons/bazi_selected.png' 
       },
@@ -59,6 +62,24 @@ class IconManager {
     try {
       console.log('[IconManager] 开始初始化图标管理器')
       
+      // 安全地初始化 API 地址
+      try {
+        const app = getApp()
+        if (app && app.globalData && app.globalData.apiBaseUrl) {
+          this.baseUrl = app.globalData.apiBaseUrl + '/api/v1/tab-icons'
+          console.log('[IconManager] API地址初始化成功:', this.baseUrl)
+        } else {
+          console.warn('[IconManager] 无法获取API地址，将使用默认图标')
+          // 直接应用默认图标，不尝试网络下载
+          await this.applyIconsToTabBar()
+          return true
+        }
+      } catch (appError) {
+        console.warn('[IconManager] 获取app实例失败，使用默认图标:', appError)
+        await this.applyIconsToTabBar()
+        return true
+      }
+      
       // 检查是否需要更新图标
       const needUpdate = await this.checkForUpdates()
       
@@ -76,9 +97,15 @@ class IconManager {
       return true
       
     } catch (error) {
-      console.error('[IconManager] 初始化失败:', error)
-      // 初始化失败时使用文字标签
-      return false
+      console.error('[IconManager] 初始化失败，使用默认图标:', error)
+      // 初始化失败时使用默认图标
+      try {
+        await this.applyIconsToTabBar()
+        return true
+      } catch (fallbackError) {
+        console.error('[IconManager] 默认图标应用也失败:', fallbackError)
+        return false
+      }
     }
   }
 
@@ -263,12 +290,13 @@ class IconManager {
         useDefaultIcons = true
       }
       
-      // tabBar配置映射
+      // tabBar配置映射 - 对应app.json中的5个tab页面
       const tabConfig = [
-        { index: 0, iconType: 'bazi' },
-        { index: 1, iconType: 'festival' },
-        { index: 2, iconType: 'zodiac' },
-        { index: 3, iconType: 'profile' }
+        { index: 0, iconType: 'bazi' },      // pages/index/index - 八字测算
+        { index: 1, iconType: 'naming' },    // pages/naming/naming - 智能起名
+        { index: 2, iconType: 'festival' },  // pages/festival/festival - 节日列表
+        { index: 3, iconType: 'zodiac' },    // pages/zodiac-matching/zodiac-matching - 生肖配对
+        { index: 4, iconType: 'profile' }    // pages/profile/profile - 个人中心
       ]
       
       // 应用图标到每个tab
