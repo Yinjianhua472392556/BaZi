@@ -580,7 +580,7 @@ if __name__ == "__main__":
     print("=" * 50)
     
     uvicorn.run(
-        "real_algorithm_server:app",
+        "main:app",
         host="0.0.0.0",
         port=8001,
         reload=True,
