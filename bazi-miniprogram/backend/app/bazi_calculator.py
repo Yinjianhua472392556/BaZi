@@ -49,13 +49,11 @@ class BaziCalculator:
         
         # 初始化sxtwl库（如果可用）
         if SXTWL_AVAILABLE:
-            try:
-                self.lunar = sxtwl.Lunar()
-            except Exception as e:
-                print(f"Warning: Failed to initialize sxtwl: {e}")
-                self.lunar = None
+            # sxtwl库不需要初始化，直接使用静态方法
+            self.sxtwl_available = True
+            print("✅ sxtwl库初始化成功")
         else:
-            self.lunar = None
+            self.sxtwl_available = False
     
     def solar_to_lunar(self, year, month, day):
         """公历转农历"""

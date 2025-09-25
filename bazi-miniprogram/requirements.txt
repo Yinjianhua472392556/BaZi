@@ -1,8 +1,23 @@
-# 核心框架依赖
+# ================================
+# 八字运势小程序 - 依赖配置文件
+# ================================
+# 
+# 分层安装说明：
+# 1. 核心依赖：requirements-core.txt（必须成功）
+# 2. 图像处理：requirements-image.txt（Pillow）
+# 3. 八字计算：requirements-bazi.txt（农历库）
+# 4. 其他功能：requirements-extra.txt（数据库、安全等）
+#
+# 安装命令：
+# pip install -r requirements-core.txt
+# pip install -r requirements-image.txt  
+# pip install -r requirements-bazi.txt
+# pip install -r requirements-extra.txt
+
+# ==================== 核心框架依赖 ====================
 fastapi==0.104.1
 uvicorn==0.24.0
 python-multipart==0.0.6
-Pillow==10.1.0
 requests==2.31.0
 pydantic==2.5.0
 
@@ -10,21 +25,29 @@ pydantic==2.5.0
 python-dateutil==2.8.2
 pytz==2023.3
 
-# 数据库相关（暂时使用SQLite，跳过MySQL/Redis）
+# ==================== 图像处理依赖 ====================
+# 注意：Pillow需要系统依赖 libjpeg, libpng, freetype
+# macOS: brew install libjpeg libpng freetype
+Pillow>=10.0.0
+
+# ==================== 八字计算专用库 ====================
+# 注意：这些库可能在新版Python中不兼容，有fallback机制
+sxtwl==2.0.7                # 寿星天文历（推荐）
+zhdate==0.1                 # 中国日期库
+chinese-calendar==1.8.0     # 中国日历库  
+lunardate==0.2.0            # 农历日期库
+
+# ==================== 数据库相关 ====================
+# 暂时使用SQLite，跳过MySQL/Redis
 sqlalchemy==2.0.23
 aiofiles==23.2.1
 
-# 安全相关
+# ==================== 安全相关 ====================
+# 用户认证和加密功能
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
-# 八字计算专用库
-sxtwl==2.0.7
-zhdate==0.1
-chinese-calendar==1.8.0
-lunardate==0.2.0
-
-# 开发和测试工具
+# ==================== 开发和测试工具 ====================
 pytest==7.4.3
 pytest-asyncio==0.21.1
 httpx==0.25.2
