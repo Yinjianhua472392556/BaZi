@@ -4,7 +4,9 @@
 
 class IconManager {
   constructor() {
-    this.baseUrl = 'http://localhost:8000/api/v1/tab-icons'
+    // 获取app实例并使用统一的API地址
+    const app = getApp()
+    this.baseUrl = app.globalData.apiBaseUrl + '/api/v1/tab-icons'
     this.cacheKey = 'bazi_app_icons'
     this.configKey = 'bazi_app_icon_config'
     this.version = '1.0.0'

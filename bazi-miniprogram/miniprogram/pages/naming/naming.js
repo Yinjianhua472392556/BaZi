@@ -262,9 +262,10 @@ Page({
    * 调用起名API
    */
   generateNames() {
+    const app = getApp();
     return new Promise((resolve, reject) => {
       wx.request({
-        url: 'http://localhost:8000/api/v1/naming/generate-names',
+        url: app.globalData.apiBaseUrl + '/api/v1/naming/generate-names',
         method: 'POST',
         header: {
           'content-type': 'application/json'
