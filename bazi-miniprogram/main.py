@@ -509,7 +509,7 @@ async def get_tab_icon(icon_type: str, style: str = "normal", theme_color: str =
         
         if ALGORITHMS_AVAILABLE and icon_generator:
             # 使用真实图标生成器
-            icon_data = icon_generator.create_base64_icon(icon_type, style, theme_color)
+            icon_data = icon_generator.create_base64_icon(icon_type, style)
             return {
                 "success": True,
                 "data": {
