@@ -309,16 +309,11 @@ create_production_config() {
 八字运势小程序 - 生产环境FastAPI服务器
 \"\"\"
 
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'backend/app'))
-
-from real_algorithm_server import app
 import uvicorn
 
 if __name__ == \"__main__\":
     uvicorn.run(
-        \"production_server:app\",
+        \"real_algorithm_server:app\",  # 直接使用 real_algorithm_server
         host=\"127.0.0.1\",  # 只监听本地，通过Nginx代理
         port=$SERVICE_PORT,
         workers=2,          # 生产环境使用多进程
