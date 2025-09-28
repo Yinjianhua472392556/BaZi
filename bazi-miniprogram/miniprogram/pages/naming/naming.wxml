@@ -318,13 +318,6 @@
             </view>
           </view>
           
-          <!-- 评分构成数学验证显示 -->
-          <view class="score-verification" wx:if="{{selectedName.score_breakdown}}">
-            <view class="verification-title">评分计算验证</view>
-            <view class="verification-formula">
-              加权计算：{{selectedName.score_breakdown.wuge_score}}×30% + {{selectedName.score_breakdown.wuxing_match_score}}×30% + {{selectedName.score_breakdown.sancai_score}}×20% + {{selectedName.score_breakdown.phonetic_score}}×10% + {{selectedName.score_breakdown.meaning_score}}×10% = {{selectedName.overall_score}}分
-            </view>
-          </view>
           
           <!-- 降级显示：如果没有score_breakdown数据 -->
           <view class="score-breakdown-fallback" wx:else>
