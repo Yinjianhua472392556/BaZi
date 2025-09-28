@@ -8,7 +8,9 @@
   </view>
 
   <view class="main-content" wx:if="{{!showResults}}">
-    <view class="form-card">
+    <view class="card">
+      <view class="subtitle">请输入您的基本信息</view>
+      
       <view class="form-group">
         <view class="form-title">基本信息</view>
         
@@ -29,9 +31,10 @@
             bindchange="onGenderChange" 
             range="{{genderOptions}}"
             range-key="text"
+            value="{{genderIndex}}"
           >
             <view class="picker-display">
-              {{genderOptions[0].text}}
+              {{genderOptions[genderIndex].text}}
               <text class="picker-arrow">▼</text>
             </view>
           </picker>
@@ -41,63 +44,80 @@
       <view class="form-group">
         <view class="form-title">出生信息</view>
         
+        <!-- 日历类型选择 -->
         <view class="input-row">
-          <view class="input-label">历法</view>
-          <picker 
-            bindchange="onCalendarTypeChange" 
-            range="{{calendarOptions}}"
-            range-key="text"
-          >
-            <view class="picker-display">
-              {{calendarOptions[0].text}}
-              <text class="picker-arrow">▼</text>
+          <view class="input-label">日期类型</view>
+          <radio-group bindchange="onCalendarTypeChange">
+            <label class="radio-item">
+              <radio value="solar" checked="{{calendarType === 'solar'}}" color="#C8860D"/>
+              公历
+            </label>
+            <label class="radio-item">
+              <radio value="lunar" checked="{{calendarType === 'lunar'}}" color="#C8860D"/>
+              农历
+            </label>
+          </radio-group>
+        </view>
+
+        <!-- 出生日期选择 -->
+        <view class="input-row">
+          <view class="input-label">出生日期</view>
+          
+          <!-- 公历日期选择器 -->
+          <view wx:if="{{calendarType === 'solar'}}" class="date-picker-container">
+            <picker mode="date" value="{{birthDate}}" start="1900-01-01" end="{{maxDate}}" bindchange="onDateChange">
+              <view class="picker">
+                {{birthDate || '请选择公历出生日期'}}
+              </view>
+            </picker>
+            <view class="date-type-hint">
+              选择公历日期（如：1990-01-15）
+              <view wx:if="{{birthDate && correspondingLunarDate}}" class="corresponding-date">
+                对应农历：{{correspondingLunarDate}}
+              </view>
             </view>
-          </picker>
+          </view>
+          
+          <!-- 农历日期选择器 -->
+          <view wx:if="{{calendarType === 'lunar'}}" class="lunar-picker-container">
+            <view class="lunar-pickers">
+              <!-- 农历年选择器 -->
+              <picker class="lunar-year-picker" value="{{lunarYearIndex}}" range="{{lunarYears}}" bindchange="onLunarYearChange">
+                <view class="picker">
+                  {{lunarYear ? lunarYear + '年' : '年'}}
+                </view>
+              </picker>
+              
+              <!-- 农历月选择器 -->
+              <picker class="lunar-month-picker" value="{{lunarMonthIndex}}" range="{{lunarMonths}}" bindchange="onLunarMonthChange">
+                <view class="picker">
+                  {{lunarMonth || '月'}}
+                </view>
+              </picker>
+              
+              <!-- 农历日选择器 -->
+              <picker class="lunar-day-picker" value="{{lunarDayIndex}}" range="{{lunarDays}}" bindchange="onLunarDayChange">
+                <view class="picker">
+                  {{lunarDay || '日'}}
+                </view>
+              </picker>
+            </view>
+            
+            <view class="date-type-hint">
+              选择农历日期
+              <view wx:if="{{lunarYear && lunarMonth && lunarDay && correspondingSolarDate}}" class="corresponding-date">
+                对应公历：{{correspondingSolarDate}}
+              </view>
+            </view>
+          </view>
         </view>
 
-        <view class="date-inputs">
-          <view class="date-input-group">
-            <input 
-              class="date-input" 
-              placeholder="年"
-              value="{{birthYear}}"
-              bindinput="onBirthYearInput"
-              type="number"
-            />
-            <text class="date-label">年</text>
-          </view>
-          <view class="date-input-group">
-            <input 
-              class="date-input" 
-              placeholder="月"
-              value="{{birthMonth}}"
-              bindinput="onBirthMonthInput"
-              type="number"
-            />
-            <text class="date-label">月</text>
-          </view>
-          <view class="date-input-group">
-            <input 
-              class="date-input" 
-              placeholder="日"
-              value="{{birthDay}}"
-              bindinput="onBirthDayInput"
-              type="number"
-            />
-            <text class="date-label">日</text>
-          </view>
-        </view>
-
+        <!-- 出生时间选择 -->
         <view class="input-row">
-          <view class="input-label">时辰</view>
-          <picker 
-            bindchange="onHourChange" 
-            range="{{hourOptions}}"
-            range-key="text"
-          >
-            <view class="picker-display">
-              {{hourOptions[6].text}}
-              <text class="picker-arrow">▼</text>
+          <view class="input-label">出生时间</view>
+          <picker mode="time" value="{{birthTime}}" bindchange="onTimeChange">
+            <view class="picker">
+              {{birthTime || '请选择出生时间'}}
             </view>
           </picker>
         </view>
@@ -112,9 +132,10 @@
             bindchange="onNameLengthChange" 
             range="{{nameLengthOptions}}"
             range-key="text"
+            value="{{nameLengthIndex}}"
           >
             <view class="picker-display">
-              {{nameLengthOptions[1].text}}
+              {{nameLengthOptions[nameLengthIndex].text}}
               <text class="picker-arrow">▼</text>
             </view>
           </picker>
@@ -125,12 +146,17 @@
         <button 
           class="start-naming-btn {{analyzing ? 'loading' : ''}}"
           bindtap="startNaming"
-          disabled="{{analyzing}}"
+          disabled="{{!canNaming || analyzing}}"
         >
           <text wx:if="{{!analyzing}}">开始起名</text>
           <text wx:else>正在分析中...</text>
         </button>
       </view>
+    </view>
+
+    <!-- 免责声明 -->
+    <view class="disclaimer">
+      本小程序基于传统文化开发，所有测算结果仅供娱乐参考。
     </view>
   </view>
 
@@ -261,7 +287,7 @@
 
   <view class="disclaimer" wx:if="{{showResults}}">
     <text class="disclaimer-text">
-      * 起名结果基于传统五行理论和姓名学计算，仅供娱乐参考，不可作为人生决策依据
+      本小程序基于传统文化开发，所有测算结果仅供娱乐参考。
     </text>
   </view>
 </view>
