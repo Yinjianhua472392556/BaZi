@@ -23,6 +23,7 @@ try:
     from bazi_calculator import BaziCalculator
     from naming_calculator import NamingCalculator
     from icon_generator import IconGenerator
+    from zodiac_matching import calculate_zodiac_compatibility
     ALGORITHMS_AVAILABLE = True
     print("✅ 算法模块导入成功")
 except ImportError as e:
@@ -361,64 +362,106 @@ async def generate_names_fallback(naming_data: NamingRequest):
         "algorithm_version": "降级模拟数据"
     }
 
-# 生肖配对接口
+# 生肖配对接口 - 使用多维度算法
 @app.post("/api/v1/zodiac-matching")
 async def zodiac_matching(request_data: ZodiacMatchingRequest):
-    """生肖配对接口"""
+    """生肖配对接口 - 多维度评分体系"""
     try:
         zodiac1 = request_data.zodiac1
         zodiac2 = request_data.zodiac2
         
-        # 简化的生肖配对算法
-        compatibility_map = {
-            ('鼠', '牛'): 85, ('鼠', '龙'): 90, ('鼠', '猴'): 88,
-            ('牛', '蛇'): 87, ('牛', '鸡'): 86,
-            ('虎', '马'): 89, ('虎', '狗'): 85,
-            ('兔', '羊'): 86, ('兔', '猪'): 84,
-            ('龙', '鸡'): 87, ('龙', '猴'): 85,
-            ('蛇', '猴'): 82, ('蛇', '鸡'): 88,
-            ('马', '羊'): 84, ('马', '狗'): 86,
-            ('羊', '猪'): 85,
-            ('猴', '鸡'): 83, ('狗', '猪'): 81
-        }
-        
-        # 查找配对得分
-        pair1 = (zodiac1, zodiac2)
-        pair2 = (zodiac2, zodiac1)
-        score = compatibility_map.get(pair1, compatibility_map.get(pair2, 75))
-        
-        if score >= 85:
-            level = "非常匹配"
-            description = f"{zodiac1}和{zodiac2}是天作之合，配对指数很高"
-        elif score >= 80:
-            level = "较好匹配"
-            description = f"{zodiac1}和{zodiac2}配对较好，相处和谐"
-        elif score >= 70:
-            level = "一般匹配"
-            description = f"{zodiac1}和{zodiac2}配对一般，需要磨合"
+        if ALGORITHMS_AVAILABLE:
+            # 使用多维度算法
+            try:
+                result = calculate_zodiac_compatibility(zodiac1, zodiac2)
+                
+                if result.get('error'):
+                    # 算法返回错误，使用降级方案
+                    return await zodiac_matching_fallback(zodiac1, zodiac2)
+                
+                # 转换为前端需要的格式
+                api_result = {
+                    "zodiac1": result['male_zodiac'],
+                    "zodiac2": result['female_zodiac'],
+                    "compatibility_score": result['overall_score'],
+                    "compatibility_level": result['compatibility_level'],
+                    "emoji": result['emoji'],
+                    "analysis": result['analysis'],
+                    "advantages": result['advantages'],
+                    "challenges": result['challenges'],
+                    "suggestions": result['suggestions'],
+                    "famous_couples": result['famous_couples'],
+                    "detailed_scores": result['scores'],
+                    "dimensions": result['dimensions'],
+                    "calculation_method": result['calculation_method']
+                }
+                
+                return {
+                    "success": True,
+                    "data": api_result,
+                    "timestamp": datetime.now().isoformat(),
+                    "algorithm_version": "多维度评分体系v2.0"
+                }
+                
+            except Exception as algo_error:
+                print(f"多维度生肖配对算法出错，使用降级方案: {str(algo_error)}")
+                return await zodiac_matching_fallback(zodiac1, zodiac2)
         else:
-            level = "需要努力"
-            description = f"{zodiac1}和{zodiac2}需要更多理解和包容"
-        
-        result = {
-            "zodiac1": zodiac1,
-            "zodiac2": zodiac2,
-            "compatibility_score": score,
-            "compatibility_level": level,
-            "analysis": description,
-            "advantages": ["性格互补", "价值观相近", "沟通顺畅"],
-            "suggestions": ["多理解对方", "保持沟通", "共同成长"]
-        }
-        
-        return {
-            "success": True,
-            "data": result,
-            "timestamp": datetime.now().isoformat(),
-            "algorithm_version": "简化配对算法v1.0"
-        }
+            # 使用降级方案
+            return await zodiac_matching_fallback(zodiac1, zodiac2)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"生肖配对失败: {str(e)}")
+
+async def zodiac_matching_fallback(zodiac1: str, zodiac2: str):
+    """生肖配对降级方案"""
+    # 简化的生肖配对算法
+    compatibility_map = {
+        ('鼠', '牛'): 85, ('鼠', '龙'): 90, ('鼠', '猴'): 88,
+        ('牛', '蛇'): 87, ('牛', '鸡'): 86,
+        ('虎', '马'): 89, ('虎', '狗'): 85,
+        ('兔', '羊'): 86, ('兔', '猪'): 84,
+        ('龙', '鸡'): 87, ('龙', '猴'): 85,
+        ('蛇', '猴'): 82, ('蛇', '鸡'): 88,
+        ('马', '羊'): 84, ('马', '狗'): 86,
+        ('羊', '猪'): 85,
+        ('猴', '鸡'): 83, ('狗', '猪'): 81
+    }
+    
+    # 查找配对得分
+    pair1 = (zodiac1, zodiac2)
+    pair2 = (zodiac2, zodiac1)
+    score = compatibility_map.get(pair1, compatibility_map.get(pair2, 75))
+    
+    if score >= 85:
+        level = "非常匹配"
+        description = f"{zodiac1}和{zodiac2}是天作之合，配对指数很高"
+    elif score >= 80:
+        level = "较好匹配"
+        description = f"{zodiac1}和{zodiac2}配对较好，相处和谐"
+    elif score >= 70:
+        level = "一般匹配"
+        description = f"{zodiac1}和{zodiac2}配对一般，需要磨合"
+    else:
+        level = "需要努力"
+        description = f"{zodiac1}和{zodiac2}需要更多理解和包容"
+    
+    result = {
+        "zodiac1": zodiac1,
+        "zodiac2": zodiac2,
+        "compatibility_score": score,
+        "compatibility_level": level,
+        "analysis": description,
+        "advantages": "性格互补，价值观相近，沟通顺畅。",
+        "suggestions": "多理解对方，保持沟通，共同成长。"
+    }
+    
+    return {
+        "success": True,
+        "data": result,
+        "timestamp": datetime.now().isoformat(),
+        "algorithm_version": "简化配对算法v1.0(降级模式)"
+    }
 
 # 节日查询接口
 @app.get("/api/v1/festivals")

@@ -90,6 +90,60 @@
           <view class="section-title">💡 相处建议</view>
           <text class="section-content">{{matchResult.suggestions}}</text>
         </view>
+
+        <!-- 多维度评分详情 -->
+        <view class="scores-section" wx:if="{{matchResult.scores}}">
+          <view class="section-title">📊 多维度评分</view>
+          <view class="score-items">
+            <view class="score-item">
+              <view class="score-label">感情匹配度</view>
+              <view class="score-bar">
+                <view class="score-progress" style="width: {{matchResult.scores.emotion}}%;"></view>
+              </view>
+              <view class="score-value">{{matchResult.scores.emotion}}分</view>
+            </view>
+            <view class="score-item">
+              <view class="score-label">性格互补度</view>
+              <view class="score-bar">
+                <view class="score-progress" style="width: {{matchResult.scores.personality}}%;"></view>
+              </view>
+              <view class="score-value">{{matchResult.scores.personality}}分</view>
+            </view>
+            <view class="score-item">
+              <view class="score-label">事业协调度</view>
+              <view class="score-bar">
+                <view class="score-progress" style="width: {{matchResult.scores.career}}%;"></view>
+              </view>
+              <view class="score-value">{{matchResult.scores.career}}分</view>
+            </view>
+            <view class="score-item">
+              <view class="score-label">生活习惯</view>
+              <view class="score-bar">
+                <view class="score-progress" style="width: {{matchResult.scores.lifestyle}}%;"></view>
+              </view>
+              <view class="score-value">{{matchResult.scores.lifestyle}}分</view>
+            </view>
+            <view class="score-item">
+              <view class="score-label">沟通默契度</view>
+              <view class="score-bar">
+                <view class="score-progress" style="width: {{matchResult.scores.communication}}%;"></view>
+              </view>
+              <view class="score-value">{{matchResult.scores.communication}}分</view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 历史名人案例 -->
+        <view class="couples-section" wx:if="{{matchResult.famousCouples}}">
+          <view class="section-title">👫 历史名人案例</view>
+          <view class="couples-list">
+            <view class="couple-card" wx:for="{{matchResult.famousCouples}}" wx:key="name">
+              <view class="couple-name">{{item.name}}</view>
+              <view class="couple-story">{{item.story}}</view>
+              <view class="couple-traits">💝 {{item.traits}}</view>
+            </view>
+          </view>
+        </view>
       </view>
 
       <!-- 默认空状态 -->
