@@ -584,13 +584,24 @@ async def lunar_to_solar(request_data: LunarToSolarRequest):
         day = request_data.day
         leap = request_data.leap
         
-        # 数据验证
+        # 详细的参数日志
+        print(f"🌙 农历转公历API - 接收参数: year={year}({type(year)}), month={month}({type(month)}), day={day}({type(day)}), leap={leap}")
+        
+        # 数据类型验证
+        if not isinstance(year, int):
+            raise HTTPException(status_code=400, detail=f"年份必须是整数，收到: {year} (类型: {type(year).__name__})")
+        if not isinstance(month, int):
+            raise HTTPException(status_code=400, detail=f"月份必须是整数，收到: {month} (类型: {type(month).__name__})")
+        if not isinstance(day, int):
+            raise HTTPException(status_code=400, detail=f"日期必须是整数，收到: {day} (类型: {type(day).__name__})")
+        
+        # 数据范围验证
         if year < 1900 or year > 2100:
-            raise HTTPException(status_code=400, detail="年份超出支持范围(1900-2100)")
+            raise HTTPException(status_code=400, detail=f"年份超出支持范围(1900-2100)，收到: {year}")
         if month < 1 or month > 12:
-            raise HTTPException(status_code=400, detail="月份无效(1-12)")
+            raise HTTPException(status_code=400, detail=f"月份无效(1-12)，收到: {month}")
         if day < 1 or day > 30:
-            raise HTTPException(status_code=400, detail="日期无效(1-30)")
+            raise HTTPException(status_code=400, detail=f"日期无效(1-30)，收到: {day}")
         
         if ALGORITHMS_AVAILABLE and bazi_calculator:
             # 使用真实算法转换

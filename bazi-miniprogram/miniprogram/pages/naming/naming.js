@@ -62,6 +62,8 @@ Page({
     showResults: false,
     selectedName: null,
     showNameDetail: false,
+    showShareModal: false,
+    shareNameIndex: null,
     canNaming: false
   },
 
@@ -83,17 +85,12 @@ Page({
       lunarYears.push(year.toString());
     }
     
-    // 初始化农历日期选择器
-    const lunarDays = [];
-    for (let day = 1; day <= 30; day++) {
-      if (day <= 10) {
-        lunarDays.push('初' + ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][day]);
-      } else if (day <= 20) {
-        lunarDays.push('十' + ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'][day - 10] || '十');
-      } else {
-        lunarDays.push('廿' + ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][day - 20] || '廿');
-      }
-    }
+    // 初始化农历日期选择器 - 修复undefined问题
+    const lunarDays = [
+      '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+      '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+      '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'
+    ];
     
     // 计算1990年在数组中的正确索引
     const defaultYearIndex = lunarYears.findIndex(year => year === '1990');
@@ -274,38 +271,72 @@ Page({
   updateLunarToSolar() {
     const { lunarYearIndex, lunarMonthIndex, lunarDayIndex } = this.data
     
-    if (lunarYearIndex >= 0 && lunarMonthIndex >= 0 && lunarDayIndex >= 0) {
-      const year = parseInt(this.data.lunarYears[lunarYearIndex])
-      const month = lunarMonthIndex + 1
-      const day = lunarDayIndex + 1
-      
-      // 调用后端API进行农历转公历
-      app.request({
-        url: '/api/v1/lunar-to-solar',
-        method: 'POST',
-        data: {
-          year: year,
-          month: month,
-          day: day,
-          leap: false
-        },
-        success: (result) => {
-          if (result.success) {
-            const solarDate = result.data.solar_date
-            const solarDateStr = `${solarDate.year}-${solarDate.month.toString().padStart(2, '0')}-${solarDate.day.toString().padStart(2, '0')}`
-            
-            this.setData({
-              birthDate: solarDateStr,
-              correspondingSolarDate: solarDateStr
-            })
-            this.checkCanNaming()
-          }
-        },
-        fail: (error) => {
-          console.error('农历转公历失败:', error)
-        }
-      })
+    // 添加参数验证
+    if (lunarYearIndex < 0 || lunarMonthIndex < 0 || lunarDayIndex < 0) {
+      console.log('农历日期参数不完整，跳过转换')
+      return
     }
+    
+    // 验证索引范围
+    if (lunarYearIndex >= this.data.lunarYears.length || 
+        lunarMonthIndex >= this.data.lunarMonths.length || 
+        lunarDayIndex >= this.data.lunarDays.length) {
+      console.error('农历日期索引超出范围:', { lunarYearIndex, lunarMonthIndex, lunarDayIndex })
+      return
+    }
+    
+    // 确保获取正确的数值
+    const year = parseInt(this.data.lunarYears[lunarYearIndex])
+    const month = parseInt(lunarMonthIndex) + 1  // 确保是数字类型
+    const day = parseInt(lunarDayIndex) + 1      // 确保是数字类型
+    
+    // 参数范围验证
+    if (isNaN(year) || year < 1900 || year > 2100) {
+      console.error('农历年份无效:', year)
+      return
+    }
+    if (isNaN(month) || month < 1 || month > 12) {
+      console.error('农历月份无效:', month, '原始索引:', lunarMonthIndex)
+      return
+    }
+    if (isNaN(day) || day < 1 || day > 30) {
+      console.error('农历日期无效:', day, '原始索引:', lunarDayIndex)
+      return
+    }
+    
+    console.log('准备调用农历转公历API:', { year, month, day })
+    
+    // 调用后端API进行农历转公历
+    app.request({
+      url: '/api/v1/lunar-to-solar',
+      method: 'POST',
+      data: {
+        year: year,
+        month: month,
+        day: day,
+        leap: false
+      },
+      success: (result) => {
+        console.log('农历转公历API响应:', result)
+        if (result.success) {
+          const solarDate = result.data.solar_date
+          const solarDateStr = `${solarDate.year}-${solarDate.month.toString().padStart(2, '0')}-${solarDate.day.toString().padStart(2, '0')}`
+          
+          this.setData({
+            birthDate: solarDateStr,
+            correspondingSolarDate: solarDateStr
+          })
+          this.checkCanNaming()
+        }
+      },
+      fail: (error) => {
+        console.error('农历转公历API请求失败:', error)
+        wx.showToast({
+          title: '日期转换失败',
+          icon: 'none'
+        })
+      }
+    })
   },
 
   // 公历日期变化时更新对应农历显示 - 与八字测算页面完全一致
@@ -561,17 +592,29 @@ Page({
       return;
     }
     
+    // 构建出生信息
+    let birthInfo = {
+      surname: this.data.surname,
+      gender: this.data.gender,
+      calendarType: this.data.calendarType
+    };
+    
+    // 添加具体的出生日期信息
+    if (this.data.calendarType === 'lunar') {
+      birthInfo.lunarYear = this.data.lunarYear;
+      birthInfo.lunarMonth = this.data.lunarMonth;
+      birthInfo.lunarDay = this.data.lunarDay;
+      birthInfo.solarDate = this.data.birthDate;
+    } else {
+      birthInfo.birthDate = this.data.birthDate;
+    }
+    birthInfo.birthTime = this.data.birthTime;
+    
     // 添加收藏
     collectedNames.push({
       ...name,
       collected_time: new Date().toISOString(),
-      birth_info: {
-        surname: this.data.surname,
-        gender: this.data.gender,
-        birthYear: this.data.birthYear,
-        birthMonth: this.data.birthMonth,
-        birthDay: this.data.birthDay
-      }
+      birth_info: birthInfo
     });
     
     // 保存到本地存储
@@ -597,23 +640,80 @@ Page({
   },
 
   /**
-   * 分享名字
+   * 显示分享选项
    */
-  shareName(e) {
+  showShareOptions(e) {
     const index = e.currentTarget.dataset.index;
-    const name = this.data.recommendations[index];
-    
-    wx.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline']
+    this.setData({
+      showShareModal: true,
+      shareNameIndex: index
     });
+  },
+
+  /**
+   * 关闭分享模态框
+   */
+  closeShareModal() {
+    this.setData({
+      showShareModal: false,
+      shareNameIndex: null
+    });
+  },
+
+  /**
+   * 准备分享给微信好友
+   */
+  prepareShareToFriend() {
+    if (this.data.shareNameIndex === null) return;
+    
+    const name = this.data.recommendations[this.data.shareNameIndex];
     
     // 设置分享内容
     this.shareData = {
       title: `我的起名结果：${name.full_name}`,
-      path: `/pages/naming/naming?shared=true&name=${encodeURIComponent(name.full_name)}`,
+      path: `/pages/naming/naming?shared=true&name=${encodeURIComponent(name.full_name)}&score=${name.overall_score}`,
       imageUrl: '/images/share-naming.png'
     };
+    
+    // 关闭分享模态框
+    this.closeShareModal();
+    
+    // 注意：不需要手动调用wx.shareAppMessage，button的open-type="share"会自动触发
+  },
+
+  /**
+   * 分享到朋友圈（显示引导）
+   */
+  shareToTimeline() {
+    if (this.data.shareNameIndex === null) return;
+    
+    const name = this.data.recommendations[this.data.shareNameIndex];
+    
+    // 设置分享内容，用于朋友圈分享时使用
+    this.shareData = {
+      title: `我通过智能起名得到了一个好名字：${name.full_name}，评分${name.overall_score}分！快来试试吧~`,
+      query: `shared=true&name=${encodeURIComponent(name.full_name)}&score=${name.overall_score}`,
+      imageUrl: '/images/share-naming.png'
+    };
+    
+    // 关闭分享模态框
+    this.closeShareModal();
+    
+    // 显示操作引导
+    wx.showModal({
+      title: '分享到朋友圈',
+      content: '请点击右上角的"..."按钮，然后选择"分享到朋友圈"即可分享这个起名结果',
+      showCancel: false,
+      confirmText: '我知道了',
+      confirmColor: '#C8860D',
+      success: () => {
+        // 启用分享菜单，确保用户可以看到分享选项
+        wx.showShareMenu({
+          withShareTicket: true,
+          menus: ['shareAppMessage', 'shareTimeline']
+        });
+      }
+    });
   },
 
   /**

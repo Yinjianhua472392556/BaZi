@@ -8,7 +8,7 @@
       <view class="menu-list">
         <navigator url="/pages/history/history" class="menu-item">
           <view class="menu-icon-wrapper">
-            <view class="menu-icon">�</view>
+            <view class="menu-icon">📊</view>
           </view>
           <view class="menu-content">
             <view class="menu-text">历史记录</view>
@@ -16,6 +16,17 @@
           </view>
           <view class="menu-arrow">></view>
         </navigator>
+        
+        <view class="menu-item" bindtap="viewCollectedNames">
+          <view class="menu-icon-wrapper">
+            <view class="menu-icon">⭐</view>
+          </view>
+          <view class="menu-content">
+            <view class="menu-text">我的收藏</view>
+            <view class="menu-desc">查看收藏的名字</view>
+          </view>
+          <view class="menu-arrow">></view>
+        </view>
         
         <view class="menu-item" bindtap="aboutApp">
           <view class="menu-icon-wrapper">
@@ -34,6 +45,136 @@
     <!-- 免责声明 -->
     <view class="disclaimer">
       本小程序基于传统文化开发，所有测算结果仅供娱乐参考。
+    </view>
+  </view>
+
+  <!-- 收藏名字模态框 -->
+  <view class="collected-modal" wx:if="{{showCollectedModal}}" bindtap="closeCollectedModal">
+    <view class="modal-content" catchtap="true">
+      <view class="modal-header">
+        <view class="modal-title">我的收藏</view>
+        <view class="modal-close" bindtap="closeCollectedModal">×</view>
+      </view>
+      
+      <view class="modal-body">
+        <view wx:if="{{collectedNames.length === 0}}" class="empty-state">
+          <view class="empty-icon">📝</view>
+          <view class="empty-text">暂无收藏的名字</view>
+          <view class="empty-desc">去起名页面收藏喜欢的名字吧</view>
+        </view>
+        
+        <view wx:else class="collected-list">
+          <view 
+            class="collected-item"
+            wx:for="{{collectedNames}}"
+            wx:key="full_name"
+          >
+            <view class="collected-main">
+              <view class="collected-name">{{item.full_name}}</view>
+              <view class="collected-score">
+                <text class="score-number">{{item.overall_score}}</text>
+                <text class="score-label">分</text>
+              </view>
+            </view>
+            <view class="collected-info">
+              <view class="collected-pronunciation">{{item.pronunciation}}</view>
+              <view class="collected-luck">{{item.luck_level}}</view>
+            </view>
+            <view class="collected-meaning">{{item.meaning_explanation}}</view>
+            <view class="collected-time">收藏时间：{{item.collected_time_formatted}}</view>
+            
+            <view class="collected-actions">
+              <button 
+                class="action-btn view-detail-btn"
+                bindtap="viewCollectedDetail"
+                data-index="{{index}}"
+              >
+                查看详情
+              </button>
+              <button 
+                class="action-btn remove-btn"
+                bindtap="removeCollected"
+                data-index="{{index}}"
+              >
+                取消收藏
+              </button>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 收藏名字详情模态框 -->
+  <view class="name-detail-modal" wx:if="{{showCollectedDetail}}" bindtap="closeCollectedDetail">
+    <view class="modal-content" catchtap="true">
+      <view class="modal-header">
+        <view class="modal-title">{{selectedCollectedName.full_name}}</view>
+        <view class="modal-close" bindtap="closeCollectedDetail">×</view>
+      </view>
+      
+      <view class="modal-body">
+        <view class="detail-section">
+          <view class="detail-title">基本信息</view>
+          <view class="detail-row">
+            <text class="detail-label">完整姓名：</text>
+            <text class="detail-value">{{selectedCollectedName.full_name}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">拼音：</text>
+            <text class="detail-value">{{selectedCollectedName.pronunciation}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">综合评分：</text>
+            <text class="detail-value score">{{selectedCollectedName.overall_score}}分</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">吉凶等级：</text>
+            <text class="detail-value luck">{{selectedCollectedName.luck_level}}</text>
+          </view>
+          <view class="detail-row">
+            <text class="detail-label">收藏时间：</text>
+            <text class="detail-value">{{selectedCollectedName.collected_time_formatted}}</text>
+          </view>
+        </view>
+
+        <view class="detail-section" wx:if="{{selectedCollectedName.wuxing_analysis}}">
+          <view class="detail-title">五行分析</view>
+          <view class="wuxing-chars">
+            <view 
+              class="wuxing-char"
+              wx:for="{{selectedCollectedName.wuxing_analysis.chars_wuxing}}"
+              wx:key="char"
+            >
+              <view class="char-text">{{item.char}}</view>
+              <view class="char-wuxing">{{item.wuxing}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section" wx:if="{{selectedCollectedName.sancai_wuge}}">
+          <view class="detail-title">三才五格</view>
+          <view class="wuge-grid">
+            <view 
+              class="wuge-item"
+              wx:for="{{selectedCollectedName.sancai_wuge.wuge_analysis}}"
+              wx:for-item="wuge"
+              wx:for-index="wugeName"
+              wx:key="*this"
+            >
+              <view class="wuge-name">{{wugeName}}</view>
+              <view class="wuge-value">{{wuge.value}}</view>
+              <view class="wuge-wuxing">{{wuge.wuxing}}</view>
+              <view class="wuge-luck">{{wuge.luck.luck}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-section">
+          <view class="detail-title">寓意解释</view>
+          <view class="meaning-text">{{selectedCollectedName.meaning_explanation}}</view>
+        </view>
+      </view>
     </view>
   </view>
 </view>

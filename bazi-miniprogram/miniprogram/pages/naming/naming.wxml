@@ -192,17 +192,15 @@
         <view class="name-actions">
           <button 
             class="action-btn collect-btn"
-            bindtap="collectName"
+            catchtap="collectName"
             data-index="{{index}}"
-            catchtap="true"
           >
             收藏
           </button>
           <button 
             class="action-btn share-btn"
-            bindtap="shareName"
+            catchtap="showShareOptions"
             data-index="{{index}}"
-            catchtap="true"
           >
             分享
           </button>
@@ -280,6 +278,31 @@
         <view class="detail-section">
           <view class="detail-title">寓意解释</view>
           <view class="meaning-text">{{selectedName.meaning_explanation}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分享选择器模态框 -->
+  <view class="share-modal" wx:if="{{showShareModal}}" bindtap="closeShareModal">
+    <view class="share-modal-content" catchtap="true">
+      <view class="share-modal-header">
+        <view class="share-modal-title">分享到</view>
+        <view class="share-modal-close" bindtap="closeShareModal">×</view>
+      </view>
+      
+      <view class="share-options">
+        <button 
+          class="share-option share-friend-btn" 
+          open-type="share"
+          bindtap="prepareShareToFriend"
+        >
+          <view class="share-icon">💬</view>
+          <view class="share-text">微信好友</view>
+        </button>
+        <view class="share-option" bindtap="shareToTimeline">
+          <view class="share-icon">👥</view>
+          <view class="share-text">朋友圈</view>
         </view>
       </view>
     </view>

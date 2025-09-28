@@ -822,7 +822,149 @@
   margin: 20rpx 0;
 }
 
+/* 分享模态框样式 */
+.share-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.share-modal-content {
+  background: white;
+  border-radius: 30rpx 30rpx 0 0;
+  width: 100%;
+  max-width: 750rpx;
+  padding: 0 0 80rpx 0;
+  animation: slideUpFromBottom 0.3s ease-out;
+}
+
+.share-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx 40rpx 20rpx;
+  border-bottom: 1rpx solid #F0F0F0;
+  position: relative;
+}
+
+.share-modal-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+  flex: 1;
+  text-align: center;
+}
+
+.share-modal-close {
+  position: absolute;
+  right: 30rpx;
+  font-size: 40rpx;
+  color: #999;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.share-modal-close:active {
+  background: #F0F0F0;
+  transform: scale(0.9);
+}
+
+.share-options {
+  padding: 40rpx;
+  display: flex;
+  justify-content: space-around;
+  gap: 40rpx;
+}
+
+.share-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30rpx 40rpx;
+  border-radius: 20rpx;
+  background: #F8F9FA;
+  border: 2rpx solid #E0E0E0;
+  transition: all 0.3s ease;
+  flex: 1;
+  max-width: 200rpx;
+}
+
+.share-option:active {
+  transform: scale(0.95);
+  background: #E9ECEF;
+  border-color: #C8860D;
+}
+
+/* 分享好友按钮特殊样式 */
+.share-friend-btn {
+  background: #F8F9FA !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  text-align: center !important;
+  border-radius: 20rpx !important;
+  padding: 30rpx 40rpx !important;
+  margin: 0 !important;
+  border: 2rpx solid #E0E0E0 !important;
+  box-sizing: border-box !important;
+}
+
+.share-friend-btn::after {
+  border: none !important;
+}
+
+.share-friend-btn:active {
+  transform: scale(0.95) !important;
+  background: #E9ECEF !important;
+  border-color: #C8860D !important;
+}
+
+.share-icon {
+  font-size: 60rpx;
+  margin-bottom: 15rpx;
+  filter: grayscale(0.2);
+}
+
+.share-text {
+  font-size: 28rpx;
+  color: #2F4F4F;
+  font-weight: 500;
+}
+
 /* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUpFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes slideInUp {
   from {
     opacity: 0;
