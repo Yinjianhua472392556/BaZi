@@ -108,6 +108,36 @@
         <view class="analysis-content">{{resultData.analysis.love || '感情分析内容...'}}</view>
       </view>
       
+      <!-- 健康运势 -->
+      <view class="analysis-section" wx:if="{{resultData.analysis.health}}">
+        <view class="analysis-title">健康运势</view>
+        <view class="analysis-content">{{resultData.analysis.health}}</view>
+      </view>
+      
+      <!-- 财运分析 -->
+      <view class="analysis-section" wx:if="{{resultData.analysis.wealth}}">
+        <view class="analysis-title">财运分析</view>
+        <view class="analysis-content">{{resultData.analysis.wealth}}</view>
+      </view>
+      
+      <!-- 人际关系 -->
+      <view class="analysis-section" wx:if="{{resultData.analysis.relationship}}">
+        <view class="analysis-title">人际关系</view>
+        <view class="analysis-content">{{resultData.analysis.relationship}}</view>
+      </view>
+      
+      <!-- 年龄特定分析 -->
+      <view class="analysis-section" wx:if="{{resultData.analysis.age_specific}}">
+        <view class="analysis-title">人生阶段指导</view>
+        <view class="analysis-content">{{resultData.analysis.age_specific}}</view>
+      </view>
+      
+      <!-- 流年运势 -->
+      <view class="analysis-section" wx:if="{{resultData.analysis.yearly_fortune}}">
+        <view class="analysis-title">流年运势</view>
+        <view class="analysis-content">{{resultData.analysis.yearly_fortune}}</view>
+      </view>
+      
       <!-- 今日运势 -->
       <view class="analysis-section">
         <view class="analysis-title">今日运势</view>

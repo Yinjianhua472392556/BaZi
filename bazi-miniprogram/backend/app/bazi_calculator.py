@@ -213,6 +213,268 @@ class BaziCalculator:
         
         return hour_gan + hour_zhi
     
+    def get_enhanced_personality_analysis(self, day_gan, day_zhi, wuxing_count):
+        """增强版性格分析"""
+        base_personality = {
+            '甲': "您具有木的阳刚之气，性格直爽坚韧，天生具备领导潜质。在团队中常常能够主动承担责任，但需要注意避免过于固执。建议多听取他人意见，发挥包容特质。",
+            '乙': "您具有木的阴柔之美，性格温和细腻，善于协调人际关系。具有很强的适应能力和同情心，但有时可能缺乏果断。建议在关键时刻要相信自己的判断。",
+            '丙': "您具有火的热情奔放，性格开朗积极，富有创新精神和感染力。天生乐观向上，但有时可能过于冲动。建议在做重要决定前多思考，控制情绪波动。",
+            '丁': "您具有火的温暖细致，性格敏感而富有艺术气质。注重细节，有很强的洞察力，但有时过于敏感多疑。建议培养内心的坚强，相信自己的能力。",
+            '戊': "您具有土的厚重稳健，性格踏实可靠，是天生的实干家。做事有条不紊，责任心强，但有时显得过于保守。建议适当接受新事物，保持开放心态。",
+            '己': "您具有土的温润包容，性格温和谦逊，善于倾听和理解他人。具有很强的服务精神，但有时缺乏主见。建议增强自信心，勇于表达自己的想法。",
+            '庚': "您具有金的刚强果断，性格坚毅正直，有很强的执行力和正义感。做事干脆利落，但有时可能过于严厉。建议在处理人际关系时多一些温和与灵活。",
+            '辛': "您具有金的精巧灵活，性格聪明机敏，善于变通和创新。具有敏锐的商业嗅觉，但有时可能过于计较得失。建议保持大格局，注重长远发展。",
+            '壬': "您具有水的智慧深远，性格聪慧理性，具有很强的适应能力和前瞻性。思维活跃，但有时可能过于理想化。建议将理想与现实相结合，脚踏实地。",
+            '癸': "您具有水的内敛深沉，性格细腻敏锐，善于观察和思考。具有很强的直觉力和洞察力，但有时显得过于消极。建议增强行动力，将想法付诸实践。"
+        }
+        return base_personality.get(day_gan, "您的性格独特，具有鲜明的个人特色，善于在生活中展现自己的独特魅力。")
+    
+    def get_detailed_wuxing_analysis(self, wuxing_count):
+        """详细五行分析"""
+        total = sum(wuxing_count.values())
+        if total == 0:
+            return "五行信息不完整，建议重新计算。"
+        
+        max_element = max(wuxing_count.items(), key=lambda x: x[1])
+        min_element = min(wuxing_count.items(), key=lambda x: x[1])
+        
+        # 生成详细分析
+        balance_desc = ""
+        if max_element[1] - min_element[1] >= 3:
+            balance_desc = f"五行分布不够均衡，{max_element[0]}过旺（{max_element[1]}个），{min_element[0]}偏弱（{min_element[1]}个）。"
+        else:
+            balance_desc = "五行分布相对均衡，整体运势平稳。"
+        
+        # 调和建议
+        advice = self.get_wuxing_balance_advice(min_element[0], max_element[0])
+        
+        return f"{balance_desc}{advice}"
+    
+    def get_wuxing_balance_advice(self, weak_element, strong_element):
+        """五行调和建议"""
+        advice_map = {
+            '木': "建议多接触绿色植物，选择木质家具，早晨散步，佩戴绿色饰品。",
+            '火': "建议多晒太阳，选择红色衣物，进行有氧运动，保持积极心态。",
+            '土': "建议多接触大自然，选择黄色系搭配，进行园艺活动，保持稳重性格。",
+            '金': "建议佩戴金属饰品，选择白色服装，进行呼吸锻炼，培养理性思维。",
+            '水': "建议多饮水，选择黑蓝色系，进行游泳等水上运动，保持灵活性。"
+        }
+        return advice_map.get(weak_element, "建议保持五行平衡，适当调节生活方式。")
+    
+    def get_age_based_career_analysis(self, day_gan, wuxing_count, age):
+        """基于年龄的事业分析"""
+        base_career = {
+            '甲': "创业管理、教育培训、环保绿化",
+            '乙': "艺术设计、服务行业、文化传媒", 
+            '丙': "能源电力、娱乐传媒、广告策划",
+            '丁': "文化出版、美容护理、照明设计",
+            '戊': "建筑工程、房地产、农业种植",
+            '己': "餐饮服务、咨询顾问、行政管理",
+            '庚': "金属制造、机械工程、执法安全",
+            '辛': "金融投资、珠宝首饰、医疗健康",
+            '壬': "贸易物流、旅游交通、水利工程",
+            '癸': "科研技术、化工医药、信息网络"
+        }
+        
+        career_base = base_career.get(day_gan, "多元化发展")
+        
+        # 根据年龄段调整建议
+        if age <= 25:
+            return f"年轻有为，适合在{career_base}等领域积累经验。建议多学习新技能，为未来发展打好基础。当前是积累期，重点在于提升能力。"
+        elif age <= 35:
+            return f"正值事业上升期，{career_base}领域有很好的发展前景。建议抓住机遇，在专业领域深耕细作，争取在行业中建立影响力。"
+        elif age <= 50:
+            return f"事业成熟期，适合在{career_base}领域发挥领导作用。建议注重团队建设和人才培养，同时考虑多元化发展和投资理财。"
+        else:
+            return f"人生阅历丰富，可在{career_base}领域发挥传承作用。建议专注于经验传承和智慧分享，同时规划好退休后的生活安排。"
+    
+    def get_age_based_love_analysis(self, day_gan, gender, age, wuxing_count):
+        """基于年龄的感情分析"""
+        base_traits = {
+            '甲': "直率真诚", '乙': "温柔体贴", '丙': "热情开朗", 
+            '丁': "细腻浪漫", '戊': "稳重可靠", '己': "温和包容",
+            '庚': "坚定专一", '辛': "聪明机敏", '壬': "智慧深情", '癸': "内敛深沉"
+        }
+        
+        trait = base_traits.get(day_gan, "独特魅力")
+        gender_desc = "男性" if gender == 'male' else "女性"
+        
+        if age <= 25:
+            return f"年轻{gender_desc}，{trait}的性格容易吸引异性关注。建议在感情中保持纯真，多了解对方，不要急于确定关系。重点在于学会如何相处和成长。"
+        elif age <= 35:
+            return f"适婚年龄，{trait}的特质有助于建立稳定关系。建议认真对待感情，寻找三观相合的伴侣。这个阶段适合考虑婚姻和组建家庭。"
+        elif age <= 50:
+            return f"感情成熟期，{trait}的品格有助于维护家庭和谐。建议注重夫妻沟通，在事业家庭间找好平衡。同时关心子女的情感教育。"
+        else:
+            return f"人生智慧丰富，{trait}的品质值得传承。建议享受天伦之乐，为年轻人提供感情方面的指导。重点在于家庭和睦和晚年幸福。"
+    
+    def get_health_analysis(self, day_gan, wuxing_count, age):
+        """健康运势分析"""
+        health_mapping = {
+            '甲': "肝胆系统是关注重点，平时注意情绪调节，避免过度劳累。",
+            '乙': "神经系统较为敏感，建议保持规律作息，多进行放松训练。",
+            '丙': "心血管系统需要关注，控制情绪起伏，适度运动很重要。",
+            '丁': "眼部和血液循环要注意，避免用眼过度，保持良好心态。",
+            '戊': "脾胃消化系统是重点，注意饮食规律，避免暴饮暴食。",
+            '己': "肠胃功能较弱，建议清淡饮食，少食多餐，保持运动习惯。",
+            '庚': "肺部和皮肤需要保养，注意空气质量，避免吸烟酗酒。",
+            '辛': "呼吸系统要关注，保持室内通风，适当进行有氧运动。",
+            '壬': "肾脏和泌尿系统重要，多饮水，避免熬夜，保持充足睡眠。",
+            '癸': "生殖系统和内分泌要注意，保持心情愉悦，规律生活。"
+        }
+        
+        base_health = health_mapping.get(day_gan, "整体健康状况良好，注意预防保健。")
+        
+        # 根据年龄调整建议
+        if age >= 40:
+            return f"{base_health}年龄增长后更要注重体检，定期检查身体，预防慢性疾病的发生。"
+        else:
+            return f"{base_health}趁着年轻要养成良好的生活习惯，为长远健康打下基础。"
+    
+    def get_wealth_analysis(self, bazi, wuxing_count, age):
+        """财运分析"""
+        day_gan = bazi["day"][0]
+        
+        wealth_base = {
+            '甲': "财运稳中有升，适合长期投资和创业发展。",
+            '乙': "财运起伏较大，适合灵活理财和分散投资。",
+            '丙': "财运火旺，容易有意外收入，但要注意理性消费。",
+            '丁': "财运细水长流，适合稳健理财和储蓄积累。",
+            '戊': "财运厚重，适合房产投资和实业发展。",
+            '己': "财运温和，适合保守理财和服务业发展。",
+            '庚': "财运刚强，适合金融投资和工业发展。",
+            '辛': "财运精明，适合珠宝贸易和精细化投资。",
+            '壬': "财运流动，适合贸易往来和流动性投资。",
+            '癸': "财运深沉，适合长线投资和技术研发。"
+        }
+        
+        base = wealth_base.get(day_gan, "财运平稳，适合稳健发展。")
+        
+        # 根据年龄调整
+        if age <= 30:
+            return f"{base}年轻时期重点在于积累财富基础，建议理性消费，开始小额投资理财。"
+        elif age <= 50:
+            return f"{base}中年时期是财富积累的关键期，可以考虑多元化投资，但要控制风险。"
+        else:
+            return f"{base}财富管理进入保值阶段，建议选择稳健的投资方式，注重资产传承规划。"
+    
+    def get_relationship_analysis(self, day_gan, day_zhi, wuxing_count):
+        """人际关系分析"""
+        relationship_traits = {
+            '甲': "在人际交往中表现积极主动，容易成为团队核心，但要注意倾听他人意见。",
+            '乙': "善于协调人际关系，具有很强的亲和力，是天然的调解者和沟通桥梁。",
+            '丙': "性格热情开朗，容易与人建立友谊，但要注意控制情绪，避免过于激进。",
+            '丁': "在人际交往中细腻敏感，能够察觉他人情绪变化，适合从事人文关怀工作。",
+            '戊': "为人踏实可靠，容易获得他人信任，是朋友圈中的依靠和支柱。",
+            '己': "性格温和包容，善于倾听他人心声，是很好的倾诉对象和心理支持者。",
+            '庚': "性格坚毅果断，在团队中有很强的执行力，但需要注意方式方法的温和性。",
+            '辛': "社交能力强，善于建立广泛的人脉关系，但要注意保持关系的真诚性。",
+            '壬': "适应能力强，能够与各类人群和谐相处，是天然的外交家和协调者。",
+            '癸': "虽然内敛，但观察力敏锐，能够深入了解他人内心，建立深层次的友谊。"
+        }
+        
+        trait = relationship_traits.get(day_gan, "在人际关系中有自己独特的相处方式，能够展现个人魅力。")
+        return f"{trait}建议在社交中保持真诚，多关心他人，这样能够建立更好的人际网络。"
+    
+    def get_age_specific_analysis(self, age, day_gan, wuxing_count, gender):
+        """年龄特定分析"""
+        if age <= 25:
+            return "当前处于人生探索期，建议多尝试不同领域，积累经验和技能。这个阶段重点在于学习成长，为未来发展奠定基础。保持开放心态，勇于接受挑战。"
+        elif age <= 35:
+            return "正值人生黄金期，各方面能力都在上升阶段。建议抓住机遇，在事业和感情上都要积极进取。这是建立人生基础的关键时期，要有明确目标。"
+        elif age <= 50:
+            return "人生成熟期，经验丰富，应该发挥引领作用。建议注重传承和分享，在稳定发展的同时关注家庭和谐。这个阶段要平衡好各方面关系。"
+        else:
+            return "人生智慧期，阅历丰富，适合享受生活和传承经验。建议保持健康的身心状态，多与年轻人交流分享人生智慧，规划好晚年生活。"
+    
+    def get_yearly_fortune_analysis(self, bazi, current_year):
+        """流年运势分析 - 个性化版本"""
+        day_gan = bazi["day"][0]
+        year_gan = bazi["year"][0]
+        
+        # 根据日主和年柱的组合计算个性化运势
+        gan_index = self.tiangan.index(day_gan)
+        year_gan_index = self.tiangan.index(year_gan)
+        
+        # 计算个性化索引
+        personal_index = (gan_index + year_gan_index + current_year) % 12
+        
+        # 根据日主特点的个性化流年分析
+        day_gan_fortune = {
+            '甲': {
+                'base': "木旺之年，创新发展机会较多",
+                'advice': "适合新项目启动和团队建设"
+            },
+            '乙': {
+                'base': "阴木柔顺，适合协调发展",
+                'advice': "重点在人际关系和合作机会"
+            },
+            '丙': {
+                'base': "火旺积极，事业发展迅速",
+                'advice': "把握机遇但要控制冲动"
+            },
+            '丁': {
+                'base': "文昌运旺，学习创作有利",
+                'advice': "适合深造学习和艺术创作"
+            },
+            '戊': {
+                'base': "土稳厚重，基础建设之年",
+                'advice': "专注于稳健发展和资产积累"
+            },
+            '己': {
+                'base': "服务运强，人际关系活跃",
+                'advice': "通过服务他人获得发展机会"
+            },
+            '庚': {
+                'base': "金旺果断，执行力强",
+                'advice': "适合推进重要决策和变革"
+            },
+            '辛': {
+                'base': "精金灵活，财运机遇多",
+                'advice': "把握投资机会但要谨慎分析"
+            },
+            '壬': {
+                'base': "水流通达，变化机会多",
+                'advice': "适应变化并从中寻找机遇"
+            },
+            '癸': {
+                'base': "雨露滋润，默默积累之年",
+                'advice': "重视内在修养和技能提升"
+            }
+        }
+        
+        # 12种不同的流年特点
+        yearly_variations = [
+            "整体运势上升，各方面都有新进展",
+            "感情运势突出，人际关系和谐",
+            "事业运势强劲，职场表现优异",
+            "财运较旺，投资理财机会多",
+            "健康运势稳定，身心状态良好",
+            "学习运势佳，进修提升效果好",
+            "家庭运势和睦，亲情关系融洽",
+            "创新运势强，适合开拓新领域",
+            "收获运势好，前期努力见成效",
+            "平稳运势，适合休整和规划",
+            "变革运势，适合突破和转型",
+            "综合运势平衡，各方面协调发展"
+        ]
+        
+        gan_info = day_gan_fortune.get(day_gan, {
+            'base': "个人特质鲜明，运势发展独特",
+            'advice': "发挥个人优势，把握机遇"
+        })
+        
+        yearly_feature = yearly_variations[personal_index]
+        
+        return f"{current_year}年流年运势：{gan_info['base']}，{yearly_feature}。{gan_info['advice']}，同时要根据实际情况灵活调整。"
+    
+    def get_dominant_element(self, wuxing_count):
+        """获取主导五行"""
+        if not wuxing_count:
+            return "五行"
+        max_element = max(wuxing_count.items(), key=lambda x: x[1])
+        return max_element[0]
+    
     def calculate_bazi(self, year, month, day, hour, gender="male", calendar_type="solar"):
         """
         主要的八字计算方法
@@ -260,7 +522,7 @@ class BaziCalculator:
             wuxing_count = self.calculate_wuxing(bazi)
             
             # 生成八字分析
-            analysis = self.generate_analysis(bazi, wuxing_count, gender)
+            analysis = self.generate_analysis(bazi, wuxing_count, gender, calc_year)
             
             # 计算大运流年
             dayun = self.calculate_dayun(bazi, calc_year, gender)
@@ -308,28 +570,53 @@ class BaziCalculator:
         
         return wuxing_count
     
-    def generate_analysis(self, bazi, wuxing_count, gender):
-        """生成八字分析"""
+    def generate_analysis(self, bazi, wuxing_count, gender, birth_year=None):
+        """生成八字分析 - 增强版"""
         day_gan = bazi["day"][0]
+        day_zhi = bazi["day"][1]
         
-        # 基础性格分析
-        personality = self.get_personality_by_day_gan(day_gan)
+        # 计算年龄
+        current_year = datetime.now().year
+        age = current_year - birth_year if birth_year else 25
         
-        # 五行平衡分析
-        wuxing_analysis = self.analyze_wuxing_balance(wuxing_count)
+        # 基础性格分析 - 增强版
+        personality = self.get_enhanced_personality_analysis(day_gan, day_zhi, wuxing_count)
         
-        # 事业运势
-        career = self.analyze_career(day_gan, wuxing_count)
+        # 五行平衡分析 - 详细版
+        wuxing_analysis = self.get_detailed_wuxing_analysis(wuxing_count)
         
-        # 感情运势
-        love = self.analyze_love(day_gan, gender, wuxing_count)
+        # 事业运势 - 根据年龄调整
+        career = self.get_age_based_career_analysis(day_gan, wuxing_count, age)
+        
+        # 感情运势 - 根据年龄和性别调整
+        love = self.get_age_based_love_analysis(day_gan, gender, age, wuxing_count)
+        
+        # 健康运势 - 新增
+        health = self.get_health_analysis(day_gan, wuxing_count, age)
+        
+        # 财运分析 - 新增
+        wealth = self.get_wealth_analysis(bazi, wuxing_count, age)
+        
+        # 人际关系分析 - 新增
+        relationship = self.get_relationship_analysis(day_gan, day_zhi, wuxing_count)
+        
+        # 年龄相关的特殊分析
+        age_specific = self.get_age_specific_analysis(age, day_gan, wuxing_count, gender)
+        
+        # 流年运势 - 新增
+        yearly_fortune = self.get_yearly_fortune_analysis(bazi, current_year)
         
         return {
             "personality": personality,
             "wuxing_analysis": wuxing_analysis,
             "career": career,
             "love": love,
-            "summary": f"您的日主为{day_gan}，{personality[:20]}...{wuxing_analysis[:20]}..."
+            "health": health,
+            "wealth": wealth,
+            "relationship": relationship,
+            "age_specific": age_specific,
+            "yearly_fortune": yearly_fortune,
+            "summary": f"您的日主为{day_gan}，五行{self.get_dominant_element(wuxing_count)}较旺，{personality[:30]}..."
         }
     
     def get_personality_by_day_gan(self, day_gan):
@@ -404,25 +691,122 @@ class BaziCalculator:
         }
     
     def calculate_today_fortune(self, bazi):
-        """计算今日运势"""
+        """计算今日运势 - 个性化版本"""
         today = datetime.now()
         day_gan = bazi["day"][0]
+        day_zhi = bazi["day"][1]
         
-        # 根据今日和日主的关系给出运势
-        fortune_score = (today.day + today.month) % 5 + 6  # 6-10分
+        # 根据日主天干地支和今日的综合关系计算运势
+        gan_index = self.tiangan.index(day_gan)
+        zhi_index = self.dizhi.index(day_zhi)
         
-        fortune_text = {
-            6: "今日运势一般，宜静不宜动。",
-            7: "今日运势尚可，适合处理日常事务。",
-            8: "今日运势不错，适合推进重要计划。",
-            9: "今日运势很好，适合开展新项目。",
-            10: "今日运势极佳，万事亨通。"
+        # 计算个性化分数
+        base_score = (today.day + today.month + gan_index + zhi_index) % 5 + 6  # 6-10分
+        
+        # 根据日主特点的个性化今日运势描述
+        day_gan_descriptions = {
+            '甲': [
+                "今日木气旺盛，适合开展新计划。",
+                "今日创新运势佳，团队合作顺利。",
+                "今日领导力突出，把握发展机遇。",
+                "今日行动力强，但要避免急躁。",
+                "今日整体运势平稳，稳步前进。"
+            ],
+            '乙': [
+                "今日人际关系和谐，适合协调工作。",
+                "今日柔性力量显现，化解矛盾。",
+                "今日艺术灵感丰富，创作有利。",
+                "今日感性思维活跃，直觉准确。",
+                "今日运势温和，宜以柔制刚。"
+            ],
+            '丙': [
+                "今日热情高涨，表现机会多。",
+                "今日创意爆发，适合展示才华。",
+                "今日积极向上，感染力强。",
+                "今日行动迅速，但要控制冲动。",
+                "今日火气旺盛，注意情绪管理。"
+            ],
+            '丁': [
+                "今日文思敏捷，学习效果好。",
+                "今日细致入微，适合精细工作。",
+                "今日艺术天赋突出，创作丰富。",
+                "今日敏感度高，洞察力强。",
+                "今日运势温暖，如春风化雨。"
+            ],
+            '戊': [
+                "今日稳重踏实，基础工作顺利。",
+                "今日包容心强，团队和谐。",
+                "今日执行力佳，任务完成度高。",
+                "今日保守策略，稳中求进。",
+                "今日土运旺盛，积累有成。"
+            ],
+            '己': [
+                "今日服务精神强，助人为乐。",
+                "今日协调能力突出，化解纷争。",
+                "今日温和谦逊，人缘极佳。",
+                "今日内敛发力，默默耕耘。",
+                "今日运势平和，以德服人。"
+            ],
+            '庚': [
+                "今日执行力强，决策果断。",
+                "今日正义感突出，行事公正。",
+                "今日金运旺盛，财运不错。",
+                "今日刚强有力，攻坚克难。",
+                "今日运势锐利，直击要害。"
+            ],
+            '辛': [
+                "今日灵活机敏，变通能力强。",
+                "今日商业嗅觉敏锐，投资有利。",
+                "今日精致细腻，品味提升。",
+                "今日社交活跃，人脉拓展。",
+                "今日运势精巧，事半功倍。"
+            ],
+            '壬': [
+                "今日智慧如泉，思路清晰。",
+                "今日适应力强，变化中求机遇。",
+                "今日流动性好，信息畅通。",
+                "今日前瞻性强，布局长远。",
+                "今日水运活跃，灵感不断。"
+            ],
+            '癸': [
+                "今日内省深刻，自我提升。",
+                "今日积累智慧，厚积薄发。",
+                "今日直觉敏锐，洞察入微。",
+                "今日低调行事，暗中布局。",
+                "今日运势深沉，静水流深。"
+            ]
         }
         
+        # 个性化建议
+        day_gan_suggestions = {
+            '甲': "发挥领导才能，主动承担责任。",
+            '乙': "以柔克刚，善用协调能力。",
+            '丙': "保持热情，但要控制情绪。",
+            '丁': "注重细节，发挥创造力。",
+            '戊': "稳扎稳打，做好基础工作。",
+            '己': "服务他人，建立良好关系。",
+            '庚': "果断决策，但要考虑他人感受。",
+            '辛': "灵活变通，抓住商机。",
+            '壬': "开阔思路，适应变化。",
+            '癸': "深度思考，积蓄力量。"
+        }
+        
+        descriptions = day_gan_descriptions.get(day_gan, [
+            "今日运势独特，发挥个人特质。",
+            "今日机遇与挑战并存。",
+            "今日运势平稳，保持平常心。",
+            "今日适合内省，规划未来。",
+            "今日运势一般，稳步前行。"
+        ])
+        
+        suggestion = day_gan_suggestions.get(day_gan, "发挥个人优势，把握当下机遇。")
+        
+        description = descriptions[(base_score - 6) % len(descriptions)]
+        
         return {
-            "score": fortune_score,
-            "description": fortune_text[fortune_score],
-            "suggestion": "保持积极心态，顺应自然规律。"
+            "score": base_score,
+            "description": description,
+            "suggestion": suggestion
         }
     
     def calculate_month_pillar_with_jieqi(self, year, month, day, year_gan_index):

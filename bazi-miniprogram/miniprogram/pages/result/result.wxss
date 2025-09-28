@@ -235,14 +235,16 @@
 }
 
 .modal-content {
-  width: 90%;
-  max-width: 650rpx;
-  max-height: 80%;
+  width: 88%;
+  max-width: 620rpx;
+  max-height: 80vh;
   background: white;
   border-radius: 30rpx;
   overflow: hidden;
   transform: scale(0.8);
   transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .analysis-modal.show .modal-content {
@@ -275,11 +277,15 @@
 }
 
 .modal-body {
-  max-height: 600rpx;
-  padding: 30rpx;
+  flex: 1;
+  padding: 30rpx 80rpx;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .analysis-section {
+  display: flex;
+  flex-direction: column;
   margin-bottom: 40rpx;
 }
 
@@ -294,8 +300,18 @@
 
 .analysis-content {
   font-size: 28rpx;
-  line-height: 1.6;
+  line-height: 1.8;
   color: #666;
+  word-wrap: break-word;
+  word-break: normal;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: justify;
+  padding-right: 100rpx;
+  margin-right: 40rpx;
+  box-sizing: border-box;
+  flex: 1;
+  width: 100%;
 }
 
 .fortune-score {
@@ -309,8 +325,10 @@
 }
 
 .modal-footer {
-  padding: 20rpx 30rpx 30rpx;
+  padding: 20rpx 30rpx 40rpx;
   border-top: 1rpx solid #E0E0E0;
+  background: white;
+  border-radius: 0 0 30rpx 30rpx;
 }
 
 .btn-save {
