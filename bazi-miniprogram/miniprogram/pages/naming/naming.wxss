@@ -473,11 +473,70 @@
 }
 
 .list-title {
-  font-size: 36rpx;
+  font-size: 18px;
   font-weight: bold;
-  color: #2F4F4F;
-  margin-bottom: 30rpx;
+  color: #333;
+  margin-bottom: 10px;
   text-align: center;
+}
+
+/* 评分说明 */
+.score-legend {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.legend-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #666;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.legend-items {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.legend-badge {
+  width: 50px;
+  height: 24px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.legend-badge.score-excellent {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+}
+
+.legend-badge.score-good {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+}
+
+.legend-badge.score-average {
+  background: linear-gradient(135deg, #feca57, #ff9ff3);
+}
+
+.legend-badge.score-below {
+  background: linear-gradient(135deg, #a0a0a0, #c0c0c0);
 }
 
 .name-item {
@@ -797,6 +856,110 @@
   font-size: 20rpx;
   color: #28A745;
   font-weight: 500;
+}
+
+/* 评分细项分析样式 */
+.score-breakdown {
+  padding: 0;
+}
+
+.score-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding: 15rpx 20rpx;
+  background: #F8F9FA;
+  border-radius: 12rpx;
+  border: 1rpx solid #E0E0E0;
+}
+
+.score-item-name {
+  font-size: 24rpx;
+  color: #2F4F4F;
+  font-weight: 500;
+  min-width: 120rpx;
+  margin-right: 15rpx;
+}
+
+.score-item-bar {
+  flex: 1;
+  margin: 0 15rpx;
+}
+
+.score-bar-bg {
+  width: 100%;
+  height: 8rpx;
+  background: #E0E0E0;
+  border-radius: 4rpx;
+  overflow: hidden;
+  position: relative;
+}
+
+.score-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #C8860D 0%, #DAA520 100%);
+  border-radius: 4rpx;
+  transition: width 0.8s ease-out;
+  animation: scoreBarAnimation 1.2s ease-out;
+}
+
+.score-item-value {
+  font-size: 22rpx;
+  color: #C8860D;
+  font-weight: bold;
+  min-width: 60rpx;
+  text-align: right;
+}
+
+/* 评分计算验证样式 */
+.score-verification {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #E8F5E8 0%, #F0F8FF 100%);
+  border-radius: 12rpx;
+  border: 1rpx solid #C8860D;
+}
+
+.verification-title {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+  margin-bottom: 10rpx;
+  text-align: center;
+}
+
+.verification-formula {
+  font-size: 20rpx;
+  color: #666;
+  line-height: 1.5;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 15rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #E0E0E0;
+}
+
+/* 降级显示样式 */
+.score-breakdown-fallback {
+  padding: 20rpx;
+  text-align: center;
+}
+
+.fallback-notice {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 20rpx;
+  font-style: italic;
+}
+
+@keyframes scoreBarAnimation {
+  from {
+    width: 0 !important;
+  }
+  to {
+    width: var(--target-width);
+  }
 }
 
 /* 寓意文本样式 */

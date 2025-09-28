@@ -169,6 +169,30 @@
 
     <view class="names-list">
       <view class="list-title">推荐名字</view>
+      
+      <!-- 评分说明 -->
+      <view class="score-legend">
+        <view class="legend-title">评分说明</view>
+        <view class="legend-items">
+          <view class="legend-item">
+            <view class="legend-badge score-excellent">90+</view>
+            <text>优秀</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-badge score-good">80-89</view>
+            <text>良好</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-badge score-average">70-79</view>
+            <text>一般</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-badge score-below">60-69</view>
+            <text>偏低</text>
+          </view>
+        </view>
+      </view>
+      
       <view 
         class="name-item"
         wx:for="{{recommendations}}"
@@ -240,6 +264,80 @@
           <view class="detail-row">
             <text class="detail-label">吉凶等级：</text>
             <text class="detail-value luck">{{selectedName.luck_level}}</text>
+          </view>
+        </view>
+
+        <!-- 评分细项分析 -->
+        <view class="detail-section">
+          <view class="detail-title">评分构成分析</view>
+          <view class="score-breakdown" wx:if="{{selectedName.score_breakdown}}">
+            <view class="score-item">
+              <view class="score-item-name">五格得分 ({{selectedName.score_breakdown.weights.wuge_weight}}%)</view>
+              <view class="score-item-bar">
+                <view class="score-bar-bg">
+                  <view class="score-bar-fill" style="width: {{selectedName.score_breakdown.wuge_score}}%"></view>
+                </view>
+              </view>
+              <view class="score-item-value">{{selectedName.score_breakdown.wuge_score}}分</view>
+            </view>
+            <view class="score-item">
+              <view class="score-item-name">五行匹配 ({{selectedName.score_breakdown.weights.wuxing_weight}}%)</view>
+              <view class="score-item-bar">
+                <view class="score-bar-bg">
+                  <view class="score-bar-fill" style="width: {{selectedName.score_breakdown.wuxing_match_score}}%"></view>
+                </view>
+              </view>
+              <view class="score-item-value">{{selectedName.score_breakdown.wuxing_match_score}}分</view>
+            </view>
+            <view class="score-item">
+              <view class="score-item-name">三才配置 ({{selectedName.score_breakdown.weights.sancai_weight}}%)</view>
+              <view class="score-item-bar">
+                <view class="score-bar-bg">
+                  <view class="score-bar-fill" style="width: {{selectedName.score_breakdown.sancai_score}}%"></view>
+                </view>
+              </view>
+              <view class="score-item-value">{{selectedName.score_breakdown.sancai_score}}分</view>
+            </view>
+            <view class="score-item">
+              <view class="score-item-name">音韵和谐 ({{selectedName.score_breakdown.weights.phonetic_weight}}%)</view>
+              <view class="score-item-bar">
+                <view class="score-bar-bg">
+                  <view class="score-bar-fill" style="width: {{selectedName.score_breakdown.phonetic_score}}%"></view>
+                </view>
+              </view>
+              <view class="score-item-value">{{selectedName.score_breakdown.phonetic_score}}分</view>
+            </view>
+            <view class="score-item">
+              <view class="score-item-name">寓意内涵 ({{selectedName.score_breakdown.weights.meaning_weight}}%)</view>
+              <view class="score-item-bar">
+                <view class="score-bar-bg">
+                  <view class="score-bar-fill" style="width: {{selectedName.score_breakdown.meaning_score}}%"></view>
+                </view>
+              </view>
+              <view class="score-item-value">{{selectedName.score_breakdown.meaning_score}}分</view>
+            </view>
+          </view>
+          
+          <!-- 评分构成数学验证显示 -->
+          <view class="score-verification" wx:if="{{selectedName.score_breakdown}}">
+            <view class="verification-title">评分计算验证</view>
+            <view class="verification-formula">
+              加权计算：{{selectedName.score_breakdown.wuge_score}}×30% + {{selectedName.score_breakdown.wuxing_match_score}}×30% + {{selectedName.score_breakdown.sancai_score}}×20% + {{selectedName.score_breakdown.phonetic_score}}×10% + {{selectedName.score_breakdown.meaning_score}}×10% = {{selectedName.overall_score}}分
+            </view>
+          </view>
+          
+          <!-- 降级显示：如果没有score_breakdown数据 -->
+          <view class="score-breakdown-fallback" wx:else>
+            <view class="fallback-notice">详细评分数据加载中...</view>
+            <view class="score-item">
+              <view class="score-item-name">综合评分</view>
+              <view class="score-item-bar">
+                <view class="score-bar-bg">
+                  <view class="score-bar-fill" style="width: {{selectedName.overall_score}}%"></view>
+                </view>
+              </view>
+              <view class="score-item-value">{{selectedName.overall_score}}分</view>
+            </view>
           </view>
         </view>
 

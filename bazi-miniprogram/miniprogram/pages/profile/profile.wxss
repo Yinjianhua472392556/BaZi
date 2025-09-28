@@ -665,3 +665,49 @@
     transform: translateY(0);
   }
 }
+
+/* 评分构成分析样式 */
+.score-breakdown {
+  padding: 20rpx 0;
+}
+
+.score-item {
+  margin-bottom: 25rpx;
+}
+
+.score-label {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.score-bar {
+  position: relative;
+  height: 40rpx;
+  background: #F0F0F0;
+  border-radius: 20rpx;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #40E0D0 0%, #C8860D 50%, #28A745 100%);
+  border-radius: 20rpx;
+  transition: width 0.8s ease-out;
+  position: relative;
+}
+
+.score-text {
+  position: absolute;
+  right: 15rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 22rpx;
+  color: #333;
+  font-weight: bold;
+  z-index: 2;
+  text-shadow: 1rpx 1rpx 2rpx rgba(255, 255, 255, 0.8);
+}

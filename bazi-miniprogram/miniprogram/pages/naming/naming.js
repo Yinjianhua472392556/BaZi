@@ -488,6 +488,9 @@ Page({
       title: '正在分析八字并起名...'
     })
 
+    // 生成会话级随机种子，确保每次点击产生不同结果
+    const sessionSeed = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
     // 调用起名API
     app.request({
       url: '/api/v1/naming/generate-names',
@@ -501,7 +504,8 @@ Page({
         birth_hour: birthData.hour,
         calendar_type: birthData.calendarType,
         name_length: this.data.nameLength,
-        count: 10
+        count: 10,
+        session_seed: sessionSeed  // 新增会话种子参数
       },
       success: (result) => {
         wx.hideLoading()

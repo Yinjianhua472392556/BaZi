@@ -170,6 +170,51 @@
           </view>
         </view>
 
+        <view class="detail-section" wx:if="{{selectedCollectedName.score_breakdown}}">
+          <view class="detail-title">评分构成分析</view>
+          <view class="score-breakdown">
+            <view class="score-item">
+              <view class="score-label">五格得分 ({{selectedCollectedName.score_breakdown.weights.wuge_weight}}%)</view>
+              <view class="score-bar">
+                <view class="score-fill" style="width: {{selectedCollectedName.score_breakdown.wuge_score}}%;"></view>
+                <view class="score-text">{{selectedCollectedName.score_breakdown.wuge_score}}分</view>
+              </view>
+            </view>
+            
+            <view class="score-item">
+              <view class="score-label">五行匹配 ({{selectedCollectedName.score_breakdown.weights.wuxing_weight}}%)</view>
+              <view class="score-bar">
+                <view class="score-fill" style="width: {{selectedCollectedName.score_breakdown.wuxing_match_score}}%;"></view>
+                <view class="score-text">{{selectedCollectedName.score_breakdown.wuxing_match_score}}分</view>
+              </view>
+            </view>
+            
+            <view class="score-item">
+              <view class="score-label">三才配置 ({{selectedCollectedName.score_breakdown.weights.sancai_weight}}%)</view>
+              <view class="score-bar">
+                <view class="score-fill" style="width: {{selectedCollectedName.score_breakdown.sancai_score}}%;"></view>
+                <view class="score-text">{{selectedCollectedName.score_breakdown.sancai_score}}分</view>
+              </view>
+            </view>
+            
+            <view class="score-item">
+              <view class="score-label">音韵和谐 ({{selectedCollectedName.score_breakdown.weights.phonetic_weight}}%)</view>
+              <view class="score-bar">
+                <view class="score-fill" style="width: {{selectedCollectedName.score_breakdown.phonetic_score}}%;"></view>
+                <view class="score-text">{{selectedCollectedName.score_breakdown.phonetic_score}}分</view>
+              </view>
+            </view>
+            
+            <view class="score-item">
+              <view class="score-label">寓意丰富 ({{selectedCollectedName.score_breakdown.weights.meaning_weight}}%)</view>
+              <view class="score-bar">
+                <view class="score-fill" style="width: {{selectedCollectedName.score_breakdown.meaning_score}}%;"></view>
+                <view class="score-text">{{selectedCollectedName.score_breakdown.meaning_score}}分</view>
+              </view>
+            </view>
+          </view>
+        </view>
+
         <view class="detail-section">
           <view class="detail-title">寓意解释</view>
           <view class="meaning-text">{{selectedCollectedName.meaning_explanation}}</view>

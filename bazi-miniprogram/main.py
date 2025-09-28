@@ -99,6 +99,7 @@ class NamingRequest(BaseModel):
     calendar_type: str = "solar"
     name_length: int = 2
     count: int = 10
+    session_seed: Optional[str] = None
 
 class ZodiacMatchingRequest(BaseModel):
     zodiac1: str
@@ -297,7 +298,8 @@ async def generate_names(naming_data: NamingRequest):
                 
                 result = naming_calculator.analyze_and_generate_names(
                     naming_data.surname, naming_data.gender, birth_info,
-                    naming_data.name_length, naming_data.count
+                    naming_data.name_length, naming_data.count, 
+                    getattr(naming_data, 'session_seed', None)
                 )
                 
                 return {
