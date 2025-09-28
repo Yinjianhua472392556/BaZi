@@ -52,13 +52,23 @@
   animation: slideInUp 0.6s ease-out;
 }
 
-/* 表单卡片样式 - 统一化 */
-.form-card {
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-  margin-bottom: 0;
+/* 卡片样式更新 - 与八字测算页面完全一致 */
+.card {
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin: 20rpx 0;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.1);
+  border: 1rpx solid #F0F0F0;
+}
+
+/* 副标题样式 - 与八字测算页面完全一致 */
+.subtitle {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #C8860D;
+  margin-bottom: 30rpx;
+  text-align: left;
 }
 
 .form-group {
@@ -100,12 +110,14 @@
 /* 统一的输入框样式 */
 .input-field {
   width: 100%;
-  padding: 25rpx;
+  padding: 25rpx 20rpx;
   border: 2rpx solid #DDD;
   border-radius: 10rpx;
   font-size: 30rpx;
   background: white;
   box-sizing: border-box;
+  line-height: 1.4;
+  height: 80rpx;
 }
 
 .input-field:focus {
@@ -138,6 +150,126 @@
   transform: translateY(-50%);
   color: #999;
   font-size: 24rpx;
+}
+
+/* 单选按钮组 */
+.radio-item {
+  display: inline-block;
+  margin-right: 40rpx;
+  margin-top: 15rpx;
+  font-size: 28rpx;
+  color: #2F4F4F;
+  font-weight: 500;
+}
+
+.radio-item radio {
+  margin-right: 10rpx;
+}
+
+/* 日期选择器容器样式 */
+.date-picker-container {
+  margin-top: 10rpx;
+}
+
+.date-picker-container .picker {
+  background: #F8F9FA;
+  border: 2rpx solid #E0E0E0;
+  border-radius: 12rpx;
+  padding: 25rpx 20rpx;
+  text-align: center;
+  font-size: 32rpx;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.date-picker-container .picker:active {
+  background: #E9ECEF;
+  border-color: #C8860D;
+  transform: scale(0.98);
+}
+
+/* 农历选择器样式 - 与八字测算页面完全一致 */
+.lunar-picker-container {
+  margin-top: 10rpx;
+}
+
+.lunar-pickers {
+  display: flex;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 10rpx;
+}
+
+.lunar-year-picker,
+.lunar-month-picker,
+.lunar-day-picker {
+  flex: 1;
+  min-width: 0;
+}
+
+.lunar-year-picker .picker,
+.lunar-month-picker .picker,
+.lunar-day-picker .picker {
+  background: #F8F9FA;
+  border: 2rpx solid #E0E0E0;
+  border-radius: 12rpx;
+  padding: 20rpx 15rpx;
+  text-align: center;
+  font-size: 28rpx;
+  color: #333;
+  min-height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.lunar-year-picker .picker:active,
+.lunar-month-picker .picker:active,
+.lunar-day-picker .picker:active {
+  background: #E9ECEF;
+  border-color: #C8860D;
+  transform: scale(0.98);
+}
+
+/* 日期类型提示样式 */
+.date-type-hint {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 10rpx;
+  padding-left: 10rpx;
+  font-style: italic;
+}
+
+/* 对应日期显示样式 */
+.corresponding-date {
+  margin-top: 8rpx;
+  padding: 8rpx 12rpx;
+  background: linear-gradient(90deg, #FFF8DC 0%, #F5DEB3 100%);
+  border-left: 4rpx solid #C8860D;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  color: #2F4F4F;
+  font-weight: 500;
+}
+
+/* 响应式适配农历选择器 */
+@media (max-width: 375px) {
+  .lunar-pickers {
+    gap: 10rpx;
+  }
+  
+  .lunar-year-picker .picker,
+  .lunar-month-picker .picker,
+  .lunar-day-picker .picker {
+    padding: 15rpx 10rpx;
+    font-size: 24rpx;
+  }
+  
+  .corresponding-date {
+    font-size: 20rpx;
+    padding: 6rpx 10rpx;
+  }
 }
 
 /* 日期输入样式优化 */
@@ -174,6 +306,64 @@
   font-size: 26rpx;
   color: #666;
   font-weight: 500;
+}
+
+/* 农历选择器样式 - 与公历输入框完全一致 */
+.lunar-picker-container {
+  /* 容器不设置多余样式，让 .lunar-pickers 直接对应 .date-inputs */
+}
+
+.lunar-pickers {
+  /* 与 .date-inputs 完全一致 */
+  display: flex;
+  gap: 15rpx;
+  margin-bottom: 30rpx;
+}
+
+.lunar-year-picker,
+.lunar-month-picker,
+.lunar-day-picker {
+  /* 与 .date-input-group 完全一致 */
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.lunar-year-picker .picker,
+.lunar-month-picker .picker,
+.lunar-day-picker .picker {
+  /* 与 .date-input 完全一致 */
+  flex: 1;
+  padding: 20rpx 15rpx;
+  border: 2rpx solid #E0E0E0;
+  border-radius: 10rpx;
+  font-size: 28rpx;
+  text-align: center;
+  background: white;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.lunar-year-picker .picker:active,
+.lunar-month-picker .picker:active,
+.lunar-day-picker .picker:active {
+  /* 与 .date-input:focus 完全一致 */
+  border-color: #C8860D;
+  box-shadow: 0 0 0 4rpx rgba(200, 134, 13, 0.1);
+}
+
+/* 日期类型提示样式 - 简化版本，避免视觉跳跃 */
+.date-type-hint {
+  font-size: 22rpx;
+  color: #999;
+  text-align: center;
+  margin-top: 8rpx;
+}
+
+.corresponding-date {
+  color: #C8860D;
+  font-weight: 500;
+  margin-top: 5rpx;
 }
 
 /* 统一的按钮样式 */
@@ -655,8 +845,8 @@
   }
 }
 
-/* 响应式适配 */
-@media (max-width: 375px) {
+/* 响应式适配 - 只针对真正的小屏幕设备 */
+@media (max-width: 320px) {
   .main-content, .results-section {
     margin: -30rpx 15rpx 0;
     padding: 30rpx 20rpx;
@@ -679,12 +869,48 @@
     font-size: 24rpx;
   }
   
+  /* 响应式适配农历选择器 */
+  .lunar-pickers {
+    gap: 10rpx;
+  }
+  
+  .lunar-year-picker .picker,
+  .lunar-month-picker .picker,
+  .lunar-day-picker .picker {
+    padding: 15rpx 10rpx;
+    font-size: 24rpx;
+  }
+  
+  .corresponding-date {
+    font-size: 20rpx;
+    padding: 6rpx 10rpx;
+  }
+  
   .wuge-grid {
     grid-template-columns: 1fr;
   }
   
   .name-detail-modal {
     padding: 30rpx 20rpx;
+  }
+}
+
+/* 中等屏幕适配 - 保持与大屏幕一致的margin/padding */
+@media (max-width: 375px) and (min-width: 321px) {
+  .page-title {
+    font-size: 40rpx;
+  }
+  
+  .date-inputs, .lunar-pickers {
+    gap: 12rpx;
+  }
+  
+  .date-input,
+  .lunar-year-picker .picker,
+  .lunar-month-picker .picker,
+  .lunar-day-picker .picker {
+    padding: 18rpx 12rpx;
+    font-size: 26rpx;
   }
 }
 
@@ -718,12 +944,10 @@
   to { transform: rotate(360deg); }
 }
 
-/* 提升视觉层次 */
-.form-group:nth-child(even) {
-  background: rgba(248, 249, 250, 0.5);
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin: 20rpx -10rpx;
+/* 保持统一的视觉层次，避免历法切换时的视觉跳跃 */
+.form-group {
+  background: transparent;
+  transition: all 0.3s ease;
 }
 
 /* 优化触摸反馈 */

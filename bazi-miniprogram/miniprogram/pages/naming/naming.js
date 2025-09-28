@@ -1,18 +1,42 @@
 // pages/naming/naming.js
+const app = getApp()
+
 Page({
   /**
    * 页面的初始数据
    */
   data: {
-    // 用户输入数据
+    // 基本信息
     surname: '',
     gender: 'male',
-    birthYear: '',
-    birthMonth: '',
-    birthDay: '',
-    birthHour: 12,
+    
+    // 出生信息 - 与八字测算页面统一
+    birthDate: '',
+    birthTime: '',
     calendarType: 'solar',
+    maxDate: '',
+    
+    // 农历选择相关 - 与八字测算页面完全一致
+    lunarYear: '1990',
+    lunarMonth: '正月',
+    lunarDay: '初八',
+    lunarYearIndex: -1,
+    lunarMonthIndex: 0,
+    lunarDayIndex: 7,
+    lunarYears: [],
+    lunarMonths: ['正月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+    lunarDays: [],
+    
+    // 对应日期显示
+    correspondingLunarDate: '',
+    correspondingSolarDate: '',
+    
+    // 起名偏好
     nameLength: 2,
+    
+    // 选择器索引
+    genderIndex: 0,
+    nameLengthIndex: 1,
     
     // 性别选项
     genderOptions: [
@@ -24,12 +48,6 @@ Page({
     nameLengthOptions: [
       { value: 1, text: '单名' },
       { value: 2, text: '双名' }
-    ],
-    
-    // 历法类型选项
-    calendarOptions: [
-      { value: 'solar', text: '公历' },
-      { value: 'lunar', text: '农历' }
     ],
     
     // 分析结果
@@ -44,31 +62,49 @@ Page({
     showResults: false,
     selectedName: null,
     showNameDetail: false,
-    
-    // 当前年份（用于选择器）
-    currentYear: new Date().getFullYear(),
-    
-    // 出生时辰选项
-    hourOptions: [
-      { value: 0, text: '子时 (23:00-01:00)' },
-      { value: 2, text: '丑时 (01:00-03:00)' },
-      { value: 4, text: '寅时 (03:00-05:00)' },
-      { value: 6, text: '卯时 (05:00-07:00)' },
-      { value: 8, text: '辰时 (07:00-09:00)' },
-      { value: 10, text: '巳时 (09:00-11:00)' },
-      { value: 12, text: '午时 (11:00-13:00)' },
-      { value: 14, text: '未时 (13:00-15:00)' },
-      { value: 16, text: '申时 (15:00-17:00)' },
-      { value: 18, text: '酉时 (17:00-19:00)' },
-      { value: 20, text: '戌时 (19:00-21:00)' },
-      { value: 22, text: '亥时 (21:00-23:00)' }
-    ]
+    canNaming: false
   },
 
   /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
+    // 设置最大日期为今天
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const maxDate = `${year}-${month}-${day}`;
+    
+    // 初始化农历年份选择器
+    const currentYear = today.getFullYear();
+    const lunarYears = [];
+    for (let year = 1900; year <= currentYear; year++) {
+      lunarYears.push(year.toString());
+    }
+    
+    // 初始化农历日期选择器
+    const lunarDays = [];
+    for (let day = 1; day <= 30; day++) {
+      if (day <= 10) {
+        lunarDays.push('初' + ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][day]);
+      } else if (day <= 20) {
+        lunarDays.push('十' + ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'][day - 10] || '十');
+      } else {
+        lunarDays.push('廿' + ['', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][day - 20] || '廿');
+      }
+    }
+    
+    // 计算1990年在数组中的正确索引
+    const defaultYearIndex = lunarYears.findIndex(year => year === '1990');
+    
+    this.setData({
+      maxDate: maxDate,
+      lunarYears: lunarYears,
+      lunarDays: lunarDays,
+      lunarYearIndex: defaultYearIndex >= 0 ? defaultYearIndex : 90
+    });
+
     // 如果从八字页面跳转过来，获取出生信息
     if (options.birthInfo) {
       try {
@@ -85,11 +121,6 @@ Page({
         console.error('解析出生信息失败:', e);
       }
     }
-    
-    // 设置导航栏标题
-    wx.setNavigationBarTitle({
-      title: '智能起名'
-    });
   },
 
   /**
@@ -99,11 +130,14 @@ Page({
     this.setData({
       surname: e.detail.value
     });
+    this.checkCanNaming();
   },
 
   onGenderChange(e) {
+    const index = parseInt(e.detail.value);
     this.setData({
-      gender: this.data.genderOptions[e.detail.value].value
+      genderIndex: index,
+      gender: this.data.genderOptions[index].value
     });
   },
 
@@ -126,173 +160,359 @@ Page({
   },
 
   onHourChange(e) {
+    const index = parseInt(e.detail.value);
     this.setData({
-      birthHour: this.data.hourOptions[e.detail.value].value
+      hourIndex: index,
+      birthHour: this.data.hourOptions[index].value
     });
   },
 
+  // 日历类型选择 - 与八字测算页面完全一致
   onCalendarTypeChange(e) {
+    const calendarType = e.detail.value
+    
+    if (calendarType === 'lunar') {
+      // 切换到农历模式时，恢复默认值
+      this.setData({
+        calendarType: calendarType,
+        birthDate: '',
+        lunarYear: '1990',
+        lunarMonth: '正月',
+        lunarDay: '初八',
+        lunarYearIndex: 1990 - 1900,  // 动态计算1990年的索引
+        lunarMonthIndex: 0,
+        lunarDayIndex: 7,
+        correspondingLunarDate: '',
+        correspondingSolarDate: ''
+      })
+      // 自动更新对应的公历日期
+      this.updateLunarToSolar()
+    } else {
+      // 切换到公历模式时，重置所有选择
+      this.setData({
+        calendarType: calendarType,
+        birthDate: '',
+        lunarYear: '',
+        lunarMonth: '',
+        lunarDay: '',
+        lunarYearIndex: -1,
+        lunarMonthIndex: -1,
+        lunarDayIndex: -1,
+        correspondingLunarDate: '',
+        correspondingSolarDate: ''
+      })
+    }
+    
+    this.checkCanNaming()
+  },
+
+  // 日期选择 - 与八字测算页面完全一致
+  onDateChange(e) {
+    const birthDate = e.detail.value
     this.setData({
-      calendarType: this.data.calendarOptions[e.detail.value].value
-    });
+      birthDate: birthDate
+    })
+    
+    // 如果是公历模式，更新对应的农历显示
+    if (this.data.calendarType === 'solar') {
+      this.updateSolarToLunar(birthDate)
+    }
+    
+    this.checkCanNaming()
+  },
+
+  // 时间选择 - 与八字测算页面完全一致
+  onTimeChange(e) {
+    this.setData({
+      birthTime: e.detail.value
+    })
+    this.checkCanNaming()
   },
 
   onNameLengthChange(e) {
+    const index = parseInt(e.detail.value);
     this.setData({
-      nameLength: this.data.nameLengthOptions[e.detail.value].value
+      nameLengthIndex: index,
+      nameLength: this.data.nameLengthOptions[index].value
     });
   },
 
-  /**
-   * 表单验证
-   */
-  validateForm() {
-    const { surname, birthYear, birthMonth, birthDay } = this.data;
-    
-    if (!surname || surname.trim() === '') {
-      wx.showToast({
-        title: '请输入姓氏',
-        icon: 'none'
-      });
-      return false;
-    }
-    
-    if (surname.length > 3) {
-      wx.showToast({
-        title: '姓氏不能超过3个字',
-        icon: 'none'
-      });
-      return false;
-    }
-    
-    if (!birthYear || !birthMonth || !birthDay) {
-      wx.showToast({
-        title: '请完善出生日期',
-        icon: 'none'
-      });
-      return false;
-    }
-    
-    const year = parseInt(birthYear);
-    const month = parseInt(birthMonth);
-    const day = parseInt(birthDay);
-    
-    if (year < 1900 || year > this.data.currentYear) {
-      wx.showToast({
-        title: `年份应在1900-${this.data.currentYear}之间`,
-        icon: 'none'
-      });
-      return false;
-    }
-    
-    if (month < 1 || month > 12) {
-      wx.showToast({
-        title: '月份应在1-12之间',
-        icon: 'none'
-      });
-      return false;
-    }
-    
-    if (day < 1 || day > 31) {
-      wx.showToast({
-        title: '日期应在1-31之间',
-        icon: 'none'
-      });
-      return false;
-    }
-    
-    return true;
+  // 农历年选择 - 与八字测算页面完全一致
+  onLunarYearChange(e) {
+    const index = e.detail.value
+    const year = this.data.lunarYears[index]
+    this.setData({
+      lunarYearIndex: index,
+      lunarYear: year
+    })
+    this.updateLunarToSolar()
   },
 
-  /**
-   * 开始起名
-   */
-  async startNaming() {
-    if (!this.validateForm()) {
-      return;
-    }
-    
+  // 农历月选择 - 与八字测算页面完全一致
+  onLunarMonthChange(e) {
+    const index = e.detail.value
+    const month = this.data.lunarMonths[index]
     this.setData({
-      analyzing: true,
-      generating: true,
-      showResults: false
-    });
+      lunarMonthIndex: index,
+      lunarMonth: month
+    })
+    this.updateLunarToSolar()
+  },
+
+  // 农历日选择 - 与八字测算页面完全一致
+  onLunarDayChange(e) {
+    const index = e.detail.value
+    const day = this.data.lunarDays[index]
+    this.setData({
+      lunarDayIndex: index,
+      lunarDay: day
+    })
+    this.updateLunarToSolar()
+  },
+
+  // 农历转公历并更新显示 - 与八字测算页面完全一致
+  updateLunarToSolar() {
+    const { lunarYearIndex, lunarMonthIndex, lunarDayIndex } = this.data
     
-    wx.showLoading({
-      title: '正在分析八字...'
-    });
-    
-    try {
-      // 调用起名接口
-      const response = await this.generateNames();
+    if (lunarYearIndex >= 0 && lunarMonthIndex >= 0 && lunarDayIndex >= 0) {
+      const year = parseInt(this.data.lunarYears[lunarYearIndex])
+      const month = lunarMonthIndex + 1
+      const day = lunarDayIndex + 1
       
-      if (response.success) {
-        this.setData({
-          baziAnalysis: response.data.bazi_analysis,
-          recommendations: response.data.recommendations,
-          analysisSummary: response.data.analysis_summary,
-          namingSuggestions: response.data.naming_suggestions,
-          showResults: true
-        });
-        
-        wx.showToast({
-          title: '起名完成',
-          icon: 'success'
-        });
-      } else {
-        throw new Error(response.error || '起名失败');
-      }
-    } catch (error) {
-      console.error('起名错误:', error);
-      wx.showToast({
-        title: error.message || '起名失败，请重试',
-        icon: 'none',
-        duration: 3000
-      });
-    } finally {
-      wx.hideLoading();
-      this.setData({
-        analyzing: false,
-        generating: false
-      });
-    }
-  },
-
-  /**
-   * 调用起名API
-   */
-  generateNames() {
-    const app = getApp();
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: app.globalData.apiBaseUrl + '/api/v1/naming/generate-names',
+      // 调用后端API进行农历转公历
+      app.request({
+        url: '/api/v1/lunar-to-solar',
         method: 'POST',
-        header: {
-          'content-type': 'application/json'
-        },
         data: {
-          surname: this.data.surname.trim(),
-          gender: this.data.gender,
-          year: parseInt(this.data.birthYear),
-          month: parseInt(this.data.birthMonth),
-          day: parseInt(this.data.birthDay),
-          hour: this.data.birthHour,
-          calendar_type: this.data.calendarType,
-          name_length: this.data.nameLength,
-          count: 10
+          year: year,
+          month: month,
+          day: day,
+          leap: false
         },
-        success: (res) => {
-          if (res.statusCode === 200) {
-            resolve(res.data);
-          } else {
-            reject(new Error(res.data?.error || '网络请求失败'));
+        success: (result) => {
+          if (result.success) {
+            const solarDate = result.data.solar_date
+            const solarDateStr = `${solarDate.year}-${solarDate.month.toString().padStart(2, '0')}-${solarDate.day.toString().padStart(2, '0')}`
+            
+            this.setData({
+              birthDate: solarDateStr,
+              correspondingSolarDate: solarDateStr
+            })
+            this.checkCanNaming()
           }
         },
-        fail: (err) => {
-          reject(new Error('网络连接失败'));
+        fail: (error) => {
+          console.error('农历转公历失败:', error)
         }
-      });
-    });
+      })
+    }
+  },
+
+  // 公历日期变化时更新对应农历显示 - 与八字测算页面完全一致
+  updateSolarToLunar(solarDate) {
+    if (!solarDate) return
+    
+    const dateArr = solarDate.split('-')
+    if (dateArr.length !== 3) return
+    
+    app.request({
+      url: '/api/v1/solar-to-lunar',
+      method: 'POST',
+      data: {
+        year: parseInt(dateArr[0]),
+        month: parseInt(dateArr[1]),
+        day: parseInt(dateArr[2])
+      },
+      success: (result) => {
+        if (result.success) {
+          const lunarDate = result.data.lunar_date
+          const lunarDateStr = `${lunarDate.year}年${this.data.lunarMonths[lunarDate.month - 1]}${this.data.lunarDays[lunarDate.day - 1]}`
+          
+          this.setData({
+            correspondingLunarDate: lunarDateStr
+          })
+        }
+      },
+      fail: (error) => {
+        console.error('公历转农历失败:', error)
+      }
+    })
+  },
+
+  // 检查是否可以起名 - 与八字测算页面的checkCanCalculate逻辑一致
+  checkCanNaming() {
+    const { surname, birthDate, birthTime, calendarType, lunarYearIndex, lunarMonthIndex, lunarDayIndex } = this.data
+    
+    // 检查姓氏
+    if (!surname || surname.trim() === '') {
+      this.setData({ canNaming: false })
+      return
+    }
+    
+    // 检查日期完整性
+    let dateComplete = false
+    if (calendarType === 'lunar') {
+      // 农历模式：检查三个选择器都已选择
+      dateComplete = lunarYearIndex >= 0 && lunarMonthIndex >= 0 && lunarDayIndex >= 0
+    } else {
+      // 公历模式：检查日期字符串
+      dateComplete = birthDate && birthDate.length > 0
+    }
+    
+    // 检查时间
+    const timeComplete = birthTime && birthTime.length > 0
+    
+    this.setData({
+      canNaming: dateComplete && timeComplete
+    })
+  },
+
+  /**
+   * 开始起名 - 使用与八字测算页面一致的数据结构
+   */
+  startNaming() {
+    if (!this.data.canNaming) {
+      wx.showToast({
+        title: '请完善信息',
+        icon: 'none'
+      })
+      return
+    }
+
+    this.setData({
+      analyzing: true
+    })
+
+    let birthData;
+    
+    // 验证出生时间
+    if (!this.data.birthTime) {
+      wx.showToast({
+        title: '请选择出生时间',
+        icon: 'none'
+      })
+      this.setData({ analyzing: false })
+      return
+    }
+    
+    // 解析时间
+    const timeArr = this.data.birthTime.split(':')
+    const hour = timeArr.length >= 2 ? parseInt(timeArr[0]) : 12
+    
+    if (this.data.calendarType === 'lunar') {
+      // 农历模式：使用农历选择的数据
+      if (this.data.lunarYearIndex < 0 || this.data.lunarMonthIndex < 0 || this.data.lunarDayIndex < 0) {
+        wx.showToast({
+          title: '请选择完整的农历日期',
+          icon: 'none'
+        })
+        this.setData({ analyzing: false })
+        return
+      }
+      
+      const year = parseInt(this.data.lunarYears[this.data.lunarYearIndex])
+      const month = parseInt(this.data.lunarMonthIndex) + 1
+      const day = parseInt(this.data.lunarDayIndex) + 1
+      
+      birthData = {
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        gender: this.data.gender,
+        calendarType: 'lunar'
+      }
+    } else {
+      // 公历模式：解析出生日期
+      if (!this.data.birthDate) {
+        wx.showToast({
+          title: '请选择出生日期',
+          icon: 'none'
+        })
+        this.setData({ analyzing: false })
+        return
+      }
+      
+      const dateArr = this.data.birthDate.split('-')
+      if (dateArr.length !== 3) {
+        wx.showToast({
+          title: '日期格式错误',
+          icon: 'none'
+        })
+        this.setData({ analyzing: false })
+        return
+      }
+      
+      birthData = {
+        year: parseInt(dateArr[0]),
+        month: parseInt(dateArr[1]),
+        day: parseInt(dateArr[2]),
+        hour: hour,
+        gender: this.data.gender,
+        calendarType: 'solar'
+      }
+    }
+
+    wx.showLoading({
+      title: '正在分析八字并起名...'
+    })
+
+    // 调用起名API
+    app.request({
+      url: '/api/v1/naming/generate-names',
+      method: 'POST',
+      data: {
+        surname: this.data.surname.trim(),
+        gender: this.data.gender,
+        birth_year: birthData.year,
+        birth_month: birthData.month,
+        birth_day: birthData.day,
+        birth_hour: birthData.hour,
+        calendar_type: birthData.calendarType,
+        name_length: this.data.nameLength,
+        count: 10
+      },
+      success: (result) => {
+        wx.hideLoading()
+        this.setData({
+          analyzing: false
+        })
+
+        if (result.success) {
+          this.setData({
+            baziAnalysis: result.data.bazi_analysis,
+            recommendations: result.data.recommendations,
+            analysisSummary: result.data.analysis_summary,
+            namingSuggestions: result.data.naming_suggestions,
+            showResults: true
+          })
+
+          wx.showToast({
+            title: '起名完成',
+            icon: 'success'
+          })
+        } else {
+          wx.showModal({
+            title: '起名失败',
+            content: result.error || '起名过程中出现错误',
+            showCancel: false
+          })
+        }
+      },
+      fail: (error) => {
+        wx.hideLoading()
+        this.setData({
+          analyzing: false
+        })
+        
+        console.error('起名请求失败:', error)
+        wx.showModal({
+          title: '起名失败',
+          content: '网络连接失败，请检查后端服务状态',
+          showCancel: false
+        })
+      }
+    })
   },
 
   /**
