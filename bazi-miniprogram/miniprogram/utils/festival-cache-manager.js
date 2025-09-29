@@ -1,5 +1,5 @@
 // 节日缓存管理器 - 优化计算性能和减少重复计算
-const LunarConversionEngine = require('./lunar-conversion-engine.js');
+const LunarConversionEngine = require('./lunar-conversion-engine-fixed.js');
 
 class FestivalCacheManager {
   // 内存缓存

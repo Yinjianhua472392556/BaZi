@@ -5,10 +5,12 @@ class AstronomicalCalculator {
   static J2000 = 2451545.0; // J2000.0 历元
   static TROPICAL_YEAR = 365.2421896698; // 回归年长度（天）
   static SYNODIC_MONTH = 29.5305888531; // 朔望月长度（天）
+  static AU = 149597870.7; // 天文单位（千米）
+  static LIGHT_SPEED = 299792458; // 光速（米/秒）
   
-  // 太阳黄经计算用常数
+  // 增强的太阳黄经计算用常数（VSOP87简化版，包含更多项）
   static SOLAR_LONGITUDE_TERMS = [
-    // L0项 (主要项)
+    // L0项 (主要项 - 扩展版)
     [175347046, 0, 0],
     [3341656, 4.6692568, 6283.0758500],
     [34894, 4.6261, 12566.1517],
@@ -18,7 +20,45 @@ class AstronomicalCalculator {
     [2676, 4.4181, 7860.4194],
     [2343, 6.1352, 3930.2097],
     [1324, 0.7425, 11506.7698],
-    [1273, 2.0371, 529.6910]
+    [1273, 2.0371, 529.6910],
+    [1199, 1.1096, 1577.3435],
+    [990, 5.233, 5884.927],
+    [902, 2.045, 26.298],
+    [857, 3.508, 398.149],
+    [780, 1.179, 5223.694],
+    [753, 2.533, 5507.553],
+    [505, 4.583, 18849.228],
+    [492, 4.205, 775.523],
+    [357, 2.920, 0.067],
+    [317, 5.849, 11790.629]
+  ];
+  
+  // L1项（一阶项）
+  static SOLAR_LONGITUDE_L1_TERMS = [
+    [628331966747, 0, 0],
+    [206059, 2.678235, 6283.075850],
+    [4303, 2.6351, 12566.1517],
+    [425, 1.590, 3.523],
+    [119, 5.796, 26.298],
+    [109, 2.966, 1577.344],
+    [93, 2.59, 18849.23],
+    [72, 1.14, 529.69],
+    [68, 1.87, 398.15],
+    [67, 4.41, 5507.55]
+  ];
+  
+  // L2项（二阶项）
+  static SOLAR_LONGITUDE_L2_TERMS = [
+    [52919, 0, 0],
+    [8720, 1.0721, 6283.0758],
+    [309, 0.867, 12566.152],
+    [27, 0.05, 3.52],
+    [16, 5.19, 26.30],
+    [16, 3.68, 155.42],
+    [10, 0.76, 18849.23],
+    [9, 2.06, 77713.77],
+    [7, 0.83, 775.52],
+    [5, 4.66, 1577.34]
   ];
   
   // 月球位置计算用主要项
@@ -115,35 +155,84 @@ class AstronomicalCalculator {
   }
 
   /**
-   * 计算太阳的黄经 (简化但实用的算法)
+   * 计算太阳的黄经 (简化但精确的算法)
    * @param {number} jd - 儒略日数
    * @returns {number} 太阳黄经（弧度）
    */
   static solarLongitude(jd) {
     const T = (jd - this.J2000) / 36525.0; // 儒略世纪数
     
-    // 太阳平均黄经（简化公式）
-    let L = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+    // 使用简化但精确的太阳黄经公式（基于Meeus算法）
+    // 太阳几何平黄经
+    let L0 = this.degToRad(280.46646 + 36000.76983 * T + 0.0003032 * T * T);
+    
+    // 太阳平近点角
+    let M = this.degToRad(357.52911 + 35999.05029 * T - 0.0001537 * T * T);
+    
+    // 地心真黄经（加入椭圆轨道修正）
+    let C = this.degToRad((1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M) +
+                          (0.019993 - 0.000101 * T) * Math.sin(2 * M) +
+                          0.000289 * Math.sin(3 * M));
+    
+    // 太阳真黄经
+    let theta = L0 + C;
+    
+    // 太阳真近点角
+    let nu = M + C;
+    
+    // 日地距离修正（用于光行差）
+    let R = 1.000001018 * (1 - 0.01671123 * Math.cos(M) - 0.00014 * Math.cos(2 * M));
+    
+    // 黄经章动修正
+    let omega = this.degToRad(125.04 - 1934.136 * T);
+    theta = theta - this.degToRad(0.00569) - this.degToRad(0.00478 * Math.sin(omega));
+    
+    return this.normalizeAngle(theta);
+  }
+
+  /**
+   * 计算岁差修正
+   * @param {number} T - 儒略世纪数
+   * @returns {number} 岁差修正（弧度）
+   */
+  static calculatePrecession(T) {
+    // IAU 2000 岁差公式
+    const pA = this.degToRad((5029.0966 * T + 1.1120 * T * T - 0.000006 * T * T * T) / 3600.0);
+    return pA;
+  }
+
+  /**
+   * 计算章动修正（IAU 2000A简化版）
+   * @param {number} T - 儒略世纪数
+   * @returns {number} 章动修正（弧度）
+   */
+  static calculateNutation(T) {
+    // 月球升交点平黄经
+    const omega = this.degToRad(125.04452 - 1934.136261 * T + 0.0020708 * T * T + T * T * T / 450000.0);
+    
+    // 主要章动项
+    const dpsi = -0.000083 * Math.sin(omega) - 0.000001 * Math.sin(2 * omega);
+    
+    return dpsi;
+  }
+
+  /**
+   * 计算光行差修正
+   * @param {number} T - 儒略世纪数
+   * @returns {number} 光行差修正（弧度）
+   */
+  static calculateAberration(T) {
+    // 地球轨道偏心率
+    const e = 0.016708634 - 0.000042037 * T - 0.0000001267 * T * T;
     
     // 太阳平均近点角
-    let M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
-    M = this.degToRad(M);
+    const M = this.degToRad(357.52911 + 35999.05029 * T - 0.0001537 * T * T);
     
-    // 中心方程
-    const C = (1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M) +
-              (0.019993 - 0.000101 * T) * Math.sin(2 * M) +
-              0.000289 * Math.sin(3 * M);
+    // 光行差常数（弧度）
+    const K = this.degToRad(20.49552 / 3600.0);
     
-    // 真太阳黄经
-    L = L + C;
-    
-    // 章动修正（简化）
-    const omega = 125.04 - 1934.136 * T;
-    const nutation = -0.00569 - 0.00478 * Math.sin(this.degToRad(omega));
-    L = L + nutation;
-    
-    // 转换为弧度并标准化
-    return this.normalizeAngle(this.degToRad(L));
+    // 简化的光行差修正
+    return -K * Math.cos(M) - K * e * Math.cos(2 * M);
   }
 
   /**

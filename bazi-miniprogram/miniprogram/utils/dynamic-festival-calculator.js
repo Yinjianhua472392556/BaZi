@@ -1,6 +1,6 @@
 // 动态节日计算器 - 基于天文算法的无限期节日计算
 const FestivalCacheManager = require('./festival-cache-manager.js');
-const LunarConversionEngine = require('./lunar-conversion-engine.js');
+const LunarConversionEngine = require('./lunar-conversion-engine-fixed.js');
 const AstronomicalCalculator = require('./astronomical-calculator.js');
 
 class DynamicFestivalCalculator {
@@ -37,6 +37,13 @@ class DynamicFestivalCalculator {
         type: 'traditional',
         level: 'normal'
       },
+      'ghost_festival': { 
+        name: '中元节', 
+        month: 7, 
+        day: 15, 
+        type: 'traditional',
+        level: 'normal'
+      },
       'mid_autumn': { 
         name: '中秋节', 
         month: 8, 
@@ -50,6 +57,27 @@ class DynamicFestivalCalculator {
         day: 9, 
         type: 'traditional',
         level: 'normal'
+      },
+      'laba': { 
+        name: '腊八节', 
+        month: 12, 
+        day: 8, 
+        type: 'traditional',
+        level: 'normal'
+      },
+      'kitchen_god': { 
+        name: '小年', 
+        month: 12, 
+        day: 23, 
+        type: 'traditional',
+        level: 'normal'
+      },
+      'new_year_eve': { 
+        name: '除夕', 
+        month: 12, 
+        day: 30, 
+        type: 'traditional',
+        level: 'major'
       }
     },
     
@@ -62,6 +90,34 @@ class DynamicFestivalCalculator {
         type: 'modern',
         level: 'major'
       },
+      'valentines': { 
+        name: '情人节', 
+        month: 2, 
+        day: 14, 
+        type: 'western',
+        level: 'normal'
+      },
+      'womens_day': { 
+        name: '妇女节', 
+        month: 3, 
+        day: 8, 
+        type: 'modern',
+        level: 'normal'
+      },
+      'tree_planting': { 
+        name: '植树节', 
+        month: 3, 
+        day: 12, 
+        type: 'modern',
+        level: 'normal'
+      },
+      'april_fools': { 
+        name: '愚人节', 
+        month: 4, 
+        day: 1, 
+        type: 'western',
+        level: 'normal'
+      },
       'labor_day': { 
         name: '劳动节', 
         month: 5, 
@@ -69,12 +125,77 @@ class DynamicFestivalCalculator {
         type: 'modern',
         level: 'major'
       },
+      'youth_day': { 
+        name: '青年节', 
+        month: 5, 
+        day: 4, 
+        type: 'modern',
+        level: 'normal'
+      },
+      'mothers_day': { 
+        name: '母亲节', 
+        month: 5, 
+        day: 12, 
+        type: 'western',
+        level: 'normal',
+        calculator: 'calculateMothersDay' // 5月第二个星期日
+      },
+      'childrens_day': { 
+        name: '儿童节', 
+        month: 6, 
+        day: 1, 
+        type: 'modern',
+        level: 'normal'
+      },
+      'party_founding': { 
+        name: '建党节', 
+        month: 7, 
+        day: 1, 
+        type: 'modern',
+        level: 'normal'
+      },
+      'army_day': { 
+        name: '建军节', 
+        month: 8, 
+        day: 1, 
+        type: 'modern',
+        level: 'normal'
+      },
+      'teachers_day': { 
+        name: '教师节', 
+        month: 9, 
+        day: 10, 
+        type: 'modern',
+        level: 'normal'
+      },
       'national_day': { 
         name: '国庆节', 
         month: 10, 
         day: 1, 
         type: 'modern',
         level: 'major'
+      },
+      'halloween': { 
+        name: '万圣节', 
+        month: 10, 
+        day: 31, 
+        type: 'western',
+        level: 'normal'
+      },
+      'singles_day': { 
+        name: '光棍节', 
+        month: 11, 
+        day: 11, 
+        type: 'modern',
+        level: 'normal'
+      },
+      'thanksgiving': { 
+        name: '感恩节', 
+        month: 11, 
+        day: 28, 
+        type: 'western',
+        level: 'normal',
+        calculator: 'calculateThanksgiving' // 11月第四个星期四
       },
       'christmas_eve': { 
         name: '平安夜', 
@@ -92,7 +213,179 @@ class DynamicFestivalCalculator {
       }
     },
     
-    // 特殊节日 - 需要复杂计算规则
+    // 24节气 - 基于天文计算
+    solar_terms: {
+      'lichun': { 
+        name: '立春', 
+        longitude: 315, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'yushui': { 
+        name: '雨水', 
+        longitude: 330, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'jingzhe': { 
+        name: '惊蛰', 
+        longitude: 345, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'chunfen': { 
+        name: '春分', 
+        longitude: 0, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'qingming': { 
+        name: '清明', 
+        longitude: 15, 
+        type: 'solar_term',
+        level: 'major',
+        calculator: 'calculateSolarTerm'
+      },
+      'guyu': { 
+        name: '谷雨', 
+        longitude: 30, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'lixia': { 
+        name: '立夏', 
+        longitude: 45, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'xiaoman': { 
+        name: '小满', 
+        longitude: 60, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'mangzhong': { 
+        name: '芒种', 
+        longitude: 75, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'xiazhi': { 
+        name: '夏至', 
+        longitude: 90, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'xiaoshu': { 
+        name: '小暑', 
+        longitude: 105, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'dashu': { 
+        name: '大暑', 
+        longitude: 120, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'liqiu': { 
+        name: '立秋', 
+        longitude: 135, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'chushu': { 
+        name: '处暑', 
+        longitude: 150, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'bailu': { 
+        name: '白露', 
+        longitude: 165, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'qiufen': { 
+        name: '秋分', 
+        longitude: 180, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'hanlu': { 
+        name: '寒露', 
+        longitude: 195, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'shuangjiang': { 
+        name: '霜降', 
+        longitude: 210, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'lidong': { 
+        name: '立冬', 
+        longitude: 225, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'xiaoxue': { 
+        name: '小雪', 
+        longitude: 240, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'daxue': { 
+        name: '大雪', 
+        longitude: 255, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'dongzhi': { 
+        name: '冬至', 
+        longitude: 270, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'xiaohan': { 
+        name: '小寒', 
+        longitude: 285, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      },
+      'dahan': { 
+        name: '大寒', 
+        longitude: 300, 
+        type: 'solar_term',
+        level: 'normal',
+        calculator: 'calculateSolarTerm'
+      }
+    },
+    
+    // 特殊节日 - 需要复杂计算规则（保留兼容性）
     special: {
       'qingming': {
         name: '清明节',
@@ -159,7 +452,24 @@ class DynamicFestivalCalculator {
     
     // 计算农历节日
     Object.entries(this.FESTIVAL_RULES.lunar).forEach(([id, rule]) => {
-      const solarDate = this.convertLunarToSolar(year, rule.month, rule.day);
+      let solarDate = null;
+      
+      // 特殊处理除夕（腊月最后一天）
+      if (id === 'new_year_eve') {
+        // 除夕是农历十二月的最后一天，需要动态计算天数
+        const lunarYearData = FestivalCacheManager.getLunarYearData(year);
+        if (lunarYearData && lunarYearData.months) {
+          // 找到腊月（十二月）
+          const lastMonth = lunarYearData.months.find(m => m.month === 12 && !m.isLeap);
+          if (lastMonth) {
+            solarDate = this.convertLunarToSolar(year, 12, lastMonth.days); // 使用实际天数
+          }
+        }
+      } else {
+        // 正常农历节日
+        solarDate = this.convertLunarToSolar(year, rule.month, rule.day);
+      }
+      
       if (solarDate) {
         festivals.push({
           id: `${id}_${year}`,
@@ -173,6 +483,25 @@ class DynamicFestivalCalculator {
           type: rule.type,
           level: rule.level,
           calendar: 'lunar'
+        });
+      }
+    });
+    
+    // 计算24节气
+    Object.entries(this.FESTIVAL_RULES.solar_terms).forEach(([id, rule]) => {
+      const date = this.calculateSolarTerm(year, rule.longitude);
+      if (date) {
+        festivals.push({
+          id: `${id}_${year}`,
+          name: rule.name,
+          year: date.getFullYear(),
+          month: date.getMonth() + 1,
+          day: date.getDate(),
+          date: date,
+          longitude: rule.longitude,
+          type: rule.type,
+          level: rule.level,
+          calendar: 'solar_term'
         });
       }
     });
@@ -209,29 +538,134 @@ class DynamicFestivalCalculator {
     }
   }
 
-  // 计算清明节 - 基于天文节气计算
-  static calculateQingming(year) {
+  // 计算24节气 - 基于天文算法
+  static calculateSolarTerm(year, longitude) {
     try {
-      // 获取该年的节气数据
+      // 优先使用缓存的节气数据
       const solarTerms = FestivalCacheManager.getSolarTermsData(year);
       
       if (solarTerms) {
-        // 找到清明节气
-        const qingming = solarTerms.find(term => term.name === '清明');
-        if (qingming) {
-          return qingming.date;
+        // 根据太阳黄经找到对应的节气
+        const term = solarTerms.find(t => t.longitude === longitude);
+        if (term) {
+          return term.date;
         }
       }
       
-      // 如果缓存失败，使用直接计算
-      const qingmingJD = AstronomicalCalculator.findSolarLongitudeTime(year, 15); // 清明：太阳黄经15度
-      return AstronomicalCalculator.julianDayToGregorian(qingmingJD);
+      // 如果缓存失败，使用直接天文计算
+      const julianDay = AstronomicalCalculator.findSolarLongitudeTime(year, longitude);
+      return AstronomicalCalculator.julianDayToGregorian(julianDay);
+    } catch (error) {
+      console.error(`计算${year}年太阳黄经${longitude}度节气失败:`, error);
+      
+      // 降级到近似算法
+      return this.approximateSolarTerm(year, longitude);
+    }
+  }
+
+  // 近似节气计算 - 降级算法
+  static approximateSolarTerm(year, longitude) {
+    try {
+      // 24节气的近似日期（基于2000年）
+      const baseTermDates = {
+        315: new Date(year, 1, 4),   // 立春
+        330: new Date(year, 1, 19),  // 雨水
+        345: new Date(year, 2, 5),   // 惊蛰
+        0: new Date(year, 2, 20),    // 春分
+        15: new Date(year, 3, 5),    // 清明
+        30: new Date(year, 3, 20),   // 谷雨
+        45: new Date(year, 4, 5),    // 立夏
+        60: new Date(year, 4, 21),   // 小满
+        75: new Date(year, 5, 5),    // 芒种
+        90: new Date(year, 5, 21),   // 夏至
+        105: new Date(year, 6, 7),   // 小暑
+        120: new Date(year, 6, 22),  // 大暑
+        135: new Date(year, 7, 7),   // 立秋
+        150: new Date(year, 7, 23),  // 处暑
+        165: new Date(year, 8, 7),   // 白露
+        180: new Date(year, 8, 23),  // 秋分
+        195: new Date(year, 9, 8),   // 寒露
+        210: new Date(year, 9, 23),  // 霜降
+        225: new Date(year, 10, 7),  // 立冬
+        240: new Date(year, 10, 22), // 小雪
+        255: new Date(year, 11, 7),  // 大雪
+        270: new Date(year, 11, 22), // 冬至
+        285: new Date(year, 0, 5),   // 小寒（下一年）
+        300: new Date(year, 0, 20)   // 大寒（下一年）
+      };
+
+      let baseDate = baseTermDates[longitude];
+      if (!baseDate) {
+        console.warn(`未知的太阳黄经: ${longitude}`);
+        return null;
+      }
+
+      // 根据年份差异调整（每4年约1天的偏移）
+      const yearOffset = Math.floor((year - 2000) / 4);
+      baseDate.setDate(baseDate.getDate() + yearOffset);
+
+      return baseDate;
+    } catch (error) {
+      console.error(`近似计算节气失败:`, error);
+      return null;
+    }
+  }
+
+  // 计算清明节 - 基于天文节气计算
+  static calculateQingming(year) {
+    try {
+      // 清明节就是清明节气
+      return this.calculateSolarTerm(year, 15);
     } catch (error) {
       console.error(`计算${year}年清明节失败:`, error);
       
       // 降级到简化算法
       const approximateDay = 4 + Math.floor((year - 2000) * 0.2422);
       return new Date(year, 3, Math.max(1, Math.min(30, approximateDay))); // 限制在4月1-30日
+    }
+  }
+
+  // 计算母亲节 - 5月第二个星期日
+  static calculateMothersDay(year) {
+    try {
+      const mayFirst = new Date(year, 4, 1); // 5月1日
+      const firstDayOfWeek = mayFirst.getDay(); // 星期几（0=周日）
+      
+      // 计算第一个星期日
+      let firstSunday = 1;
+      if (firstDayOfWeek !== 0) {
+        firstSunday = 8 - firstDayOfWeek;
+      }
+      
+      // 第二个星期日
+      const secondSunday = firstSunday + 7;
+      return new Date(year, 4, secondSunday);
+    } catch (error) {
+      console.error(`计算${year}年母亲节失败:`, error);
+      return new Date(year, 4, 12); // 默认5月12日
+    }
+  }
+
+  // 计算感恩节 - 11月第四个星期四
+  static calculateThanksgiving(year) {
+    try {
+      const novFirst = new Date(year, 10, 1); // 11月1日
+      const firstDayOfWeek = novFirst.getDay(); // 星期几（0=周日）
+      
+      // 计算第一个星期四
+      let firstThursday = 1;
+      if (firstDayOfWeek <= 4) {
+        firstThursday = 5 - firstDayOfWeek;
+      } else {
+        firstThursday = 12 - firstDayOfWeek;
+      }
+      
+      // 第四个星期四
+      const fourthThursday = firstThursday + 21;
+      return new Date(year, 10, fourthThursday);
+    } catch (error) {
+      console.error(`计算${year}年感恩节失败:`, error);
+      return new Date(year, 10, 28); // 默认11月28日
     }
   }
 
