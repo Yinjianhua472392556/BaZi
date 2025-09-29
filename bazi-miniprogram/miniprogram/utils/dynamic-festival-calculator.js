@@ -1,7 +1,8 @@
-// 动态节日计算器 - 基于天文算法的无限期节日计算
+// 动态节日计算器 - 基于天文算法的无限期节日计算（支持中国时区）
 const FestivalCacheManager = require('./festival-cache-manager.js');
-const LunarConversionEngine = require('./lunar-conversion-engine-fixed.js');
+const LunarConversionEngine = require('./lunar-conversion-engine.js');
 const AstronomicalCalculator = require('./astronomical-calculator.js');
+const ChinaTimezoneHandler = require('./china-timezone-handler.js');
 
 class DynamicFestivalCalculator {
   
@@ -192,7 +193,7 @@ class DynamicFestivalCalculator {
       'thanksgiving': { 
         name: '感恩节', 
         month: 11, 
-        day: 28, 
+        day: 27, 
         type: 'western',
         level: 'normal',
         calculator: 'calculateThanksgiving' // 11月第四个星期四
@@ -563,35 +564,35 @@ class DynamicFestivalCalculator {
     }
   }
 
-  // 近似节气计算 - 降级算法
+  // 近似节气计算 - 降级算法（修正版）
   static approximateSolarTerm(year, longitude) {
     try {
-      // 24节气的近似日期（基于2000年）
+      // 24节气的近似日期（基于实际天文数据修正）
       const baseTermDates = {
-        315: new Date(year, 1, 4),   // 立春
-        330: new Date(year, 1, 19),  // 雨水
-        345: new Date(year, 2, 5),   // 惊蛰
-        0: new Date(year, 2, 20),    // 春分
-        15: new Date(year, 3, 5),    // 清明
-        30: new Date(year, 3, 20),   // 谷雨
-        45: new Date(year, 4, 5),    // 立夏
-        60: new Date(year, 4, 21),   // 小满
-        75: new Date(year, 5, 5),    // 芒种
-        90: new Date(year, 5, 21),   // 夏至
-        105: new Date(year, 6, 7),   // 小暑
-        120: new Date(year, 6, 22),  // 大暑
-        135: new Date(year, 7, 7),   // 立秋
-        150: new Date(year, 7, 23),  // 处暑
-        165: new Date(year, 8, 7),   // 白露
-        180: new Date(year, 8, 23),  // 秋分
-        195: new Date(year, 9, 8),   // 寒露
-        210: new Date(year, 9, 23),  // 霜降
-        225: new Date(year, 10, 7),  // 立冬
-        240: new Date(year, 10, 22), // 小雪
-        255: new Date(year, 11, 7),  // 大雪
-        270: new Date(year, 11, 22), // 冬至
-        285: new Date(year, 0, 5),   // 小寒（下一年）
-        300: new Date(year, 0, 20)   // 大寒（下一年）
+        315: new Date(year, 1, 4),   // 立春 (2月4日左右)
+        330: new Date(year, 1, 19),  // 雨水 (2月19日左右)
+        345: new Date(year, 2, 5),   // 惊蛰 (3月5日左右)
+        0: new Date(year, 2, 20),    // 春分 (3月20日左右)
+        15: new Date(year, 3, 5),    // 清明 (4月5日左右)
+        30: new Date(year, 3, 20),   // 谷雨 (4月20日左右)
+        45: new Date(year, 4, 5),    // 立夏 (5月5日左右)
+        60: new Date(year, 4, 21),   // 小满 (5月21日左右)
+        75: new Date(year, 5, 5),    // 芒种 (6月5日左右)
+        90: new Date(year, 5, 21),   // 夏至 (6月21日左右)
+        105: new Date(year, 6, 7),   // 小暑 (7月7日左右)
+        120: new Date(year, 6, 22),  // 大暑 (7月22日左右)
+        135: new Date(year, 7, 7),   // 立秋 (8月7日左右)
+        150: new Date(year, 7, 23),  // 处暑 (8月23日左右)
+        165: new Date(year, 8, 7),   // 白露 (9月7日左右)
+        180: new Date(year, 8, 23),  // 秋分 (9月23日左右)
+        195: new Date(year, 9, 8),   // 寒露 (10月8日左右)
+        210: new Date(year, 9, 23),  // 霜降 (10月23日左右)
+        225: new Date(year, 10, 7),  // 立冬 (11月7日左右)
+        240: new Date(year, 10, 22), // 小雪 (11月22日左右)
+        255: new Date(year, 11, 7),  // 大雪 (12月7日左右) - 修正关键问题
+        270: new Date(year, 11, 22), // 冬至 (12月22日左右)
+        285: new Date(year + 1, 0, 5),   // 小寒 (次年1月5日左右) - 修正年份
+        300: new Date(year + 1, 0, 20)   // 大寒 (次年1月20日左右) - 修正年份
       };
 
       let baseDate = baseTermDates[longitude];
@@ -600,9 +601,13 @@ class DynamicFestivalCalculator {
         return null;
       }
 
-      // 根据年份差异调整（每4年约1天的偏移）
-      const yearOffset = Math.floor((year - 2000) / 4);
-      baseDate.setDate(baseDate.getDate() + yearOffset);
+      // 根据年份差异调整（更精确的偏移计算）
+      const yearsSince2000 = year - 2000;
+      const leapYearOffset = Math.floor(yearsSince2000 / 4);
+      const fineOffset = (yearsSince2000 % 4) * 0.25;
+      const totalOffset = Math.round(leapYearOffset + fineOffset);
+      
+      baseDate.setDate(baseDate.getDate() + totalOffset);
 
       return baseDate;
     } catch (error) {
@@ -646,27 +651,59 @@ class DynamicFestivalCalculator {
     }
   }
 
-  // 计算感恩节 - 11月第四个星期四
+  // 计算感恩节 - 11月第四个星期四（修复版算法）
   static calculateThanksgiving(year) {
     try {
-      const novFirst = new Date(year, 10, 1); // 11月1日
-      const firstDayOfWeek = novFirst.getDay(); // 星期几（0=周日）
+      const november1 = new Date(year, 10, 1); // 11月1日
+      const firstDayOfWeek = november1.getDay(); // 星期几（0=周日, 1=周一, ..., 6=周六）
       
-      // 计算第一个星期四
-      let firstThursday = 1;
-      if (firstDayOfWeek <= 4) {
-        firstThursday = 5 - firstDayOfWeek;
-      } else {
-        firstThursday = 12 - firstDayOfWeek;
+      // 计算第一个星期四的日期 - 使用标准算法
+      // 公式：1 + (4 - firstDayOfWeek + 7) % 7
+      const firstThursday = 1 + (4 - firstDayOfWeek + 7) % 7;
+      
+      // 第四个星期四 = 第一个星期四 + 21天
+      const fourthThursday = firstThursday + 21;
+      
+      // 验证日期是否合理（11月应该有30天）
+      if (fourthThursday > 30) {
+        console.warn(`${year}年感恩节计算异常: 11月${fourthThursday}日，使用备用算法`);
+        return this.calculateThanksgivingFallback(year);
       }
       
-      // 第四个星期四
-      const fourthThursday = firstThursday + 21;
-      return new Date(year, 10, fourthThursday);
+      const thanksgivingDate = new Date(year, 10, fourthThursday);
+      
+      // 验证确实是星期四
+      if (thanksgivingDate.getDay() !== 4) {
+        console.warn(`${year}年感恩节计算错误: ${fourthThursday}日不是星期四，使用备用算法`);
+        return this.calculateThanksgivingFallback(year);
+      }
+      
+      return thanksgivingDate;
     } catch (error) {
       console.error(`计算${year}年感恩节失败:`, error);
-      return new Date(year, 10, 28); // 默认11月28日
+      return this.calculateThanksgivingFallback(year);
     }
+  }
+  
+  // 感恩节备用计算算法
+  static calculateThanksgivingFallback(year) {
+    // 使用更直接的方法：遍历11月的每一天，找到第四个星期四
+    const thursdays = [];
+    
+    for (let day = 1; day <= 30; day++) {
+      const date = new Date(year, 10, day);
+      if (date.getDay() === 4) { // 星期四
+        thursdays.push(day);
+      }
+    }
+    
+    if (thursdays.length >= 4) {
+      return new Date(year, 10, thursdays[3]); // 第四个星期四（索引3）
+    }
+    
+    // 最后的备用方案：经验日期
+    console.error(`${year}年无法找到第四个星期四，使用经验日期`);
+    return new Date(year, 10, 25); // 11月25日左右通常是感恩节
   }
 
   /**

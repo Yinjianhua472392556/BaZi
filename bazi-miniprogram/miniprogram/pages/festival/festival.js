@@ -108,6 +108,15 @@ Page({
       isTomorrow: displayInfo.isTomorrow,
       isThisWeek: displayInfo.isThisWeek,
       
+      // 高精度数据标识
+      isHighPrecision: festival.isHighPrecision || false,
+      precisionLevel: festival.precisionLevel || 'calculated',
+      precisionDisplay: festival.precisionDisplay || '📊计算',
+      precisionDescription: festival.precisionDescription || '天文算法计算',
+      precisionColor: festival.precisionColor || '#32CD32',
+      dataSource: festival.dataSource || { source: '动态计算', reliability: 'standard' },
+      qualityLevel: festival.qualityLevel || 'standard_grade',
+      
       // 传统信息（仅对非节气类型）
       ganZhi: lunarInfo ? `${lunarInfo.ganZhi || ''}·${lunarInfo.ganZhiLuck || ''}` : '',
       shierShen: lunarInfo ? `${lunarInfo.shierShen || ''}·${lunarInfo.shierShenLuck || ''}` : '',

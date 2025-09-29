@@ -1,4 +1,6 @@
-// 天文计算引擎 - 基于高精度天文算法
+// 天文计算引擎 - 基于高精度天文算法，支持中国时区
+const ChinaTimezoneHandler = require('./china-timezone-handler.js');
+
 class AstronomicalCalculator {
   
   // 常数定义
@@ -86,108 +88,115 @@ class AstronomicalCalculator {
   ];
 
   /**
-   * 公历转换为儒略日
+   * 计算太阳黄经（增强版VSOP87）
+   * @param {number} jd - 儒略日数
+   * @returns {number} 太阳黄经（弧度）
+   */
+  static solarLongitude(jd) {
+    const T = (jd - this.J2000) / 36525.0;
+    
+    // 计算L0项（主项）
+    let L0 = 0;
+    this.SOLAR_LONGITUDE_TERMS.forEach(term => {
+      const [A, B, C] = term;
+      L0 += A * Math.cos(B + C * T);
+    });
+    
+    // 计算L1项（一阶项）
+    let L1 = 0;
+    this.SOLAR_LONGITUDE_L1_TERMS.forEach(term => {
+      const [A, B, C] = term;
+      L1 += A * Math.cos(B + C * T);
+    });
+    
+    // 计算L2项（二阶项）
+    let L2 = 0;
+    this.SOLAR_LONGITUDE_L2_TERMS.forEach(term => {
+      const [A, B, C] = term;
+      L2 += A * Math.cos(B + C * T);
+    });
+    
+    // 合成黄经
+    let L = (L0 + L1 * T + L2 * T * T) / 100000000.0;
+    
+    // 转换为度数并标准化
+    L = this.radToDeg(L);
+    L = L % 360;
+    if (L < 0) L += 360;
+    
+    // 应用修正
+    const precession = this.calculatePrecession(T);
+    const nutation = this.calculateNutation(T);
+    const aberration = this.calculateAberration(T);
+    
+    L += this.radToDeg(precession + nutation + aberration);
+    
+    // 最终标准化
+    L = L % 360;
+    if (L < 0) L += 360;
+    
+    return this.degToRad(L);
+  }
+
+  /**
+   * 儒略日转换为公历（支持中国时区）
+   * @param {number} jd - 儒略日数
+   * @param {boolean} useCST - 是否转换为中国标准时间（默认true）
+   * @returns {Date} JavaScript Date对象
+   */
+  static julianDayToGregorian(jd, useCST = true) {
+    if (useCST) {
+      // 使用中国时区处理器进行转换
+      return ChinaTimezoneHandler.julianDayToCST(jd);
+    } else {
+      // 原始UTC转换逻辑（保留兼容性）
+      const jdInt = Math.floor(jd + 0.5);
+      const fraction = jd + 0.5 - jdInt;
+      
+      let a = jdInt;
+      if (jdInt >= 2299161) {
+        const alpha = Math.floor((jdInt - 1867216.25) / 36524.25);
+        a = jdInt + 1 + alpha - Math.floor(alpha / 4);
+      }
+      
+      const b = a + 1524;
+      const c = Math.floor((b - 122.1) / 365.25);
+      const d = Math.floor(365.25 * c);
+      const e = Math.floor((b - d) / 30.6001);
+      
+      const day = b - d - Math.floor(30.6001 * e);
+      const month = e <= 13 ? e - 1 : e - 13;
+      const year = month <= 2 ? c - 4715 : c - 4716;
+      
+      // 计算时分秒
+      const timeOfDay = fraction * 24;
+      const hour = Math.floor(timeOfDay);
+      const minute = Math.floor((timeOfDay - hour) * 60);
+      const second = ((timeOfDay - hour) * 60 - minute) * 60;
+      
+      return new Date(year, month - 1, day, hour, minute, Math.floor(second));
+    }
+  }
+
+  /**
+   * 公历转换为儒略日（支持中国时区）
    * @param {number} year - 年份
    * @param {number} month - 月份 (1-12)
    * @param {number} day - 日期
    * @param {number} hour - 小时 (默认12，表示中午)
    * @param {number} minute - 分钟 (默认0)
    * @param {number} second - 秒钟 (默认0)
+   * @param {boolean} useCST - 输入时间是否为中国标准时间（默认true）
    * @returns {number} 儒略日数
    */
-  static gregorianToJulianDay(year, month, day, hour = 12, minute = 0, second = 0) {
-    // 处理公历改革前的日期
-    if (month <= 2) {
-      year -= 1;
-      month += 12;
+  static gregorianToJulianDay(year, month, day, hour = 12, minute = 0, second = 0, useCST = true) {
+    if (useCST) {
+      // 使用中国时区处理器进行转换
+      return ChinaTimezoneHandler.gregorianToJulianDayCST(year, month, day, hour, minute, second);
+    } else {
+      // 原始UTC转换逻辑（保留兼容性）
+      return ChinaTimezoneHandler.gregorianToJulianDayUTC(year, month, day, hour, minute, second);
     }
-    
-    let a = Math.floor(year / 100);
-    let b = 0;
-    
-    // 格里高利历改革：1582年10月15日之后
-    if (year > 1582 || (year === 1582 && month > 10) || 
-        (year === 1582 && month === 10 && day >= 15)) {
-      b = 2 - a + Math.floor(a / 4);
-    }
-    
-    const jd = Math.floor(365.25 * (year + 4716)) + 
-               Math.floor(30.6001 * (month + 1)) + 
-               day + b - 1524.5;
-    
-    // 添加时分秒
-    const timeOfDay = (hour + minute / 60 + second / 3600) / 24;
-    
-    return jd + timeOfDay;
-  }
-
-  /**
-   * 儒略日转换为公历
-   * @param {number} jd - 儒略日数
-   * @returns {Date} JavaScript Date对象
-   */
-  static julianDayToGregorian(jd) {
-    const jdInt = Math.floor(jd + 0.5);
-    const fraction = jd + 0.5 - jdInt;
-    
-    let a = jdInt;
-    if (jdInt >= 2299161) {
-      const alpha = Math.floor((jdInt - 1867216.25) / 36524.25);
-      a = jdInt + 1 + alpha - Math.floor(alpha / 4);
-    }
-    
-    const b = a + 1524;
-    const c = Math.floor((b - 122.1) / 365.25);
-    const d = Math.floor(365.25 * c);
-    const e = Math.floor((b - d) / 30.6001);
-    
-    const day = b - d - Math.floor(30.6001 * e);
-    const month = e <= 13 ? e - 1 : e - 13;
-    const year = month <= 2 ? c - 4715 : c - 4716;
-    
-    // 计算时分秒
-    const timeOfDay = fraction * 24;
-    const hour = Math.floor(timeOfDay);
-    const minute = Math.floor((timeOfDay - hour) * 60);
-    const second = ((timeOfDay - hour) * 60 - minute) * 60;
-    
-    return new Date(year, month - 1, day, hour, minute, Math.floor(second));
-  }
-
-  /**
-   * 计算太阳的黄经 (简化但精确的算法)
-   * @param {number} jd - 儒略日数
-   * @returns {number} 太阳黄经（弧度）
-   */
-  static solarLongitude(jd) {
-    const T = (jd - this.J2000) / 36525.0; // 儒略世纪数
-    
-    // 使用简化但精确的太阳黄经公式（基于Meeus算法）
-    // 太阳几何平黄经
-    let L0 = this.degToRad(280.46646 + 36000.76983 * T + 0.0003032 * T * T);
-    
-    // 太阳平近点角
-    let M = this.degToRad(357.52911 + 35999.05029 * T - 0.0001537 * T * T);
-    
-    // 地心真黄经（加入椭圆轨道修正）
-    let C = this.degToRad((1.914602 - 0.004817 * T - 0.000014 * T * T) * Math.sin(M) +
-                          (0.019993 - 0.000101 * T) * Math.sin(2 * M) +
-                          0.000289 * Math.sin(3 * M));
-    
-    // 太阳真黄经
-    let theta = L0 + C;
-    
-    // 太阳真近点角
-    let nu = M + C;
-    
-    // 日地距离修正（用于光行差）
-    let R = 1.000001018 * (1 - 0.01671123 * Math.cos(M) - 0.00014 * Math.cos(2 * M));
-    
-    // 黄经章动修正
-    let omega = this.degToRad(125.04 - 1934.136 * T);
-    theta = theta - this.degToRad(0.00569) - this.degToRad(0.00478 * Math.sin(omega));
-    
-    return this.normalizeAngle(theta);
   }
 
   /**
@@ -336,31 +345,81 @@ class AstronomicalCalculator {
   }
 
   /**
-   * 计算太阳到达指定黄经的时刻
+   * 计算太阳到达指定黄经的时刻（修复版）
    * @param {number} year - 年份
    * @param {number} longitude - 目标黄经（度）
    * @returns {number} 儒略日数
    */
   static findSolarLongitudeTime(year, longitude) {
     const targetLon = this.degToRad(longitude);
-    const jdStart = this.gregorianToJulianDay(year, 1, 1);
-    const jdEnd = this.gregorianToJulianDay(year + 1, 1, 1);
+    
+    // 根据黄经确定搜索时间范围
+    let searchStart, searchEnd;
+    
+    if (longitude >= 270 || longitude < 90) {
+      // 冬季和春季节气 (270°-360°, 0°-90°)
+      if (longitude >= 270) {
+        // 冬季节气：前一年12月到当年2月
+        searchStart = this.gregorianToJulianDay(year - 1, 11, 1);  // 前年11月
+        searchEnd = this.gregorianToJulianDay(year, 2, 28);        // 当年2月
+      } else {
+        // 春季节气：当年2月到5月
+        searchStart = this.gregorianToJulianDay(year, 1, 1);       // 当年1月
+        searchEnd = this.gregorianToJulianDay(year, 5, 31);        // 当年5月
+      }
+    } else if (longitude >= 90 && longitude < 180) {
+      // 夏季节气 (90°-180°)：当年5月到8月
+      searchStart = this.gregorianToJulianDay(year, 4, 1);         // 当年4月
+      searchEnd = this.gregorianToJulianDay(year, 8, 31);          // 当年8月
+    } else if (longitude >= 180 && longitude < 270) {
+      // 秋季节气 (180°-270°)：当年8月到11月
+      searchStart = this.gregorianToJulianDay(year, 7, 1);         // 当年7月
+      searchEnd = this.gregorianToJulianDay(year, 11, 30);         // 当年11月
+    }
+    
+    // 特殊处理大雪节气（255度）
+    if (longitude === 255) {
+      searchStart = this.gregorianToJulianDay(year, 11, 15);       // 11月15日
+      searchEnd = this.gregorianToJulianDay(year + 1, 1, 15);      // 次年1月15日
+    }
     
     const precision = 1e-6;
-    let jd1 = jdStart;
-    let jd2 = jdEnd;
+    let bestJd = null;
+    let minDiff = Infinity;
     
-    // 二分法寻找目标时刻
+    // 在搜索范围内寻找最佳匹配
+    for (let jd = searchStart; jd <= searchEnd; jd += 0.1) {
+      const sunLon = this.solarLongitude(jd);
+      const sunLonDeg = this.radToDeg(sunLon);
+      
+      let diff = Math.abs(sunLonDeg - longitude);
+      if (diff > 180) diff = 360 - diff;  // 处理角度跨越0度的情况
+      
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestJd = jd;
+      }
+    }
+    
+    if (!bestJd) {
+      console.warn(`无法找到${year}年太阳黄经${longitude}度的时刻，使用备用算法`);
+      return this.fallbackSolarLongitudeTime(year, longitude);
+    }
+    
+    // 在最佳匹配点附近进行精细搜索
+    let jd1 = bestJd - 1;
+    let jd2 = bestJd + 1;
+    
     while (jd2 - jd1 > precision) {
       const jdMid = (jd1 + jd2) / 2;
       const sunLon = this.solarLongitude(jdMid);
+      const sunLonDeg = this.radToDeg(sunLon);
       
-      let diff = sunLon - targetLon;
-      diff = this.normalizeAngle(diff);
+      let diff = sunLonDeg - longitude;
       
-      if (diff > Math.PI) {
-        diff -= 2 * Math.PI;
-      }
+      // 处理跨年情况（360度-0度）
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
       
       if (diff < 0) {
         jd1 = jdMid;
@@ -370,6 +429,70 @@ class AstronomicalCalculator {
     }
     
     return (jd1 + jd2) / 2;
+  }
+  
+  /**
+   * 备用太阳黄经时刻计算（基于经验公式）
+   * @param {number} year - 年份
+   * @param {number} longitude - 目标黄经（度）
+   * @returns {number} 儒略日数
+   */
+  static fallbackSolarLongitudeTime(year, longitude) {
+    // 基于经验的节气日期估算
+    const solarTermDates = {
+      0: [3, 20],     // 春分
+      15: [4, 5],     // 清明
+      30: [4, 20],    // 谷雨
+      45: [5, 5],     // 立夏
+      60: [5, 21],    // 小满
+      75: [6, 5],     // 芒种
+      90: [6, 21],    // 夏至
+      105: [7, 7],    // 小暑
+      120: [7, 22],   // 大暑
+      135: [8, 7],    // 立秋
+      150: [8, 23],   // 处暑
+      165: [9, 7],    // 白露
+      180: [9, 23],   // 秋分
+      195: [10, 8],   // 寒露
+      210: [10, 23],  // 霜降
+      225: [11, 7],   // 立冬
+      240: [11, 22],  // 小雪
+      255: [12, 7],   // 大雪 - 修正为12月7日
+      270: [12, 22],  // 冬至
+      285: [1, 5],    // 小寒（次年）
+      300: [1, 20],   // 大寒（次年）
+      315: [2, 4],    // 立春
+      330: [2, 19]    // 雨水
+    };
+    
+    const termDate = solarTermDates[longitude];
+    if (!termDate) {
+      console.error(`未知的太阳黄经: ${longitude}`);
+      return this.gregorianToJulianDay(year, 6, 21); // 默认返回夏至
+    }
+    
+    let [month, day] = termDate;
+    let termYear = year;
+    
+    // 处理跨年的节气
+    if (longitude >= 285 && longitude <= 330) {
+      termYear = year + 1;
+    }
+    
+    // 年份修正（简单的线性校正）
+    const yearOffset = Math.round((year - 2000) * 0.0078); // 每年约0.0078天的偏移
+    day += yearOffset;
+    
+    // 处理日期溢出
+    if (day > 31) {
+      day -= 31;
+      month += 1;
+    } else if (day < 1) {
+      day += 31;
+      month -= 1;
+    }
+    
+    return this.gregorianToJulianDay(termYear, month, day, 12, 0, 0);
   }
 
   // 辅助函数
