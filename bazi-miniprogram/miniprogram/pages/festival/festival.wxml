@@ -33,86 +33,135 @@
       <view 
         wx:for="{{festivals}}" 
         wx:key="id" 
-        class="festival-card"
+        class="festival-card {{item.popularityLevel}}"
+        style="--primary-color: {{item.primaryColor}}; --accent-color: {{item.accentColor}};"
         data-festival="{{item}}"
         bindtap="onFestivalTap"
       >
-        <!-- 装饰角 -->
-        <view class="corner-decoration top-left"></view>
-        <view class="corner-decoration top-right"></view>
-        <view class="corner-decoration bottom-left"></view>
-        <view class="corner-decoration bottom-right"></view>
-        <!-- 节日名称装饰边框 -->
+        <!-- 卡片顶部装饰条 -->
+        <view class="card-top-decoration" style="background: linear-gradient(90deg, {{item.primaryColor}}, {{item.accentColor}});"></view>
+        
+        <!-- 头部区域：节日名称和类型 -->
         <view class="festival-header">
-          <view 
-            class="festival-name-border {{item.type}}"
-            style="border-color: {{item.decoration.borderColor}}; background-color: {{item.decoration.backgroundColor}};"
-          >
-            <text 
-              class="festival-name"
-              style="color: {{item.decoration.textColor}};"
-            >
-              {{item.name}}
-            </text>
-          </view>
-        </view>
-        
-        <!-- 日期信息 -->
-        <view class="date-info">
-          <view class="lunar-date">{{item.lunarDate}}</view>
-          <view class="solar-date">{{item.date}}</view>
-          <view class="day-of-week">{{item.dayOfWeek}}</view>
-          <view class="countdown">{{item.countdownText}}</view>
-        </view>
-        
-        <!-- 传统信息 -->
-        <view class="traditional-info">
-          <view class="info-row">
-            <view class="info-item">
-              <text class="info-label">值神</text>
-              <text class="info-value">{{item.ganZhi}}</text>
-            </view>
-            <view class="info-item">
-              <text class="info-label">十二神</text>
-              <text class="info-value">{{item.shierShen}}</text>
-            </view>
-          </view>
-          <view class="info-row">
-            <view class="info-item full-width">
-              <text class="info-label">星宿</text>
-              <text class="info-value">{{item.xingXiu}}</text>
+          <view class="header-main">
+            <view class="festival-title-section">
+              <text class="festival-emoji">{{item.iconEmoji}}</text>
+              <text class="festival-name" style="color: {{item.primaryColor}};">{{item.name}}</text>
+              <view class="festival-type-tag" style="background: {{item.accentColor}};">{{item.typeDisplay}}</view>
             </view>
           </view>
         </view>
         
-        <!-- 宜忌活动 -->
-        <view class="activities">
-          <view class="activity-row">
-            <view class="activity-label suitable">宜</view>
-            <view class="activity-content">
+        <!-- 核心信息区：日期 + 倒计时突出显示 -->
+        <view class="core-info">
+          <view class="date-section">
+            <view class="date-main">
+              <text class="solar-date">{{item.date}}</text>
+              <text class="day-of-week">{{item.dayOfWeek}}</text>
+            </view>
+            <view class="lunar-date-display" wx:if="{{item.lunarDate}}">
+              <text class="lunar-text">{{item.lunarDate}}</text>
+            </view>
+          </view>
+          <view class="countdown-section">
+            <view class="countdown-circle" style="border-color: {{item.primaryColor}};">
+              <text class="countdown-number" style="color: {{item.primaryColor}};">{{item.daysUntil}}</text>
+              <text class="countdown-unit">天</text>
+            </view>
+            <text class="countdown-text">{{item.countdownText}}</text>
+          </view>
+        </view>
+        
+        <!-- 文化信息区：描述 + 习俗 -->
+        <view class="cultural-info" wx:if="{{item.description}}">
+          <view class="description-section">
+            <text class="festival-description">{{item.description}}</text>
+          </view>
+          <view class="customs-section" wx:if="{{item.customs && item.customs.length > 0}}">
+            <text class="customs-label">主要习俗：</text>
+            <view class="customs-tags">
               <text 
-                wx:for="{{item.activities.suitable}}" 
-                wx:for-item="activity"
+                wx:for="{{item.customs}}" 
+                wx:for-item="custom"
                 wx:key="*this" 
-                class="activity-item"
+                class="custom-tag"
+                style="background: {{item.accentColor}};"
               >
-                {{activity}}
+                {{custom}}
               </text>
             </view>
           </view>
-          <view class="activity-row">
-            <view class="activity-label unsuitable">忌</view>
-            <view class="activity-content">
-              <text 
-                wx:for="{{item.activities.unsuitable}}" 
-                wx:for-item="activity"
-                wx:key="*this" 
-                class="activity-item"
-              >
-                {{activity}}
-              </text>
+        </view>
+        
+        <!-- 传统信息区：可折叠 -->
+        <view class="traditional-info" wx:if="{{!item.isolarTerm}}">
+          <view class="traditional-header">
+            <text class="traditional-title">传统信息</text>
+            <text class="traditional-toggle">👁️</text>
+          </view>
+          <view class="traditional-content">
+            <view class="info-grid">
+              <view class="info-item" wx:if="{{item.ganZhi}}">
+                <text class="info-label">值神</text>
+                <text class="info-value">{{item.ganZhi}}</text>
+              </view>
+              <view class="info-item" wx:if="{{item.shierShen}}">
+                <text class="info-label">十二神</text>
+                <text class="info-value">{{item.shierShen}}</text>
+              </view>
+              <view class="info-item full-width" wx:if="{{item.xingXiu}}">
+                <text class="info-label">星宿</text>
+                <text class="info-value">{{item.xingXiu}}</text>
+              </view>
             </view>
           </view>
+        </view>
+        
+        <!-- 宜忌活动区：优化布局 -->
+        <view class="activities-section" wx:if="{{item.activities && (item.activities.suitable.length > 0 || item.activities.unsuitable.length > 0)}}">
+          <view class="activities-header">
+            <text class="activities-title">宜忌活动</text>
+          </view>
+          <view class="activities-content">
+            <view class="activity-group" wx:if="{{item.activities.suitable && item.activities.suitable.length > 0}}">
+              <view class="activity-label suitable">
+                <text class="label-icon">✓</text>
+                <text class="label-text">宜</text>
+              </view>
+              <view class="activity-tags">
+                <text 
+                  wx:for="{{item.activities.suitable}}" 
+                  wx:for-item="activity"
+                  wx:key="*this" 
+                  class="activity-tag suitable-tag"
+                >
+                  {{activity}}
+                </text>
+              </view>
+            </view>
+            <view class="activity-group" wx:if="{{item.activities.unsuitable && item.activities.unsuitable.length > 0}}">
+              <view class="activity-label unsuitable">
+                <text class="label-icon">✗</text>
+                <text class="label-text">忌</text>
+              </view>
+              <view class="activity-tags">
+                <text 
+                  wx:for="{{item.activities.unsuitable}}" 
+                  wx:for-item="activity"
+                  wx:key="*this" 
+                  class="activity-tag unsuitable-tag"
+                >
+                  {{activity}}
+                </text>
+              </view>
+            </view>
+          </view>
+        </view>
+        
+        
+        <!-- 重要程度指示器 -->
+        <view class="importance-indicator {{item.popularityLevel}}" wx:if="{{item.popularityLevel === 'popular'}}">
+          <text class="importance-icon">�</text>
         </view>
       </view>
     </view>

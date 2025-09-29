@@ -1,10 +1,10 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/naming/naming",
     "pages/festival/festival",
-    "pages/zodiac-matching/zodiac-matching",
     "pages/result/result",
+    "pages/naming/naming",
+    "pages/zodiac-matching/zodiac-matching",
     "pages/profile/profile",
     "pages/history/history"
   ],

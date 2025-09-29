@@ -28,6 +28,7 @@
           <view class="menu-arrow">></view>
         </view>
         
+        
         <view class="menu-item" bindtap="aboutApp">
           <view class="menu-icon-wrapper">
             <view class="menu-icon">ℹ️</view>

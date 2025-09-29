@@ -1,4 +1,4 @@
-/**festival.wxss**/
+/**festival.wxss - 优化版节日页面样式**/
 
 /* 页面容器 */
 .container {
@@ -25,6 +25,7 @@
   color: #2F4F4F;
   margin-bottom: 8rpx;
   text-shadow: 0 2rpx 4rpx rgba(255, 255, 255, 0.8);
+  animation: titleShine 4s ease-in-out infinite;
 }
 
 .page-subtitle {
@@ -57,7 +58,8 @@
   font-size: 24rpx;
   color: #8B4513;
   opacity: 0.8;
-  margin-top: 10rpx;
+  margin-bottom: 20rpx;
+  text-align: center;
 }
 
 /* 加载状态 */
@@ -75,7 +77,7 @@
   border: 6rpx solid #E0E0E0;
   border-top: 6rpx solid #C8860D;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 1s linear infinite, spinGlow 2s ease-in-out infinite alternate;
   margin-bottom: 20rpx;
 }
 
@@ -116,10 +118,15 @@
   border-radius: 30rpx;
   border: none;
   box-shadow: 0 6rpx 20rpx rgba(200, 134, 13, 0.3);
+  transition: all 0.3s ease;
 }
 
 .retry-button::after {
   border: none;
+}
+
+.retry-button:active {
+  transform: scale(0.95);
 }
 
 /* 节日列表 */
@@ -127,277 +134,359 @@
   padding: 20rpx 0;
 }
 
-/* 节日卡片 */
+/* 节日卡片 - 全新设计 */
 .festival-card {
   background: white;
-  border-radius: 20rpx;
-  margin-bottom: 30rpx;
-  padding: 30rpx;
-  box-shadow: 0 8rpx 25rpx rgba(0, 0, 0, 0.1);
-  border: 2rpx solid #F0F0F0;
-  transition: all 0.3s ease;
+  border-radius: 24rpx;
+  margin-bottom: 40rpx;
+  padding: 0;
+  box-shadow: 
+    0 8rpx 32rpx rgba(0, 0, 0, 0.08),
+    0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  border: 1rpx solid #F0F0F0;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
+  animation: fadeInUp 0.6s ease-out;
 }
 
-.festival-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6rpx;
-  background: linear-gradient(90deg, 
-    #FFD700 0%, #FF6347 25%, #32CD32 50%, #1E90FF 75%, #FFD700 100%);
-  opacity: 0.8;
-}
-
-.festival-card::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
-  transform: scale(0);
-  transition: transform 0.6s ease;
-  pointer-events: none;
+.festival-card:hover {
+  transform: translateY(-8rpx);
+  box-shadow: 
+    0 16rpx 48rpx rgba(0, 0, 0, 0.12),
+    0 4rpx 16rpx rgba(0, 0, 0, 0.08);
 }
 
 .festival-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.15);
+  transform: translateY(-4rpx) scale(0.99);
 }
 
-.festival-card:active::after {
-  transform: scale(1);
-}
-
-.festival-card:last-child {
-  margin-bottom: 0;
-}
-
-/* 节日卡片装饰角 */
-.festival-card .corner-decoration {
-  position: absolute;
-  width: 30rpx;
-  height: 30rpx;
-  background: linear-gradient(45deg, #FFD700, #FFA500);
-  opacity: 0.6;
-}
-
-.festival-card .corner-decoration.top-left {
-  top: 10rpx;
-  left: 10rpx;
-  border-radius: 0 0 20rpx 0;
-}
-
-.festival-card .corner-decoration.top-right {
-  top: 10rpx;
-  right: 10rpx;
-  border-radius: 0 0 0 20rpx;
-}
-
-.festival-card .corner-decoration.bottom-left {
-  bottom: 10rpx;
-  left: 10rpx;
-  border-radius: 0 20rpx 0 0;
-}
-
-.festival-card .corner-decoration.bottom-right {
-  bottom: 10rpx;
-  right: 10rpx;
-  border-radius: 20rpx 0 0 0;
-}
-
-/* 节日标题区域 */
-.festival-header {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 30rpx;
-}
-
-.festival-name-border {
-  position: relative;
-  padding: 15rpx 40rpx;
-  border: 3rpx solid #C8860D;
-  border-radius: 50rpx;
-  background: #FFF8DC;
-  
-  /* 装饰边框效果 */
+/* 受欢迎程度样式 */
+.festival-card.popular {
+  border: 2rpx solid var(--primary-color);
   box-shadow: 
-    0 0 0 2rpx white,
-    0 0 0 5rpx #C8860D,
-    0 4rpx 15rpx rgba(200, 134, 13, 0.2);
+    0 8rpx 32rpx rgba(0, 0, 0, 0.08),
+    0 0 0 1rpx var(--primary-color);
 }
 
-.festival-name-border::before {
-  content: '';
-  position: absolute;
-  top: -8rpx;
-  left: 20rpx;
-  right: 20rpx;
-  height: 4rpx;
-  background: linear-gradient(90deg, transparent 0%, #C8860D 50%, transparent 100%);
-  border-radius: 2rpx;
+/* 卡片顶部装饰条 */
+.card-top-decoration {
+  height: 6rpx;
+  width: 100%;
+  opacity: 0.8;
 }
 
-.festival-name-border::after {
-  content: '';
-  position: absolute;
-  bottom: -8rpx;
-  left: 20rpx;
-  right: 20rpx;
-  height: 4rpx;
-  background: linear-gradient(90deg, transparent 0%, #C8860D 50%, transparent 100%);
-  border-radius: 2rpx;
+/* 头部区域 */
+.festival-header {
+  padding: 30rpx 30rpx 20rpx;
+}
+
+.header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.festival-title-section {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 12rpx;
+}
+
+.festival-emoji {
+  font-size: 48rpx;
+  line-height: 1;
 }
 
 .festival-name {
   font-size: 36rpx;
   font-weight: bold;
-  color: #8B4513;
-  text-shadow: 1rpx 1rpx 2rpx rgba(255, 255, 255, 0.8);
+  color: var(--primary-color);
+  margin-right: 12rpx;
+  text-shadow: 0 1rpx 3rpx rgba(255, 255, 255, 0.8);
+  filter: contrast(1.2);
 }
 
-/* 不同类型节日的样式 */
-.festival-name-border.traditional {
-  border-color: #C8860D;
-  background: #FFF8DC;
+.festival-type-tag {
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  color: white;
+  background: var(--accent-color);
+  opacity: 0.9;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.6);
+  border: 1rpx solid rgba(0, 0, 0, 0.15);
+  filter: saturate(1.2) contrast(1.1);
 }
 
-.festival-name-border.modern {
-  border-color: #DC143C;
-  background: #FFE4E1;
-}
 
-.festival-name-border.western {
-  border-color: #228B22;
-  background: #F0FFF0;
-}
-
-/* 日期信息 */
-.date-info {
+/* 核心信息区 */
+.core-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30rpx;
-  padding: 20rpx;
-  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
-  border-radius: 15rpx;
-  border-left: 6rpx solid #C8860D;
+  padding: 0 30rpx 20rpx;
+  margin-bottom: 20rpx;
 }
 
-.lunar-date {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #2F4F4F;
+.date-section {
+  flex: 1;
+}
+
+.date-main {
+  margin-bottom: 8rpx;
 }
 
 .solar-date {
-  font-size: 28rpx;
-  color: #666;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+  display: block;
+  margin-bottom: 4rpx;
 }
 
 .day-of-week {
-  font-size: 26rpx;
-  color: #888;
-}
-
-.countdown {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #DC143C;
-  background: linear-gradient(45deg, #FFE4E1 0%, #FFF0F5 100%);
-  padding: 8rpx 16rpx;
-  border-radius: 20rpx;
-  border: 2rpx solid #DC143C;
-}
-
-/* 传统信息 */
-.traditional-info {
-  margin-bottom: 30rpx;
-  padding: 20rpx;
-  background: linear-gradient(135deg, #F0FFFF 0%, #E0F6FF 100%);
-  border-radius: 15rpx;
-  border-left: 6rpx solid #40E0D0;
-}
-
-.info-row {
-  display: flex;
-  margin-bottom: 15rpx;
-}
-
-.info-row:last-child {
-  margin-bottom: 0;
-}
-
-.info-item {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.info-item.full-width {
-  flex: 2;
-}
-
-.info-label {
   font-size: 24rpx;
-  color: #708090;
-  margin-right: 10rpx;
-  min-width: 60rpx;
-}
-
-.info-value {
-  font-size: 26rpx;
-  color: #2F4F4F;
+  color: #555;
   font-weight: 500;
 }
 
-/* 宜忌活动 */
-.activities {
-  border-top: 2rpx dashed #E0E0E0;
-  padding-top: 20rpx;
+.lunar-date-display {
+  margin-top: 8rpx;
 }
 
-.activity-row {
+.lunar-text {
+  font-size: 26rpx;
+  color: #654321;
+  background: linear-gradient(135deg, #FFF8DC 0%, #F0F8FF 100%);
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #E0E0E0;
+  font-weight: 600;
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.8);
+}
+
+/* 倒计时区域 */
+.countdown-section {
   display: flex;
-  margin-bottom: 15rpx;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.countdown-circle {
+  width: 120rpx;
+  height: 120rpx;
+  border: 5rpx solid var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 248, 248, 0.95) 100%);
+  animation: countdownPulse 2.5s ease-in-out infinite, countdownGlow 4s ease-in-out infinite alternate;
+  box-shadow: 
+    0 4rpx 16rpx rgba(0, 0, 0, 0.1),
+    inset 0 2rpx 4rpx rgba(255, 255, 255, 0.8);
+}
+
+.countdown-number {
+  font-size: 38rpx;
+  font-weight: 900;
+  color: var(--primary-color);
+  line-height: 1;
+  animation: numberBounce 3s ease-in-out infinite;
+}
+
+.countdown-unit {
+  font-size: 20rpx;
+  color: var(--primary-color);
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.countdown-text {
+  font-size: 22rpx;
+  color: #666;
+  text-align: center;
+}
+
+/* 文化信息区 */
+.cultural-info {
+  padding: 0 30rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.description-section {
+  margin-bottom: 16rpx;
+}
+
+.festival-description {
+  font-size: 28rpx;
+  color: #2F4F4F;
+  line-height: 1.6;
+  padding: 16rpx 20rpx;
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  border-radius: 16rpx;
+  border-left: 4rpx solid var(--primary-color);
+}
+
+.customs-section {
+  margin-top: 16rpx;
+}
+
+.customs-label {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+  display: block;
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.8);
+}
+
+.customs-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.custom-tag {
+  font-size: 22rpx;
+  color: white;
+  background: var(--accent-color);
+  padding: 6rpx 12rpx;
+  border-radius: 16rpx;
+  opacity: 0.9;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.5);
+  border: 1rpx solid rgba(0, 0, 0, 0.1);
+  min-contrast: 4.5;
+}
+
+/* 传统信息区 */
+.traditional-info {
+  padding: 0 30rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.traditional-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+  padding: 8rpx 0;
+}
+
+.traditional-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2F4F4F;
+}
+
+.traditional-toggle {
+  font-size: 20rpx;
+  opacity: 0.6;
+}
+
+.traditional-content {
+  background: linear-gradient(135deg, #F0FFFF 0%, #E0F6FF 100%);
+  border-radius: 16rpx;
+  padding: 20rpx;
+  border-left: 4rpx solid #40E0D0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-label {
+  font-size: 22rpx;
+  color: #556B7A;
+  font-weight: 600;
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.8);
+}
+
+.info-value {
+  font-size: 24rpx;
+  color: #1A4A4A;
+  font-weight: 700;
+  text-shadow: 0 1rpx 2rpx rgba(255, 255, 255, 0.5);
+}
+
+/* 宜忌活动区 */
+.activities-section {
+  padding: 0 30rpx 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.activities-header {
+  margin-bottom: 12rpx;
+}
+
+.activities-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #2F4F4F;
+}
+
+.activities-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.activity-group {
+  display: flex;
+  gap: 12rpx;
   align-items: flex-start;
 }
 
-.activity-row:last-child {
-  margin-bottom: 0;
-}
-
 .activity-label {
-  width: 60rpx;
-  height: 50rpx;
   display: flex;
   align-items: center;
+  gap: 4rpx;
+  padding: 8rpx 12rpx;
+  border-radius: 12rpx;
+  min-width: 80rpx;
   justify-content: center;
-  font-size: 24rpx;
-  font-weight: bold;
-  border-radius: 8rpx;
-  margin-right: 15rpx;
-  flex-shrink: 0;
 }
 
 .activity-label.suitable {
   background: linear-gradient(45deg, #E8F5E8 0%, #F0FFF0 100%);
-  color: #2E7D2E;
   border: 2rpx solid #4CAF50;
+  color: #2E7D2E;
 }
 
 .activity-label.unsuitable {
   background: linear-gradient(45deg, #FFE8E8 0%, #FFF0F0 100%);
-  color: #C62828;
   border: 2rpx solid #F44336;
+  color: #C62828;
 }
 
-.activity-content {
+.label-icon {
+  font-size: 16rpx;
+  font-weight: bold;
+}
+
+.label-text {
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.activity-tags {
   flex: 1;
   display: flex;
   flex-wrap: wrap;
@@ -405,14 +494,45 @@
   align-items: center;
 }
 
-.activity-item {
-  font-size: 24rpx;
-  color: #333;
-  background: #F8F9FA;
-  padding: 6rpx 12rpx;
+.activity-tag {
+  font-size: 20rpx;
+  padding: 6rpx 10rpx;
   border-radius: 12rpx;
   border: 1rpx solid #E0E0E0;
-  white-space: nowrap;
+  background: #F8F9FA;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.activity-tag.suitable-tag {
+  border-color: #4CAF50;
+  color: #2E7D2E;
+  background: #F0FFF0;
+}
+
+.activity-tag.unsuitable-tag {
+  border-color: #F44336;
+  color: #C62828;
+  background: #FFF0F0;
+}
+
+
+
+/* 重要程度指示器 */
+.importance-indicator {
+  position: absolute;
+  top: 20rpx;
+  right: 20rpx;
+  z-index: 10;
+}
+
+.importance-indicator.popular {
+  animation: popularPulse 2s ease-in-out infinite;
+}
+
+.importance-icon {
+  font-size: 32rpx;
+  filter: drop-shadow(0 2rpx 4rpx rgba(255, 0, 0, 0.3));
 }
 
 /* 底部说明 */
@@ -437,9 +557,13 @@
   100% { transform: rotate(360deg); }
 }
 
-@keyframes cloudFloat {
-  0% { transform: translateX(-20rpx); }
-  100% { transform: translateX(100vw); }
+@keyframes spinGlow {
+  0% { 
+    box-shadow: 0 0 10rpx rgba(200, 134, 13, 0.3);
+  }
+  100% { 
+    box-shadow: 0 0 25rpx rgba(200, 134, 13, 0.6);
+  }
 }
 
 @keyframes fadeInUp {
@@ -453,105 +577,15 @@
   }
 }
 
-/* 卡片入场动画 */
-.festival-card {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.festival-card:nth-child(1) { animation-delay: 0.1s; }
-.festival-card:nth-child(2) { animation-delay: 0.2s; }
-.festival-card:nth-child(3) { animation-delay: 0.3s; }
-.festival-card:nth-child(4) { animation-delay: 0.4s; }
-.festival-card:nth-child(5) { animation-delay: 0.5s; }
-
-/* 高级视觉效果 */
-.festival-card .festival-name-border {
-  animation: nameGlow 3s ease-in-out infinite alternate;
-}
-
-@keyframes nameGlow {
-  0% { 
-    box-shadow: 
-      0 0 0 2rpx white,
-      0 0 0 5rpx #C8860D,
-      0 4rpx 15rpx rgba(200, 134, 13, 0.2);
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50rpx);
   }
-  100% { 
-    box-shadow: 
-      0 0 0 2rpx white,
-      0 0 0 5rpx #C8860D,
-      0 4rpx 20rpx rgba(200, 134, 13, 0.4),
-      0 0 30rpx rgba(255, 215, 0, 0.3);
-  }
-}
-
-/* 装饰角动画 */
-.festival-card .corner-decoration {
-  animation: cornerPulse 4s ease-in-out infinite;
-}
-
-.festival-card .corner-decoration:nth-child(1) { animation-delay: 0s; }
-.festival-card .corner-decoration:nth-child(2) { animation-delay: 1s; }
-.festival-card .corner-decoration:nth-child(3) { animation-delay: 2s; }
-.festival-card .corner-decoration:nth-child(4) { animation-delay: 3s; }
-
-@keyframes cornerPulse {
-  0%, 80%, 100% { 
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  40% { 
+  to {
     opacity: 1;
-    transform: scale(1.1);
+    transform: translateY(0);
   }
-}
-
-/* 倒计时特效 */
-.countdown {
-  animation: countdownPulse 2s ease-in-out infinite;
-}
-
-@keyframes countdownPulse {
-  0%, 100% { 
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.4);
-  }
-  50% { 
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10rpx rgba(220, 20, 60, 0);
-  }
-}
-
-/* 宜忌标签动画 */
-.activity-label.suitable {
-  animation: suitableGlow 3s ease-in-out infinite alternate;
-}
-
-.activity-label.unsuitable {
-  animation: unsuitableGlow 3s ease-in-out infinite alternate;
-}
-
-@keyframes suitableGlow {
-  0% { 
-    box-shadow: 0 0 5rpx rgba(76, 175, 80, 0.3);
-  }
-  100% { 
-    box-shadow: 0 0 15rpx rgba(76, 175, 80, 0.6);
-  }
-}
-
-@keyframes unsuitableGlow {
-  0% { 
-    box-shadow: 0 0 5rpx rgba(244, 67, 54, 0.3);
-  }
-  100% { 
-    box-shadow: 0 0 15rpx rgba(244, 67, 54, 0.6);
-  }
-}
-
-/* 页面标题特效 */
-.page-title {
-  animation: titleShine 4s ease-in-out infinite;
 }
 
 @keyframes titleShine {
@@ -565,29 +599,62 @@
   }
 }
 
-/* 加载动画增强 */
-.loading-spinner {
-  animation: spin 1s linear infinite, spinGlow 2s ease-in-out infinite alternate;
-}
-
-@keyframes spinGlow {
-  0% { 
-    box-shadow: 0 0 10rpx rgba(200, 134, 13, 0.3);
+@keyframes countdownPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 
+      0 4rpx 16rpx rgba(0, 0, 0, 0.1),
+      inset 0 2rpx 4rpx rgba(255, 255, 255, 0.8),
+      0 0 0 0 rgba(200, 134, 13, 0.4);
   }
-  100% { 
-    box-shadow: 0 0 25rpx rgba(200, 134, 13, 0.6);
+  50% { 
+    transform: scale(1.08);
+    box-shadow: 
+      0 8rpx 24rpx rgba(0, 0, 0, 0.15),
+      inset 0 2rpx 4rpx rgba(255, 255, 255, 0.9),
+      0 0 0 8rpx rgba(200, 134, 13, 0.2);
   }
 }
 
-/* 活动项悬浮效果 */
-.activity-item {
-  transition: all 0.3s ease;
+@keyframes countdownGlow {
+  0% {
+    filter: drop-shadow(0 0 5rpx rgba(200, 134, 13, 0.3));
+  }
+  100% {
+    filter: drop-shadow(0 0 15rpx rgba(200, 134, 13, 0.6));
+  }
 }
 
-.activity-item:hover {
-  transform: translateY(-2rpx);
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+@keyframes numberBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4rpx);
+  }
+  60% {
+    transform: translateY(-2rpx);
+  }
 }
+
+@keyframes popularPulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+/* 卡片入场动画 */
+.festival-card:nth-child(1) { animation-delay: 0.1s; }
+.festival-card:nth-child(2) { animation-delay: 0.2s; }
+.festival-card:nth-child(3) { animation-delay: 0.3s; }
+.festival-card:nth-child(4) { animation-delay: 0.4s; }
+.festival-card:nth-child(5) { animation-delay: 0.5s; }
+.festival-card:nth-child(n+6) { animation-delay: 0.6s; }
 
 /* 响应式适配 */
 @media (max-width: 375px) {
@@ -597,54 +664,150 @@
   }
   
   .festival-card {
-    padding: 20rpx;
+    margin-bottom: 30rpx;
   }
   
-  .page-title {
-    font-size: 48rpx;
+  .festival-header {
+    padding: 20rpx 20rpx 15rpx;
   }
   
-  .date-info {
-    flex-direction: column;
-    gap: 10rpx;
-    text-align: center;
+  .core-info {
+    padding: 0 20rpx 15rpx;
+    margin-bottom: 15rpx;
   }
   
-  .festival-name-border {
-    padding: 12rpx 30rpx;
+  .cultural-info,
+  .traditional-info,
+  .activities-section {
+    padding: 0 20rpx 15rpx;
+    margin-bottom: 15rpx;
+  }
+  
+  .action-section {
+    padding: 15rpx 20rpx 20rpx;
   }
   
   .festival-name {
     font-size: 32rpx;
   }
   
-  .activity-content {
-    gap: 6rpx;
+  .festival-emoji {
+    font-size: 40rpx;
   }
   
-  .activity-item {
-    font-size: 22rpx;
-    padding: 4rpx 8rpx;
-  }
-}
-
-/* 下拉刷新优化 */
-.main-content {
-  padding-top: 40rpx;
-}
-
-/* 节日卡片悬浮效果 */
-.festival-card:hover {
-  box-shadow: 0 12rpx 35rpx rgba(0, 0, 0, 0.15);
-}
-
-/* 优化小屏幕显示 */
-@media (max-height: 667px) {
-  .header-illustration {
-    height: 300rpx;
+  .countdown-circle {
+    width: 80rpx;
+    height: 80rpx;
   }
   
-  .page-title {
-    font-size: 48rpx;
+  .countdown-number {
+    font-size: 28rpx;
+  }
+  
+  .action-buttons {
+    gap: 12rpx;
+  }
+  
+  .action-btn {
+    padding: 12rpx 8rpx;
+    max-width: 100rpx;
+  }
+}
+
+/* 节日类型特定样式 */
+.festival-card[data-type="traditional"] {
+  background: linear-gradient(135deg, #FFFAF0 0%, #FFF8DC 100%);
+}
+
+.festival-card[data-type="modern"] {
+  background: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 100%);
+}
+
+.festival-card[data-type="western"] {
+  background: linear-gradient(135deg, #F0FFF0 0%, #E0FFE0 100%);
+}
+
+.festival-card[data-type="solar_term"] {
+  background: linear-gradient(135deg, #F0F8FF 0%, #E0F0FF 100%);
+}
+
+/* 悬浮和交互效果增强 */
+.custom-tag:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.activity-tag:active {
+  transform: scale(0.95);
+  background: #E9ECEF;
+}
+
+.countdown-circle:active {
+  transform: scale(0.95);
+}
+
+/* 优化长文本显示 */
+.festival-description {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.info-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 加载状态优化 */
+.loading-container {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* 错误状态优化 */
+.error-container {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.empty-container {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* 性能优化 */
+.festival-card {
+  will-change: transform, box-shadow;
+}
+
+.countdown-circle {
+  will-change: transform;
+}
+
+/* 无障碍优化 */
+.action-btn:focus {
+  outline: 2rpx solid #2196F3;
+  outline-offset: 2rpx;
+}
+
+.festival-card:focus {
+  outline: 2rpx solid #2196F3;
+  outline-offset: 4rpx;
+}
+
+/* 深色模式适配（预留） */
+@media (prefers-color-scheme: dark) {
+  .container {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 50%, #3a3a3a 100%);
+  }
+  
+  .main-content {
+    background: #2a2a2a;
+    color: #ffffff;
+  }
+  
+  .festival-card {
+    background: #333333;
+    border-color: #444444;
+    color: #ffffff;
   }
 }
