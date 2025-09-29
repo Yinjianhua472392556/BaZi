@@ -6,14 +6,15 @@ class FestivalData {
   // 获取未来13个月内的节日和节气 - 使用动态计算
   static getUpcomingFestivals(limit = 15, includeSolarTerms = true) {
     try {
-      // 使用动态计算器获取13个月内的节日
+      // 使用动态计算器获取13个月内的节日（已包含节气）
       const festivals = DynamicFestivalCalculator.getFutureThirteenMonthsFestivals();
       
-      // 添加节气支持
+      // DynamicFestivalCalculator已经包含节气，不需要额外添加
       let allEvents = [...festivals];
-      if (includeSolarTerms) {
-        const solarTerms = this.getUpcomingSolarTerms();
-        allEvents = [...festivals, ...solarTerms];
+      
+      // 如果需要禁用节气，可以过滤掉
+      if (!includeSolarTerms) {
+        allEvents = festivals.filter(event => event.type !== 'solar_term');
       }
       
       // 数据验证
