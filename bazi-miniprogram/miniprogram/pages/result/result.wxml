@@ -58,19 +58,27 @@
       <button class="btn-secondary" bindtap="calculateAgain">重新计算</button>
     </view>
     
-    <!-- 广告位 -->
+    <!-- 广告位 - 使用新的广告组件 -->
     <view class="ad-section">
-      <view class="ad-content">
-        <image class="ad-image" src="/images/ad-placeholder.png" mode="aspectFit" binderror="onImageError" bindload="onImageLoad"></image>
-        <view class="ad-placeholder {{showAdPlaceholder ? 'show' : ''}}" wx:if="{{showAdPlaceholder}}">
-          <view class="placeholder-text">广告位</view>
-        </view>
-        <view class="ad-text">
-          <view class="ad-title">2025时尚百搭运动鞋，适配多样运动场景</view>
-          <view class="ad-subtitle">劲步运动潮鞋工厂</view>
-        </view>
-        <button class="ad-button">立即购买</button>
-      </view>
+      <!-- Banner广告 -->
+      <ad-banner 
+        page-name="result"
+        custom-class="result-banner-ad"
+        bindadload="onAdLoad"
+        bindaderror="onAdError"
+        bindadclick="onAdClick">
+      </ad-banner>
+      
+      <!-- 激励视频广告 -->
+      <ad-reward-video 
+        page-name="result"
+        button-text="观看视频解锁高级运势"
+        button-class="primary"
+        reward-desc="观看完整视频即可获得详细运势分析"
+        show-reward-desc="{{true}}"
+        bindreward="onVideoReward"
+        binderror="onVideoError">
+      </ad-reward-video>
     </view>
   </view>
 </view>

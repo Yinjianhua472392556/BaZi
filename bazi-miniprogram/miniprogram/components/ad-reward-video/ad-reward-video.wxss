@@ -1,0 +1,289 @@
+/* 激励视频广告组件样式 */
+
+.reward-video-container {
+  padding: 20rpx;
+  margin: 10rpx 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 12rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 奖励描述 */
+.reward-desc {
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+
+.desc-text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 观看广告按钮基础样式 */
+.reward-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 280rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  border: none;
+  font-size: 28rpx;
+  font-weight: 500;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 按钮文字 */
+.btn-text {
+  margin-right: 8rpx;
+}
+
+/* 视频图标 */
+.video-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32rpx;
+  height: 32rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  margin-left: 8rpx;
+}
+
+.play-icon {
+  font-size: 16rpx;
+  color: inherit;
+  margin-left: 2rpx;
+}
+
+/* 加载图标 */
+.btn-loading-icon {
+  width: 24rpx;
+  height: 24rpx;
+  border: 3rpx solid rgba(255, 255, 255, 0.3);
+  border-top: 3rpx solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8rpx;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 按钮主题样式 */
+.btn-default {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: #ffffff;
+}
+
+.btn-default:not(.btn-disabled):active {
+  background: linear-gradient(135deg, #ee5a52, #d63447);
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007aff, #0056b3);
+  color: #ffffff;
+}
+
+.btn-primary:not(.btn-disabled):active {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: scale(0.98);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: #ffffff;
+}
+
+.btn-success:not(.btn-disabled):active {
+  background: linear-gradient(135deg, #1e7e34, #155724);
+  transform: scale(0.98);
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  color: #212529;
+}
+
+.btn-warning:not(.btn-disabled):active {
+  background: linear-gradient(135deg, #e0a800, #d39e00);
+  transform: scale(0.98);
+}
+
+/* 禁用状态 */
+.btn-disabled {
+  background: #cccccc !important;
+  color: #999999 !important;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn-disabled .video-icon {
+  background-color: rgba(153, 153, 153, 0.3);
+}
+
+/* 加载状态 */
+.btn-loading {
+  pointer-events: none;
+}
+
+/* 错误提示 */
+.error-tip {
+  margin-top: 15rpx;
+  text-align: center;
+  padding: 10rpx 20rpx;
+  background-color: #fff5f5;
+  border-radius: 8rpx;
+  border: 1rpx solid #fed7d7;
+}
+
+.error-text {
+  font-size: 22rpx;
+  color: #e53e3e;
+  margin-bottom: 10rpx;
+  display: block;
+  line-height: 1.4;
+}
+
+.retry-btn {
+  background-color: #007aff;
+  color: white;
+  border: none;
+  border-radius: 20rpx;
+  padding: 8rpx 20rpx;
+  font-size: 22rpx;
+  margin-top: 10rpx;
+}
+
+.retry-btn:active {
+  background-color: #0056b3;
+}
+
+/* 占位符 */
+.reward-video-placeholder {
+  display: none; /* 默认隐藏占位符 */
+}
+
+/* 响应式设计 */
+@media (max-width: 320px) {
+  .reward-video-container {
+    padding: 15rpx;
+    margin: 8rpx 0;
+  }
+  
+  .reward-btn {
+    min-width: 240rpx;
+    height: 70rpx;
+    font-size: 26rpx;
+  }
+  
+  .desc-text {
+    font-size: 24rpx;
+  }
+  
+  .error-text,
+  .retry-btn {
+    font-size: 20rpx;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .reward-video-container {
+    background-color: #2c2c2c;
+    box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+  }
+  
+  .desc-text {
+    color: #cccccc;
+  }
+  
+  .error-tip {
+    background-color: #4a1515;
+    border-color: #7a2020;
+  }
+  
+  .error-text {
+    color: #ff9999;
+  }
+}
+
+/* 动画效果 */
+.reward-video-container {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 按钮悬停效果（在支持的设备上） */
+@media (hover: hover) {
+  .reward-btn:not(.btn-disabled):hover {
+    transform: translateY(-2rpx);
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* 无障碍访问 */
+.reward-btn:focus {
+  outline: 3rpx solid rgba(0, 122, 255, 0.5);
+  outline-offset: 2rpx;
+}
+
+.retry-btn:focus {
+  outline: 2rpx solid #007aff;
+  outline-offset: 2rpx;
+}
+
+/* 特殊主题样式 */
+.reward-video-container.minimal {
+  background-color: transparent;
+  box-shadow: none;
+  padding: 10rpx;
+}
+
+.reward-video-container.card {
+  background-color: #ffffff;
+  border: 2rpx solid #e0e0e0;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 按钮尺寸变体 */
+.reward-btn.small {
+  min-width: 200rpx;
+  height: 60rpx;
+  font-size: 24rpx;
+}
+
+.reward-btn.large {
+  min-width: 320rpx;
+  height: 100rpx;
+  font-size: 32rpx;
+}
+
+.reward-btn.large .video-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.reward-btn.large .play-icon {
+  font-size: 20rpx;
+}

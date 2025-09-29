@@ -53,6 +53,10 @@
       }
     ]
   },
+  "usingComponents": {
+    "ad-banner": "/components/ad-banner/ad-banner",
+    "ad-reward-video": "/components/ad-reward-video/ad-reward-video"
+  },
   "networkTimeout": {
     "request": 10000,
     "downloadFile": 10000

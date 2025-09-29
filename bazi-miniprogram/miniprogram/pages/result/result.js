@@ -259,6 +259,90 @@ Page({
   },
 
   /**
+   * 广告加载成功处理
+   */
+  onAdLoad(e) {
+    console.log('Banner广告加载成功:', e.detail);
+    // 可以在这里添加统计逻辑
+  },
+
+  /**
+   * 广告加载失败处理
+   */
+  onAdError(e) {
+    console.log('Banner广告加载失败:', e.detail);
+    // 可以在这里添加错误统计或备用方案
+  },
+
+  /**
+   * 广告点击处理
+   */
+  onAdClick(e) {
+    console.log('Banner广告被点击:', e.detail);
+    // 可以在这里添加点击统计
+  },
+
+  /**
+   * 激励视频奖励处理
+   */
+  onVideoReward(e) {
+    console.log('用户获得视频奖励:', e.detail);
+    
+    // 给用户解锁高级运势功能
+    wx.showModal({
+      title: '奖励获得',
+      content: '恭喜您获得高级运势分析！现在可以查看更详细的运势解读。',
+      showCancel: false,
+      success: () => {
+        // 可以在这里解锁高级功能
+        this.unlockAdvancedFeatures();
+      }
+    });
+  },
+
+  /**
+   * 激励视频错误处理
+   */
+  onVideoError(e) {
+    console.log('激励视频广告错误:', e.detail);
+    wx.showToast({
+      title: '视频加载失败，请稍后重试',
+      icon: 'none'
+    });
+  },
+
+  /**
+   * 解锁高级功能
+   */
+  unlockAdvancedFeatures() {
+    // 这里可以实现解锁高级功能的逻辑
+    // 比如显示更详细的分析内容、解锁特殊功能等
+    
+    // 示例：更新页面数据，显示高级内容
+    const { resultData } = this.data;
+    if (resultData && resultData.analysis) {
+      // 可以在这里添加高级分析内容
+      const enhancedAnalysis = {
+        ...resultData.analysis,
+        advanced_personality: '高级性格分析：根据您的八字，您具有独特的领导才能...',
+        lucky_colors: ['红色', '金色', '紫色'],
+        lucky_numbers: [3, 8, 9],
+        lucky_direction: '正南方',
+        relationship_advice: '在感情中，您需要更多的耐心和理解...'
+      };
+      
+      this.setData({
+        'resultData.analysis': enhancedAnalysis
+      });
+      
+      wx.showToast({
+        title: '高级功能已解锁',
+        icon: 'success'
+      });
+    }
+  },
+
+  /**
    * 保存到历史记录
    */
   saveToHistory() {

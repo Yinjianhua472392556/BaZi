@@ -1,0 +1,29 @@
+<!--Banner广告组件模板-->
+<view class="ad-banner-container {{customClass}}" wx:if="{{showAd}}">
+  <!-- 广告加载中状态 -->
+  <view class="ad-loading" wx:if="{{loading}}">
+    <view class="loading-icon"></view>
+    <text class="loading-text">广告加载中...</text>
+  </view>
+
+  <!-- 广告错误状态 -->
+  <view class="ad-error" wx:elif="{{showError}}">
+    <view class="error-icon">!</view>
+    <text class="error-text">{{errorMsg}}</text>
+    <button class="retry-btn" size="mini" bindtap="reloadAd">重试</button>
+  </view>
+
+  <!-- 实际广告组件 -->
+  <ad wx:else
+      unit-id="{{adUnitId}}"
+      ad-intervals="{{refreshInterval}}"
+      bindload="onAdLoad"
+      binderror="onAdError"
+      bindclose="onAdClose">
+  </ad>
+</view>
+
+<!-- 广告占位符（当广告未启用时） -->
+<view class="ad-placeholder" wx:else>
+  <!-- 可以放置一些占位内容或者完全隐藏 -->
+</view>
