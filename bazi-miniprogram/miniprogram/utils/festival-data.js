@@ -4,7 +4,7 @@ const LunarConversionEngine = require('./lunar-conversion-engine.js');
 
 class FestivalData {
   // 获取未来13个月内的节日和节气 - 使用动态计算
-  static getUpcomingFestivals(limit = 15, includeSolarTerms = true) {
+  static getUpcomingFestivals(limit = 999, includeSolarTerms = true) {
     try {
       // 使用动态计算器获取13个月内的节日（已包含节气）
       const festivals = DynamicFestivalCalculator.getFutureThirteenMonthsFestivals();

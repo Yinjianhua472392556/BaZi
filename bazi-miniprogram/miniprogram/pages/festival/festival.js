@@ -34,8 +34,8 @@ Page({
     this.setData({ loading: true, error: null });
     
     try {
-      // 获取未来13个月内的节日
-      const upcomingFestivals = FestivalData.getUpcomingFestivals(15);
+      // 获取未来13个月内的所有节日（不限制数量）
+      const upcomingFestivals = FestivalData.getUpcomingFestivals();
       const processedFestivals = upcomingFestivals.map(festival => {
         return this.processFestivalData(festival);
       });
