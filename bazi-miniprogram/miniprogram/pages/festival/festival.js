@@ -69,35 +69,59 @@ Page({
   processFestivalData(festival) {
     const { date, name, daysUntil, type } = festival;
     
-    // 获取农历信息
-    const lunarInfo = LunarCalendar.getLunarInfo(date, festival);
+    // 使用新的显示信息获取方法
+    const displayInfo = FestivalData.getDisplayInfo(festival);
     
-    // 获取宜忌活动
-    const activities = AlmanacUtils.getFullAlmanacInfo(date, festival, lunarInfo);
+    // 获取农历信息（对于非节气类型）
+    let lunarInfo = null;
+    let activities = null;
     
-    // 获取装饰信息
-    const decoration = FestivalData.getFestivalDecoration(type);
+    if (type !== 'solar_term') {
+      try {
+        lunarInfo = LunarCalendar.getLunarInfo(date, festival);
+        activities = AlmanacUtils.getFullAlmanacInfo(date, festival, lunarInfo);
+      } catch (error) {
+        console.warn('获取农历信息失败:', error);
+        lunarInfo = { lunarMonthCn: '未知', lunarDayCn: '未知' };
+        activities = { suitable: [], unsuitable: [] };
+      }
+    }
 
     return {
       id: festival.id,
       name,
       type,
-      date: LunarCalendar.formatDate(date),
-      lunarDate: `${lunarInfo.lunarMonthCn}${lunarInfo.lunarDayCn}`,
-      dayOfWeek: LunarCalendar.getDayOfWeekCn(date),
+      date: typeof date === 'string' ? date : LunarCalendar.formatDate(date),
+      lunarDate: displayInfo.lunarDisplay || 
+                 (lunarInfo ? `${lunarInfo.lunarMonthCn}${lunarInfo.lunarDayCn}` : ''),
+      dayOfWeek: typeof date === 'string' ? 
+                 LunarCalendar.getDayOfWeekCn(new Date(date)) : 
+                 LunarCalendar.getDayOfWeekCn(date),
       daysUntil,
       countdownText: this.getCountdownText(daysUntil),
-      // 传统信息
-      ganZhi: `${lunarInfo.ganZhi}·${lunarInfo.ganZhiLuck}`,
-      shierShen: `${lunarInfo.shierShen}·${lunarInfo.shierShenLuck}`,
-      xingXiu: `${lunarInfo.xingxiuFull}·${lunarInfo.xingxiuLuck}`,
-      // 宜忌活动
-      activities: {
-        suitable: activities.suitable,
-        unsuitable: activities.unsuitable
-      },
+      
+      // 新增字段
+      displayName: displayInfo.displayName,
+      typeDisplay: displayInfo.typeDisplay,
+      importance: displayInfo.importance,
+      isToday: displayInfo.isToday,
+      isTomorrow: displayInfo.isTomorrow,
+      isThisWeek: displayInfo.isThisWeek,
+      
+      // 传统信息（仅对非节气类型）
+      ganZhi: lunarInfo ? `${lunarInfo.ganZhi || ''}·${lunarInfo.ganZhiLuck || ''}` : '',
+      shierShen: lunarInfo ? `${lunarInfo.shierShen || ''}·${lunarInfo.shierShenLuck || ''}` : '',
+      xingXiu: lunarInfo ? `${lunarInfo.xingxiuFull || ''}·${lunarInfo.xingxiuLuck || ''}` : '',
+      
+      // 宜忌活动（仅对非节气类型）
+      activities: activities || { suitable: [], unsuitable: [] },
+      
       // 装饰样式
-      decoration
+      decoration: displayInfo.decoration,
+      
+      // 节气特殊信息
+      isolarTerm: type === 'solar_term',
+      longitude: festival.longitude || null
     };
   },
 

@@ -127,7 +127,7 @@
     <!-- 底部说明 -->
     <view wx:if="{{festivals.length > 0}}" class="disclaimer">
       <text class="disclaimer-text">
-        * 节日数据基于动态历法计算，确保长期准确性至2035年，宜忌内容仅供参考
+        * 传统历法结合现代天文算法，提供精准的节日信息，宜忌内容仅供参考
       </text>
     </view>
   </view>

@@ -1,4 +1,8 @@
-// 动态节日计算器 - 确保长期数据准确性
+// 动态节日计算器 - 基于天文算法的无限期节日计算
+const FestivalCacheManager = require('./festival-cache-manager.js');
+const LunarConversionEngine = require('./lunar-conversion-engine.js');
+const AstronomicalCalculator = require('./astronomical-calculator.js');
+
 class DynamicFestivalCalculator {
   
   // 节日规则定义 - 基于固定规则动态计算
@@ -94,42 +98,9 @@ class DynamicFestivalCalculator {
         name: '清明节',
         type: 'traditional',
         level: 'major',
-        calculator: 'calculateQingming' // 基于春分后第15天
+        calculator: 'calculateQingming' // 基于节气计算
       }
     }
-  };
-
-  // 高精度农历转换表 - 基于天文数据
-  static LUNAR_CONVERSION_TABLE = {
-    // 每年的农历信息 (年份: {春节公历日期, 闰月信息})
-    2024: { springFestival: new Date(2024, 1, 10), leapMonth: null },
-    2025: { springFestival: new Date(2025, 0, 29), leapMonth: 6 },
-    2026: { springFestival: new Date(2026, 1, 17), leapMonth: null },
-    2027: { springFestival: new Date(2027, 1, 6), leapMonth: null },
-    2028: { springFestival: new Date(2028, 0, 26), leapMonth: 5 },
-    2029: { springFestival: new Date(2029, 1, 13), leapMonth: null },
-    2030: { springFestival: new Date(2030, 1, 3), leapMonth: null },
-    2031: { springFestival: new Date(2031, 0, 23), leapMonth: 3 },
-    2032: { springFestival: new Date(2032, 1, 11), leapMonth: null },
-    2033: { springFestival: new Date(2033, 0, 31), leapMonth: 11 },
-    2034: { springFestival: new Date(2034, 1, 19), leapMonth: null },
-    2035: { springFestival: new Date(2035, 1, 8), leapMonth: null }
-  };
-
-  // 农历月份天数表
-  static LUNAR_MONTHS_DAYS = {
-    2024: [30, 29, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30], // 闰6月
-    2025: [29, 30, 29, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30], // 闰6月
-    2026: [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 30],
-    2027: [29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30],
-    2028: [30, 29, 30, 29, 30, 29, 29, 30, 29, 30, 30, 29, 30], // 闰5月
-    2029: [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29],
-    2030: [30, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30],
-    2031: [29, 30, 29, 30, 30, 29, 29, 30, 29, 30, 29, 30, 30], // 闰3月
-    2032: [29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 30, 29],
-    2033: [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30], // 闰11月
-    2034: [30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 30],
-    2035: [29, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29]
   };
 
   // 获取未来13个月内的所有节日
@@ -227,62 +198,151 @@ class DynamicFestivalCalculator {
     return festivals;
   }
 
-  // 农历转公历 - 高精度算法
+  // 农历转公历 - 基于天文算法的高精度转换
   static convertLunarToSolar(lunarYear, lunarMonth, lunarDay) {
-    if (!this.LUNAR_CONVERSION_TABLE[lunarYear]) {
-      console.warn(`缺少${lunarYear}年的农历转换数据`);
+    try {
+      // 使用缓存的农历转换引擎
+      return FestivalCacheManager.lunarToSolarCached(lunarYear, lunarMonth, lunarDay, false);
+    } catch (error) {
+      console.error(`农历转公历失败: ${lunarYear}-${lunarMonth}-${lunarDay}`, error);
       return null;
     }
-    
-    const yearInfo = this.LUNAR_CONVERSION_TABLE[lunarYear];
-    const monthDays = this.LUNAR_MONTHS_DAYS[lunarYear];
-    
-    if (!monthDays) {
-      console.warn(`缺少${lunarYear}年的农历月份天数数据`);
-      return null;
-    }
-    
-    // 从春节开始计算天数
-    let totalDays = lunarDay - 1; // 减1因为春节是第1天
-    
-    // 加上前面几个月的天数
-    for (let month = 1; month < lunarMonth; month++) {
-      const monthIndex = month - 1;
-      if (monthIndex < monthDays.length) {
-        totalDays += monthDays[monthIndex];
-      }
-    }
-    
-    // 基于春节日期计算目标日期
-    const springFestival = new Date(yearInfo.springFestival);
-    const targetDate = new Date(springFestival);
-    targetDate.setDate(springFestival.getDate() + totalDays);
-    
-    return targetDate;
   }
 
-  // 计算清明节 - 基于春分后第15天的算法
+  // 计算清明节 - 基于天文节气计算
   static calculateQingming(year) {
-    // 简化算法：春分通常在3月20-21日，清明在春分后15天左右
-    // 更精确的算法会基于天文计算
-    let qingmingDay;
-    
-    if (year >= 1900 && year <= 2099) {
-      // 基于经验公式计算清明
-      const coefficient = (year - 1900) * 0.2422 + 4.81;
-      qingmingDay = Math.floor(coefficient);
+    try {
+      // 获取该年的节气数据
+      const solarTerms = FestivalCacheManager.getSolarTermsData(year);
       
-      // 处理特殊年份的调整
-      const specialYears = [1900, 1904, 1908, 1912, 1916, 1920, 1924, 1928, 1932, 1936, 1940, 1944, 1948, 1952, 1956, 1960, 1964, 1968, 1972, 1976, 1980, 1984, 1988, 1992, 1996, 2000, 2004, 2008, 2012, 2016, 2020, 2024, 2028, 2032, 2036, 2040, 2044, 2048, 2052, 2056, 2060, 2064, 2068, 2072, 2076, 2080, 2084, 2088, 2092, 2096];
-      if (specialYears.includes(year)) {
-        qingmingDay -= 1;
+      if (solarTerms) {
+        // 找到清明节气
+        const qingming = solarTerms.find(term => term.name === '清明');
+        if (qingming) {
+          return qingming.date;
+        }
       }
-    } else {
-      // 默认值
-      qingmingDay = 5;
+      
+      // 如果缓存失败，使用直接计算
+      const qingmingJD = AstronomicalCalculator.findSolarLongitudeTime(year, 15); // 清明：太阳黄经15度
+      return AstronomicalCalculator.julianDayToGregorian(qingmingJD);
+    } catch (error) {
+      console.error(`计算${year}年清明节失败:`, error);
+      
+      // 降级到简化算法
+      const approximateDay = 4 + Math.floor((year - 2000) * 0.2422);
+      return new Date(year, 3, Math.max(1, Math.min(30, approximateDay))); // 限制在4月1-30日
+    }
+  }
+
+  /**
+   * 获取指定农历年的春节日期
+   * @param {number} lunarYear - 农历年份
+   * @returns {Date|null} 春节公历日期
+   */
+  static getSpringFestivalDate(lunarYear) {
+    try {
+      const yearData = FestivalCacheManager.getLunarYearData(lunarYear);
+      return yearData ? yearData.springFestival : null;
+    } catch (error) {
+      console.error(`获取${lunarYear}年春节日期失败:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 判断指定年份是否为农历闰年
+   * @param {number} lunarYear - 农历年份
+   * @returns {boolean} 是否为闰年
+   */
+  static isLunarLeapYear(lunarYear) {
+    try {
+      const yearData = FestivalCacheManager.getLunarYearData(lunarYear);
+      return yearData ? yearData.isLeapYear : false;
+    } catch (error) {
+      console.error(`判断${lunarYear}年是否闰年失败:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * 获取指定农历年的闰月月份
+   * @param {number} lunarYear - 农历年份
+   * @returns {number|null} 闰月月份，无闰月返回null
+   */
+  static getLeapMonth(lunarYear) {
+    try {
+      const yearData = FestivalCacheManager.getLunarYearData(lunarYear);
+      return yearData ? yearData.leapMonth : null;
+    } catch (error) {
+      console.error(`获取${lunarYear}年闰月信息失败:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * 计算两个日期之间的所有节日
+   * @param {Date} startDate - 开始日期
+   * @param {Date} endDate - 结束日期
+   * @returns {Array<Object>} 节日列表
+   */
+  static getFestivalsBetweenDates(startDate, endDate) {
+    const festivals = [];
+    const startYear = startDate.getFullYear();
+    const endYear = endDate.getFullYear();
+    
+    for (let year = startYear; year <= endYear; year++) {
+      const yearFestivals = this.calculateYearFestivals(year);
+      
+      const filteredFestivals = yearFestivals.filter(festival => {
+        return festival.date >= startDate && festival.date <= endDate;
+      });
+      
+      festivals.push(...filteredFestivals);
     }
     
-    return new Date(year, 3, qingmingDay); // 4月的qingmingDay日
+    return festivals.sort((a, b) => a.date.getTime() - b.date.getTime());
+  }
+
+  /**
+   * 获取指定日期的节日信息
+   * @param {Date} date - 指定日期
+   * @returns {Array<Object>} 该日期的节日列表
+   */
+  static getFestivalsOnDate(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    
+    const yearFestivals = this.calculateYearFestivals(year);
+    
+    return yearFestivals.filter(festival => 
+      festival.year === year && 
+      festival.month === month && 
+      festival.day === day
+    );
+  }
+
+  /**
+   * 获取性能统计信息
+   * @returns {Object} 性能统计
+   */
+  static getPerformanceStats() {
+    return FestivalCacheManager.getCacheStatistics();
+  }
+
+  /**
+   * 预热缓存 - 预计算常用年份数据
+   * @param {number} centerYear - 中心年份
+   * @param {number} range - 前后年份范围
+   */
+  static async warmupCache(centerYear = new Date().getFullYear(), range = 10) {
+    const startYear = centerYear - range;
+    const yearCount = range * 2 + 1;
+    
+    console.log(`开始预热缓存: ${startYear}-${startYear + yearCount - 1}年`);
+    await FestivalCacheManager.precomputeYears(startYear, yearCount);
+    console.log('缓存预热完成');
   }
 
   // 数据验证 - 确保计算结果的合理性
