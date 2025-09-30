@@ -230,6 +230,18 @@
           </button>
         </view>
       </view>
+
+      <!-- 4. 推荐名字列表中的原生广告 - 每3个名字后插入一个广告 -->
+      <ad-native 
+        wx:if="{{(index + 1) % 3 === 0 && index < recommendations.length - 1}}"
+        ad-type="native"
+        page-name="naming"
+        show-close-button="{{true}}"
+        bind:adload="onNativeAdLoad"
+        bind:adclick="onNativeAdClick"
+        bind:adclose="onNativeAdClose"
+        bind:aderror="onNativeAdError">
+      </ad-native>
     </view>
 
     <view class="restart-section">

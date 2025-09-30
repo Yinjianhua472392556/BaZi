@@ -1,0 +1,229 @@
+/* 原生广告组件样式 */
+.ad-native-container {
+  position: relative;
+  margin: 10rpx 0;
+}
+
+/* 模拟广告样式 */
+.ad-native-mock {
+  position: relative;
+  padding: 20rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #E8E8E8;
+  background-color: #FFFFFF;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 广告标识 */
+.ad-label {
+  position: absolute;
+  top: 10rpx;
+  right: 10rpx;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #FFFFFF;
+  font-size: 20rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+  z-index: 10;
+}
+
+/* 广告内容 */
+.ad-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+}
+
+/* 广告图片容器 */
+.ad-image-container {
+  flex-shrink: 0;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background-color: #F5F5F5;
+}
+
+.ad-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+}
+
+/* 广告文字内容 */
+.ad-text-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+/* 广告标题 */
+.ad-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #333333;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 广告描述 */
+.ad-description {
+  font-size: 28rpx;
+  line-height: 1.5;
+  color: #666666;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 广告按钮 */
+.ad-button {
+  margin-top: 16rpx;
+  padding: 12rpx 24rpx;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: 500;
+  border-radius: 24rpx;
+  text-align: center;
+  align-self: flex-start;
+  min-width: 120rpx;
+  transition: all 0.2s ease;
+}
+
+.ad-button:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+/* 关闭按钮 */
+.ad-close {
+  position: absolute;
+  top: 10rpx;
+  left: 10rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.ad-close:active {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+/* 真实广告样式 */
+.ad-native-real {
+  border-radius: 16rpx;
+  overflow: hidden;
+  background-color: #FFFFFF;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 响应式适配 */
+@media (max-width: 400px) {
+  .ad-content {
+    flex-direction: column;
+  }
+  
+  .ad-image-container {
+    width: 100%;
+    height: 200rpx;
+  }
+  
+  .ad-text-content {
+    gap: 8rpx;
+  }
+  
+  .ad-title {
+    font-size: 30rpx;
+  }
+  
+  .ad-description {
+    font-size: 26rpx;
+  }
+  
+  .ad-button {
+    font-size: 26rpx;
+    padding: 10rpx 20rpx;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .ad-native-mock {
+    background-color: #1F1F1F;
+    border-color: #333333;
+  }
+  
+  .ad-title {
+    color: #FFFFFF;
+  }
+  
+  .ad-description {
+    color: #CCCCCC;
+  }
+  
+  .ad-image-container {
+    background-color: #333333;
+  }
+}
+
+/* 加载状态 */
+.ad-native-loading {
+  height: 160rpx;
+  background-color: #F5F5F5;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999999;
+  font-size: 28rpx;
+}
+
+/* 错误状态 */
+.ad-native-error {
+  height: 160rpx;
+  background-color: #FFF5F5;
+  border: 2rpx solid #FFE6E6;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FF6B6B;
+  font-size: 26rpx;
+}
+
+/* 动画效果 */
+.ad-native-container {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 悬停效果（支持的设备） */
+.ad-native-mock:hover {
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  transform: translateY(-2rpx);
+  transition: all 0.2s ease;
+}

@@ -1,5 +1,6 @@
 // pages/naming/naming.js
 const app = getApp()
+const AdManager = require('../../utils/ad-manager')
 
 Page({
   /**
@@ -401,13 +402,34 @@ Page({
   /**
    * 开始起名 - 使用与八字测算页面一致的数据结构
    */
-  startNaming() {
+  async startNaming() {
     if (!this.data.canNaming) {
       wx.showToast({
         title: '请完善信息',
         icon: 'none'
       })
       return
+    }
+
+    // 3. 点击开始起名时展示激励视频广告
+    try {
+      const adManager = AdManager.getInstance()
+      const adResult = await adManager.showRewardVideoAd('naming')
+      
+      if (adResult.skipped) {
+        console.log('激励视频广告已跳过，原因:', adResult.reason)
+      } else if (adResult.success) {
+        console.log('激励视频广告观看完成，给予额外奖励')
+        // 可以给用户更多起名选择或优质名字
+        wx.showToast({
+          title: '获得高质量起名',
+          icon: 'success'
+        })
+      } else {
+        console.log('激励视频广告展示失败，继续执行:', adResult.error)
+      }
+    } catch (error) {
+      console.warn('激励视频广告展示出错，继续执行:', error)
     }
 
     this.setData({
@@ -776,5 +798,24 @@ Page({
       query: '',
       imageUrl: '/images/share-naming.png'
     };
+  },
+
+  /**
+   * 原生广告事件处理
+   */
+  onNativeAdLoad(e) {
+    console.log('起名页面原生广告加载成功:', e.detail)
+  },
+
+  onNativeAdClick(e) {
+    console.log('起名页面原生广告被点击:', e.detail)
+  },
+
+  onNativeAdClose(e) {
+    console.log('起名页面原生广告被关闭:', e.detail)
+  },
+
+  onNativeAdError(e) {
+    console.log('起名页面原生广告加载失败:', e.detail)
   }
 });

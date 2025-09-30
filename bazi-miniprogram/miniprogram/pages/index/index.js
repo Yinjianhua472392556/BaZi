@@ -1,5 +1,6 @@
 // index.js
 const app = getApp()
+const AdManager = require('../../utils/ad-manager')
 
 Page({
   data: {
@@ -254,13 +255,29 @@ Page({
   },
 
   // 开始测算八字
-  calculateBazi() {
+  async calculateBazi() {
     if (!this.data.canCalculate) {
       wx.showToast({
         title: '请完善出生信息',
         icon: 'none'
       })
       return
+    }
+
+    // 1. 点击八字测算页面的开始测算时展示插屏广告
+    try {
+      const adManager = AdManager.getInstance()
+      const adResult = await adManager.showInterstitialAd('index')
+      
+      if (adResult.skipped) {
+        console.log('广告已跳过，原因:', adResult.reason)
+      } else if (adResult.success) {
+        console.log('插屏广告展示成功')
+      } else {
+        console.log('插屏广告展示失败，继续执行:', adResult.error)
+      }
+    } catch (error) {
+      console.warn('广告展示出错，继续执行:', error)
     }
 
     this.setData({

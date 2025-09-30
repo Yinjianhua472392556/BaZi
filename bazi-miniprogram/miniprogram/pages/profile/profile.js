@@ -1,4 +1,6 @@
 // profile.js
+const AdManager = require('../../utils/ad-manager')
+
 Page({
   data: {
     showCollectedModal: false,
@@ -52,7 +54,23 @@ Page({
   /**
    * 查看收藏的名字
    */
-  viewCollectedNames() {
+  async viewCollectedNames() {
+    // 7. 点击我的收藏时展示横幅广告
+    try {
+      const adManager = AdManager.getInstance()
+      const adResult = await adManager.showBannerAd('profile-collection')
+      
+      if (adResult.skipped) {
+        console.log('横幅广告已跳过，原因:', adResult.reason)
+      } else if (adResult.success) {
+        console.log('横幅广告展示成功')
+      } else {
+        console.log('横幅广告展示失败，继续执行:', adResult.error)
+      }
+    } catch (error) {
+      console.warn('横幅广告展示出错，继续执行:', error)
+    }
+
     this.loadCollectedNames();
     this.setData({
       showCollectedModal: true
@@ -147,5 +165,24 @@ Page({
       query: 'from=timeline',
       imageUrl: '/images/share-bg.png'
     }
+  },
+
+  /**
+   * 横幅广告事件处理
+   */
+  onBannerAdLoad(e) {
+    console.log('个人资料页面横幅广告加载成功:', e.detail)
+  },
+
+  onBannerAdClick(e) {
+    console.log('个人资料页面横幅广告被点击:', e.detail)
+  },
+
+  onBannerAdClose(e) {
+    console.log('个人资料页面横幅广告被关闭:', e.detail)
+  },
+
+  onBannerAdError(e) {
+    console.log('个人资料页面横幅广告加载失败:', e.detail)
   }
 })

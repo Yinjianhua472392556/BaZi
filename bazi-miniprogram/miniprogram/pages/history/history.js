@@ -1,13 +1,30 @@
 // history.js
 const app = getApp()
+const AdManager = require('../../utils/ad-manager')
 
 Page({
   data: {
     historyList: []
   },
 
-  onLoad() {
+  async onLoad() {
     this.loadHistory()
+    
+    // 7. 访问历史记录页面时展示横幅广告
+    try {
+      const adManager = AdManager.getInstance()
+      const adResult = await adManager.showBannerAd('history-page')
+      
+      if (adResult.skipped) {
+        console.log('历史记录页横幅广告已跳过，原因:', adResult.reason)
+      } else if (adResult.success) {
+        console.log('历史记录页横幅广告展示成功')
+      } else {
+        console.log('历史记录页横幅广告展示失败:', adResult.error)
+      }
+    } catch (error) {
+      console.warn('历史记录页横幅广告展示出错:', error)
+    }
   },
 
   onShow() {

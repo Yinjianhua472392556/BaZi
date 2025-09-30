@@ -1,4 +1,6 @@
 // zodiac-matching.js
+const AdManager = require('../../utils/ad-manager')
+
 Page({
   /**
    * 页面的初始数据
@@ -50,7 +52,7 @@ Page({
   /**
    * 执行配对分析
    */
-  performMatching: function() {
+  async performMatching() {
     const maleZodiac = this.data.maleZodiac;
     const femaleZodiac = this.data.femaleZodiac;
     
@@ -60,6 +62,22 @@ Page({
         icon: 'none'
       });
       return;
+    }
+
+    // 6. 点击生肖配对按钮时展示插屏广告
+    try {
+      const adManager = AdManager.getInstance()
+      const adResult = await adManager.showInterstitialAd('zodiac-matching')
+      
+      if (adResult.skipped) {
+        console.log('插屏广告已跳过，原因:', adResult.reason)
+      } else if (adResult.success) {
+        console.log('插屏广告展示成功')
+      } else {
+        console.log('插屏广告展示失败，继续执行:', adResult.error)
+      }
+    } catch (error) {
+      console.warn('插屏广告展示出错，继续执行:', error)
     }
 
     // 显示加载状态

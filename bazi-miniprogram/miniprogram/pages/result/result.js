@@ -1,4 +1,6 @@
 // result.js
+const AdManager = require('../../utils/ad-manager')
+
 Page({
   /**
    * 页面的初始数据
@@ -410,8 +412,25 @@ Page({
   /**
    * 显示分析结果弹窗
    */
-  showAnalysis() {
+  async showAnalysis() {
     console.log('显示分析结果');
+    
+    // 2. 点击八字解读时展示横幅广告
+    try {
+      const adManager = AdManager.getInstance()
+      const adResult = await adManager.showBannerAd('result')
+      
+      if (adResult.skipped) {
+        console.log('横幅广告已跳过，原因:', adResult.reason)
+      } else if (adResult.success) {
+        console.log('横幅广告展示成功')
+      } else {
+        console.log('横幅广告展示失败，继续执行:', adResult.error)
+      }
+    } catch (error) {
+      console.warn('横幅广告展示出错，继续执行:', error)
+    }
+    
     this.setData({
       showAnalysisModal: true
     });

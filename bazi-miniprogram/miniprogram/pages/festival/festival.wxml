@@ -161,9 +161,21 @@
         
         <!-- 重要程度指示器 -->
         <view class="importance-indicator {{item.popularityLevel}}" wx:if="{{item.popularityLevel === 'popular'}}">
-          <text class="importance-icon">�</text>
+          <text class="importance-icon">⭐</text>
         </view>
       </view>
+
+      <!-- 5. 节日列表中的原生广告 - 每4个节日后插入一个广告 -->
+      <ad-native 
+        wx:if="{{(index + 1) % 4 === 0 && index < festivals.length - 1}}"
+        ad-type="native"
+        page-name="festival"
+        show-close-button="{{true}}"
+        bind:adload="onNativeAdLoad"
+        bind:adclick="onNativeAdClick"
+        bind:adclose="onNativeAdClose"
+        bind:aderror="onNativeAdError">
+      </ad-native>
     </view>
 
     <!-- 空状态 -->

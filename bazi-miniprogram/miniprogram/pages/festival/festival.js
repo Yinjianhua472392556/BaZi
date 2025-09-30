@@ -849,5 +849,24 @@ Page({
     
     // 清理临时数据
     this.tempShareData = null;
+  },
+
+  /**
+   * 原生广告事件处理
+   */
+  onNativeAdLoad(e) {
+    console.log('节日页面原生广告加载成功:', e.detail)
+  },
+
+  onNativeAdClick(e) {
+    console.log('节日页面原生广告被点击:', e.detail)
+  },
+
+  onNativeAdClose(e) {
+    console.log('节日页面原生广告被关闭:', e.detail)
+  },
+
+  onNativeAdError(e) {
+    console.log('节日页面原生广告加载失败:', e.detail)
   }
 });
