@@ -1,5 +1,5 @@
 /**
- * Banner广告组件
+ * Banner广告组件 - 简化版
  * 封装微信小程序的banner广告
  */
 
@@ -7,30 +7,15 @@ const AdManager = require('../../utils/ad-manager');
 
 Component({
   properties: {
-    // 广告单元ID
-    adUnitId: {
-      type: String,
-      value: ''
-    },
     // 页面名称，用于配置检查
     pageName: {
       type: String,
       value: ''
     },
-    // 自定义样式类
-    customClass: {
+    // 广告单元ID（可选，会优先使用配置文件中的ID）
+    adUnitId: {
       type: String,
       value: ''
-    },
-    // 是否自动刷新
-    autoRefresh: {
-      type: Boolean,
-      value: true
-    },
-    // 刷新间隔（秒）
-    refreshInterval: {
-      type: Number,
-      value: 30
     }
   },
 
@@ -40,19 +25,13 @@ Component({
     // 是否显示错误占位符
     showError: false,
     // 错误信息
-    errorMsg: '',
-    // 广告是否加载中
-    loading: false
+    errorMsg: ''
   },
 
   lifetimes: {
     attached() {
       this.adManager = AdManager.getInstance();
       this.checkAndInitAd();
-    },
-
-    detached() {
-      this.clearRefreshTimer();
     }
   },
 
@@ -81,48 +60,8 @@ Component({
       // 使用配置中的unitId，如果组件没有传入的话
       const finalUnitId = adUnitId || adConfig.unitId;
       
-      this.setData({ 
-        showAd: true,
-        loading: true
-      });
-
-      // 设置自动刷新
-      if (this.properties.autoRefresh) {
-        this.setupAutoRefresh(adConfig.intervals || this.properties.refreshInterval);
-      }
-    },
-
-    /**
-     * 设置自动刷新
-     * @param {number} interval 刷新间隔（秒）
-     */
-    setupAutoRefresh(interval) {
-      this.clearRefreshTimer();
-      
-      if (interval > 0) {
-        this.refreshTimer = setInterval(() => {
-          this.refreshAd();
-        }, interval * 1000);
-      }
-    },
-
-    /**
-     * 清除刷新定时器
-     */
-    clearRefreshTimer() {
-      if (this.refreshTimer) {
-        clearInterval(this.refreshTimer);
-        this.refreshTimer = null;
-      }
-    },
-
-    /**
-     * 刷新广告
-     */
-    refreshAd() {
-      console.log('刷新Banner广告');
-      // banner广告会自动刷新，这里主要用于统计
-      this.adManager.reportShow('banner');
+      this.setData({ showAd: true });
+      console.log('Banner广告组件初始化完成，unitId:', finalUnitId);
     },
 
     /**
@@ -130,16 +69,7 @@ Component({
      */
     onAdLoad() {
       console.log('Banner广告加载成功');
-      this.setData({ 
-        loading: false,
-        showError: false 
-      });
-      this.adManager.reportShow('banner');
-      
-      // 触发自定义事件
-      this.triggerEvent('adload', {
-        type: 'banner'
-      });
+      this.setData({ showError: false });
     },
 
     /**
@@ -149,19 +79,9 @@ Component({
       console.error('Banner广告加载失败:', e.detail);
       
       const { errCode, errMsg } = e.detail;
-      this.adManager.reportError('banner', errCode, errMsg);
-      
       this.setData({ 
-        loading: false,
         showError: true,
         errorMsg: `广告加载失败: ${errMsg || '未知错误'}`
-      });
-
-      // 触发自定义事件
-      this.triggerEvent('aderror', {
-        type: 'banner',
-        errCode,
-        errMsg
       });
     },
 
@@ -170,12 +90,6 @@ Component({
      */
     onAdClick() {
       console.log('Banner广告被点击');
-      this.adManager.reportClick('banner');
-      
-      // 触发自定义事件
-      this.triggerEvent('adclick', {
-        type: 'banner'
-      });
     },
 
     /**
@@ -183,21 +97,13 @@ Component({
      */
     onAdClose() {
       console.log('Banner广告被关闭');
-      
-      // 触发自定义事件
-      this.triggerEvent('adclose', {
-        type: 'banner'
-      });
     },
 
     /**
      * 重新加载广告
      */
     reloadAd() {
-      this.setData({ 
-        showError: false,
-        loading: true 
-      });
+      this.setData({ showError: false });
       
       // 延迟一段时间后重新检查
       setTimeout(() => {

@@ -1,21 +1,14 @@
 /**
- * 广告管理器
- * 统一管理小程序广告的加载、展示、错误处理和统计
+ * 广告管理器 - 简化版
+ * 统一管理小程序广告的加载、展示、错误处理
  */
 
-const { getAdConfig, canShowAd, getErrorHandlingConfig, getAnalyticsConfig } = require('./ad-config');
+const { getAdConfig, canShowAd, getErrorHandlingConfig } = require('./ad-config');
 
 class AdManager {
   constructor() {
     this.adInstances = new Map(); // 存储广告实例
     this.retryCounters = new Map(); // 重试计数器
-    this.loadingStates = new Map(); // 加载状态
-    this.statistics = {
-      shows: 0,
-      clicks: 0,
-      errors: 0,
-      errorTypes: {}
-    };
   }
 
   /**
@@ -76,7 +69,6 @@ class AdManager {
       }
     } catch (error) {
       console.error('创建激励视频广告失败:', error);
-      this.reportError('reward', 1000, error.message);
       return null;
     }
   }
@@ -109,7 +101,6 @@ class AdManager {
       }
     } catch (error) {
       console.error('创建插屏广告失败:', error);
-      this.reportError('interstitial', 1000, error.message);
       return null;
     }
   }
@@ -123,14 +114,11 @@ class AdManager {
     // 广告加载成功
     ad.onLoad(() => {
       console.log('激励视频广告加载成功:', unitId);
-      this.loadingStates.set(unitId, 'loaded');
-      this.reportShow('reward');
     });
 
     // 广告加载失败
     ad.onError((err) => {
       console.error('激励视频广告加载失败:', err);
-      this.loadingStates.set(unitId, 'error');
       this.handleAdError('reward', err.errCode, err.errMsg, unitId);
     });
 
@@ -139,7 +127,6 @@ class AdManager {
       console.log('激励视频广告关闭:', res);
       if (res && res.isEnded) {
         console.log('用户完整观看了激励视频');
-        // 可以在这里给用户奖励
       } else {
         console.log('用户提前关闭了激励视频');
       }
@@ -155,14 +142,11 @@ class AdManager {
     // 广告加载成功
     ad.onLoad(() => {
       console.log('插屏广告加载成功:', unitId);
-      this.loadingStates.set(unitId, 'loaded');
-      this.reportShow('interstitial');
     });
 
     // 广告加载失败
     ad.onError((err) => {
       console.error('插屏广告加载失败:', err);
-      this.loadingStates.set(unitId, 'error');
       this.handleAdError('interstitial', err.errCode, err.errMsg, unitId);
     });
 
@@ -247,16 +231,15 @@ class AdManager {
   }
 
   /**
-   * 处理广告错误
+   * 处理广告错误（简化版，只有控制台输出和重试）
    * @param {string} adType 广告类型
    * @param {number} errCode 错误码
    * @param {string} errMsg 错误信息
    * @param {string} unitId 广告单元ID
    */
   handleAdError(adType, errCode, errMsg, unitId) {
-    console.error(`广告错误 [${adType}]:`, errCode, errMsg);
-    
-    this.reportError(adType, errCode, errMsg);
+    // 只在控制台输出错误信息
+    console.error(`[广告错误] ${adType}:`, errCode, errMsg);
     
     const errorConfig = getErrorHandlingConfig();
     const retryKey = `${adType}_${unitId}`;
@@ -307,79 +290,6 @@ class AdManager {
   }
 
   /**
-   * 上报广告展示事件
-   * @param {string} adType 广告类型
-   */
-  reportShow(adType) {
-    this.statistics.shows++;
-    
-    const analyticsConfig = getAnalyticsConfig();
-    if (analyticsConfig.enabled && analyticsConfig.reportShow) {
-      // 这里可以接入数据统计SDK
-      console.log('广告展示统计:', adType, this.statistics.shows);
-    }
-  }
-
-  /**
-   * 上报广告点击事件
-   * @param {string} adType 广告类型
-   */
-  reportClick(adType) {
-    this.statistics.clicks++;
-    
-    const analyticsConfig = getAnalyticsConfig();
-    if (analyticsConfig.enabled && analyticsConfig.reportClick) {
-      // 这里可以接入数据统计SDK
-      console.log('广告点击统计:', adType, this.statistics.clicks);
-    }
-  }
-
-  /**
-   * 上报广告错误事件
-   * @param {string} adType 广告类型
-   * @param {number} errCode 错误码
-   * @param {string} errMsg 错误信息
-   */
-  reportError(adType, errCode, errMsg) {
-    this.statistics.errors++;
-    
-    if (!this.statistics.errorTypes[errCode]) {
-      this.statistics.errorTypes[errCode] = 0;
-    }
-    this.statistics.errorTypes[errCode]++;
-    
-    const analyticsConfig = getAnalyticsConfig();
-    if (analyticsConfig.enabled && analyticsConfig.reportError) {
-      // 这里可以接入数据统计SDK
-      console.log('广告错误统计:', adType, errCode, errMsg);
-    }
-  }
-
-  /**
-   * 获取广告统计信息
-   * @returns {object} 统计信息
-   */
-  getStatistics() {
-    return {
-      ...this.statistics,
-      clickRate: this.statistics.shows > 0 ? (this.statistics.clicks / this.statistics.shows * 100).toFixed(2) + '%' : '0%',
-      errorRate: this.statistics.shows > 0 ? (this.statistics.errors / this.statistics.shows * 100).toFixed(2) + '%' : '0%'
-    };
-  }
-
-  /**
-   * 重置统计信息
-   */
-  resetStatistics() {
-    this.statistics = {
-      shows: 0,
-      clicks: 0,
-      errors: 0,
-      errorTypes: {}
-    };
-  }
-
-  /**
    * 销毁广告实例
    * @param {string} adType 广告类型
    * @param {string} unitId 广告单元ID
@@ -406,7 +316,6 @@ class AdManager {
     });
     this.adInstances.clear();
     this.retryCounters.clear();
-    this.loadingStates.clear();
     console.log('所有广告实例已销毁');
   }
 }

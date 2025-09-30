@@ -1,5 +1,5 @@
 /**
- * 激励视频广告组件
+ * 激励视频广告组件 - 简化版
  * 封装微信小程序的激励视频广告
  */
 
@@ -7,13 +7,13 @@ const AdManager = require('../../utils/ad-manager');
 
 Component({
   properties: {
-    // 广告单元ID
-    adUnitId: {
+    // 页面名称，用于配置检查
+    pageName: {
       type: String,
       value: ''
     },
-    // 页面名称，用于配置检查
-    pageName: {
+    // 广告单元ID（可选）
+    adUnitId: {
       type: String,
       value: ''
     },
@@ -21,26 +21,6 @@ Component({
     buttonText: {
       type: String,
       value: '观看视频获得奖励'
-    },
-    // 按钮样式类
-    buttonClass: {
-      type: String,
-      value: 'default'
-    },
-    // 是否禁用按钮
-    disabled: {
-      type: Boolean,
-      value: false
-    },
-    // 奖励描述
-    rewardDesc: {
-      type: String,
-      value: ''
-    },
-    // 是否显示奖励描述
-    showRewardDesc: {
-      type: Boolean,
-      value: true
     }
   },
 
@@ -52,11 +32,7 @@ Component({
     // 错误信息
     errorMsg: '',
     // 是否显示错误提示
-    showError: false,
-    // 广告是否已准备好
-    adReady: false,
-    // 上次点击时间（防抖）
-    lastClickTime: 0
+    showError: false
   },
 
   lifetimes: {
@@ -94,49 +70,15 @@ Component({
       }
 
       this.setData({ showComponent: true });
-      
-      // 预加载广告
-      this.preloadAd();
-    },
-
-    /**
-     * 预加载广告
-     */
-    preloadAd() {
-      const { adUnitId, pageName } = this.properties;
-      const adConfig = this.adManager.getAdConfiguration('rewardVideo', pageName);
-      const finalUnitId = adUnitId || (adConfig && adConfig.unitId);
-
-      if (!finalUnitId) {
-        console.warn('激励视频广告单元ID无效');
-        return;
-      }
-
-      // 创建激励视频广告实例
-      const rewardedVideoAd = this.adManager.createRewardedVideoAd(finalUnitId);
-      if (rewardedVideoAd) {
-        this.rewardedVideoAd = rewardedVideoAd;
-        this.setData({ adReady: true });
-        console.log('激励视频广告预加载成功');
-      }
+      console.log('激励视频广告组件初始化完成');
     },
 
     /**
      * 点击观看广告按钮
      */
     onWatchAdClick() {
-      const now = Date.now();
-      const { lastClickTime } = this.data;
-      
-      // 防抖处理，500ms内只允许点击一次
-      if (now - lastClickTime < 500) {
-        return;
-      }
-      
-      this.setData({ lastClickTime: now });
-
       // 检查按钮状态
-      if (this.properties.disabled || this.data.buttonState !== 'normal') {
+      if (this.data.buttonState !== 'normal') {
         return;
       }
 
@@ -200,6 +142,8 @@ Component({
      * @param {string} message 错误信息
      */
     showError(message) {
+      console.error('[激励视频广告错误]:', message);
+      
       this.setData({
         showError: true,
         errorMsg: message
@@ -209,12 +153,6 @@ Component({
       setTimeout(() => {
         this.setData({ showError: false });
       }, 3000);
-
-      // 触发错误事件
-      this.triggerEvent('error', {
-        type: 'rewardVideo',
-        message
-      });
     },
 
     /**
@@ -223,13 +161,12 @@ Component({
     retryLoad() {
       this.setData({
         showError: false,
-        buttonState: 'normal',
-        adReady: false
+        buttonState: 'normal'
       });
       
       // 延迟重试
       setTimeout(() => {
-        this.preloadAd();
+        this.checkAndInitComponent();
       }, 1000);
     },
 
@@ -237,36 +174,13 @@ Component({
      * 清理资源
      */
     cleanUp() {
-      if (this.rewardedVideoAd) {
-        // 销毁广告实例
-        const { adUnitId, pageName } = this.properties;
-        const adConfig = this.adManager.getAdConfiguration('rewardVideo', pageName);
-        const finalUnitId = adUnitId || (adConfig && adConfig.unitId);
-        
-        if (finalUnitId) {
-          this.adManager.destroyAd('reward', finalUnitId);
-        }
+      const { adUnitId, pageName } = this.properties;
+      const adConfig = this.adManager.getAdConfiguration('rewardVideo', pageName);
+      const finalUnitId = adUnitId || (adConfig && adConfig.unitId);
+      
+      if (finalUnitId) {
+        this.adManager.destroyAd('reward', finalUnitId);
       }
-    },
-
-    /**
-     * 获取按钮样式类
-     */
-    getButtonClass() {
-      const { buttonClass } = this.properties;
-      const { buttonState } = this.data;
-      
-      let classes = ['reward-btn', `btn-${buttonClass}`];
-      
-      if (buttonState === 'loading') {
-        classes.push('btn-loading');
-      }
-      
-      if (this.properties.disabled || buttonState === 'disabled') {
-        classes.push('btn-disabled');
-      }
-      
-      return classes.join(' ');
     }
   }
 });

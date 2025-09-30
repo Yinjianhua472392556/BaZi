@@ -1,30 +1,36 @@
-# 微信小程序广告系统使用指南
+# 微信小程序广告系统使用指南 - 简化版
 
 ## 概述
 
-本项目实现了一套完整的微信小程序流量主广告管理系统，支持Banner广告、激励视频广告等多种广告形式。系统设计考虑到目前可能还未达到开通流量主条件的情况，通过配置文件可以灵活控制广告的显示与隐藏。
+本项目实现了一套简化的微信小程序流量主广告管理系统，支持Banner广告、激励视频广告等多种广告形式。系统专注于核心广告功能，采用简洁的设计理念，错误处理只在开发阶段的控制台输出。
+
+**特点：**
+- 🎯 **专注核心功能**：只保留广告展示的核心功能
+- 🛠️ **简化配置**：配置文件结构简单清晰
+- 🔧 **轻量化组件**：组件API精简，易于使用
+- 📝 **开发友好**：错误信息在控制台清晰显示
 
 ## 系统架构
 
 ### 核心组件
-1. **广告配置管理** (`ad-config.js`) - 统一管理广告配置和开关
-2. **广告管理器** (`ad-manager.js`) - 负责广告实例的创建、管理和统计
-3. **Banner广告组件** (`ad-banner`) - 封装微信小程序的banner广告
-4. **激励视频广告组件** (`ad-reward-video`) - 封装激励视频广告功能
+1. **广告配置管理** (`ad-config.js`) - 简化的广告配置和开关
+2. **广告管理器** (`ad-manager.js`) - 负责广告实例的创建和管理
+3. **Banner广告组件** (`ad-banner`) - 精简的banner广告组件
+4. **激励视频广告组件** (`ad-reward-video`) - 精简的激励视频广告组件
 
 ### 文件结构
 ```
 miniprogram/
 ├── utils/
-│   ├── ad-config.js          # 广告配置文件
-│   └── ad-manager.js         # 广告管理核心类
+│   ├── ad-config.js          # 广告配置文件（简化版）
+│   └── ad-manager.js         # 广告管理核心类（简化版）
 ├── components/
-│   ├── ad-banner/            # Banner广告组件
+│   ├── ad-banner/            # Banner广告组件（精简版）
 │   │   ├── ad-banner.js
 │   │   ├── ad-banner.wxml
 │   │   ├── ad-banner.wxss
 │   │   └── ad-banner.json
-│   └── ad-reward-video/      # 激励视频广告组件
+│   └── ad-reward-video/      # 激励视频广告组件（精简版）
 │       ├── ad-reward-video.js
 │       ├── ad-reward-video.wxml
 │       ├── ad-reward-video.wxss
@@ -54,7 +60,6 @@ const AD_CONFIG = {
       enabled: true,
       unitId: 'adunit-xxxxxxxx', // 填入你的广告位ID
       intervals: 30,
-      theme: 'white',
       type: 'banner'
     },
     rewardVideo: {
@@ -78,113 +83,73 @@ const AD_CONFIG = {
 在页面的 `.wxml` 文件中添加广告组件：
 
 ```xml
-<!-- Banner广告 -->
-<ad-banner 
-  page-name="result"
-  custom-class="my-banner-ad"
-  bindadload="onAdLoad"
-  bindaderror="onAdError"
-  bindadclick="onAdClick">
-</ad-banner>
+<!-- Banner广告（精简版） -->
+<ad-banner page-name="result"></ad-banner>
 
-<!-- 激励视频广告 -->
+<!-- 激励视频广告（精简版） -->
 <ad-reward-video 
   page-name="result"
   button-text="观看视频获得奖励"
-  button-class="primary"
-  reward-desc="观看完整视频即可获得特殊奖励"
-  show-reward-desc="{{true}}"
-  bindreward="onVideoReward"
-  binderror="onVideoError">
+  bindreward="onVideoReward">
 </ad-reward-video>
 ```
 
-在页面的 `.js` 文件中处理广告事件：
+在页面的 `.js` 文件中处理奖励事件：
 
 ```javascript
 Page({
-  // 广告加载成功
-  onAdLoad(e) {
-    console.log('广告加载成功:', e.detail);
-  },
-
-  // 广告加载失败
-  onAdError(e) {
-    console.log('广告加载失败:', e.detail);
-  },
-
-  // 广告点击
-  onAdClick(e) {
-    console.log('广告被点击:', e.detail);
-  },
-
   // 激励视频奖励
   onVideoReward(e) {
     console.log('用户获得奖励:', e.detail);
     // 给用户发放奖励
     this.giveUserReward();
-  },
-
-  // 激励视频错误
-  onVideoError(e) {
-    console.log('视频广告错误:', e.detail);
-    wx.showToast({
-      title: '视频加载失败',
-      icon: 'none'
-    });
   }
 });
 ```
 
 ## 组件详细说明
 
-### Banner广告组件 (ad-banner)
+### Banner广告组件 (ad-banner) - 精简版
 
 #### 属性参数
 - `page-name` (String): 页面名称，用于配置检查
 - `ad-unit-id` (String): 广告单元ID（可选，会优先使用配置文件中的ID）
-- `custom-class` (String): 自定义样式类
-- `auto-refresh` (Boolean): 是否自动刷新，默认true
-- `refresh-interval` (Number): 刷新间隔（秒），默认30
 
-#### 事件
-- `bindadload`: 广告加载成功
-- `bindaderror`: 广告加载失败
-- `bindadclick`: 广告被点击
-- `bindadclose`: 广告被关闭
+#### 自动行为
+- 自动检查广告配置
+- 自动显示/隐藏广告
+- 错误时在控制台输出错误信息
 
-### 激励视频广告组件 (ad-reward-video)
+### 激励视频广告组件 (ad-reward-video) - 精简版
 
 #### 属性参数
 - `page-name` (String): 页面名称
 - `ad-unit-id` (String): 广告单元ID（可选）
 - `button-text` (String): 按钮文字，默认"观看视频获得奖励"
-- `button-class` (String): 按钮样式类：default/primary/success/warning
-- `disabled` (Boolean): 是否禁用按钮
-- `reward-desc` (String): 奖励描述
-- `show-reward-desc` (Boolean): 是否显示奖励描述
 
 #### 事件
 - `bindreward`: 用户获得奖励（完整观看视频）
-- `binderror`: 广告错误
 
 ## 配置详解
 
-### 全局配置
+### 简化的全局配置
 
 ```javascript
 const AD_CONFIG = {
   // 全局广告开关
   globalEnabled: false,  // 设为true启用广告
   
-  // 广告位配置
+  // 广告位配置（简化）
   adUnits: {
     banner: {
       enabled: false,      // 广告位开关
       unitId: '',         // 广告位ID
       intervals: 30,      // 自动刷新间隔
-      theme: 'white',     // 主题色
       type: 'banner'      // 广告类型
+    },
+    rewardVideo: {
+      enabled: false,
+      unitId: ''
     }
   },
   
@@ -200,14 +165,6 @@ const AD_CONFIG = {
     maxRetries: 3,        // 最大重试次数
     retryDelay: 2000,     // 重试延迟
     hideOnError: true     // 错误时隐藏容器
-  },
-  
-  // 统计配置
-  analytics: {
-    enabled: true,        // 启用统计
-    reportShow: true,     // 上报展示事件
-    reportClick: true,    // 上报点击事件
-    reportError: true     // 上报错误事件
   }
 };
 ```
@@ -220,8 +177,7 @@ const AD_CONFIG = {
 pages: {
   // 首页
   index: {
-    banner: false,
-    video: false
+    banner: false
   },
   
   // 运势页面
@@ -232,49 +188,36 @@ pages: {
   
   // 节日页面
   festival: {
-    banner: true,
-    grid: false
+    banner: true
   }
 }
 ```
 
-## 样式自定义
+## 错误处理
 
-### Banner广告样式
+### 简化的错误处理策略
 
-可以通过 `custom-class` 属性添加自定义样式：
+系统采用简化的错误处理方式：
 
-```css
-/* 自定义Banner广告样式 */
-.my-banner-ad {
-  margin: 20rpx;
-  border-radius: 12rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
-}
+1. **控制台输出**：所有错误直接在开发者工具控制台显示
+2. **智能重试**：根据错误类型自动重试（最多3次）
+3. **优雅降级**：广告错误不影响主要功能
 
-/* 使用预定义主题 */
-.ad-banner-container.light-theme {
-  background-color: #ffffff;
-  border: 1rpx solid #e0e0e0;
-}
+### 错误信息示例
 
-.ad-banner-container.dark-theme {
-  background-color: #1a1a1a;
-  border: 1rpx solid #333;
-}
+```javascript
+// 控制台会显示类似信息：
+console.error('[广告错误] banner:', 1001, '广告位配置错误');
+console.error('[激励视频广告错误]:', '广告加载失败');
 ```
 
-### 激励视频按钮样式
+### 不重试的错误码
 
-组件支持多种按钮样式主题：
-
-```xml
-<!-- 不同样式的按钮 -->
-<ad-reward-video button-class="primary">   <!-- 蓝色主题 -->
-<ad-reward-video button-class="success">   <!-- 绿色主题 -->
-<ad-reward-video button-class="warning">   <!-- 黄色主题 -->
-<ad-reward-video button-class="default">   <!-- 红色主题 -->
-```
+以下错误码不会触发重试：
+- `1002`: 参数错误
+- `1006`: 广告被驳回
+- `1007`: 广告被封禁
+- `1008`: 广告已关闭
 
 ## 常见问题
 
@@ -293,18 +236,11 @@ pages: {
 - 或者将对应广告位的 `enabled` 设为 `false`
 - 广告组件会自动隐藏，不影响页面布局
 
-### 3. 测试广告
+### 3. 查看错误信息
 
-在开发和测试阶段：
-- 可以使用微信官方提供的测试广告位ID
-- 注意在正式上线前替换为真实的广告位ID
-
-### 4. 错误处理
-
-系统内置了完善的错误处理机制：
-- 自动重试失败的广告加载
-- 错误统计和上报
-- 优雅降级，错误时不影响用户体验
+- 在微信开发者工具中打开控制台
+- 所有广告相关错误都会在控制台显示
+- 错误信息包含错误类型、错误码和错误描述
 
 ## 流量主开通后的配置流程
 
@@ -344,25 +280,41 @@ pages: {
 
 ## 最佳实践
 
-### 1. 广告位置选择
-- Banner广告适合放在页面顶部或底部
-- 激励视频广告适合在用户需要奖励的场景
+### 1. 开发调试
+- 保持开发者工具控制台开启
+- 关注错误信息输出
+- 使用测试广告位ID进行开发
+
+### 2. 配置管理
+- 开发环境使用测试配置
+- 生产环境切换真实广告位ID
+- 根据实际需要开启/关闭广告
+
+### 3. 用户体验
+- 合理设置广告位置
 - 避免过度影响用户体验
-
-### 2. 用户体验
 - 提供明确的奖励说明
-- 避免强制观看广告
-- 合理设置广告刷新频率
 
-### 3. 数据分析
-- 监控广告展示率和点击率
-- 分析用户互动数据
-- 根据数据优化广告策略
+### 4. 错误监控
+- 定期查看控制台错误信息
+- 关注广告加载失败频率
+- 根据错误信息调整配置
 
-### 4. 错误处理
-- 准备广告加载失败的备用方案
-- 提供友好的错误提示
-- 确保广告错误不影响核心功能
+## 系统特色
+
+### 简化优势
+
+1. **代码更简洁**：移除了复杂的统计逻辑
+2. **配置更简单**：只保留核心必要配置
+3. **维护更容易**：专注广告展示功能
+4. **调试更直观**：错误直接在控制台显示
+
+### 适用场景
+
+- 小型小程序项目
+- 专注核心功能的应用
+- 不需要复杂广告数据分析的场景
+- 开发阶段的快速原型
 
 ## 技术支持
 
@@ -370,6 +322,6 @@ pages: {
 1. 检查微信开发者工具控制台的错误信息
 2. 确认广告位ID和配置的正确性
 3. 参考微信官方文档：https://developers.weixin.qq.com/miniprogram/dev/framework/ad/
-4. 查看本项目的相关日志和错误提示
+4. 查看控制台的详细错误日志
 
-本系统已经在八字测算小程序中成功集成和测试，具有良好的稳定性和扩展性。
+本系统已经在八字测算小程序中成功集成和测试，具有良好的稳定性和易用性。

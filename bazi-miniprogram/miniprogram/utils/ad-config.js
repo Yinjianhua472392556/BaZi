@@ -1,5 +1,5 @@
 /**
- * 广告配置管理
+ * 广告配置管理 - 简化版
  * 用于管理小程序的广告展示配置
  */
 
@@ -14,15 +14,13 @@ const AD_CONFIG = {
       enabled: false,
       unitId: '', // 流量主开通后填入对应的广告位ID
       intervals: 30, // 自动刷新间隔（秒）
-      theme: 'white', // 主题色：white/black
-      type: 'banner' // 广告类型
+      type: 'banner'
     },
     
     // 视频广告位
     video: {
       enabled: false,
       unitId: '',
-      theme: 'white',
       type: 'video'
     },
     
@@ -30,7 +28,6 @@ const AD_CONFIG = {
     grid: {
       enabled: false,
       unitId: '',
-      theme: 'white',
       type: 'grid'
     },
     
@@ -93,17 +90,6 @@ const AD_CONFIG = {
     retryDelay: 2000,
     // 是否在错误时隐藏广告容器
     hideOnError: true
-  },
-  
-  // 统计配置
-  analytics: {
-    enabled: true,
-    // 是否上报广告展示事件
-    reportShow: true,
-    // 是否上报广告点击事件
-    reportClick: true,
-    // 是否上报广告错误事件
-    reportError: true
   }
 };
 
@@ -152,14 +138,6 @@ function getErrorHandlingConfig() {
 }
 
 /**
- * 获取统计配置
- * @returns {object} 统计配置
- */
-function getAnalyticsConfig() {
-  return AD_CONFIG.analytics;
-}
-
-/**
  * 更新广告配置（仅供开发调试使用）
  * @param {object} config 新的配置
  */
@@ -175,6 +153,5 @@ module.exports = {
   getAdConfig,
   canShowAd,
   getErrorHandlingConfig,
-  getAnalyticsConfig,
   updateAdConfig
 };
