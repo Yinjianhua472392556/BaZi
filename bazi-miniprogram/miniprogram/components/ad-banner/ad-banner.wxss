@@ -1,36 +1,31 @@
 /* Banner广告组件样式 */
-
 .ad-banner-container {
   width: 100%;
-  margin: 10rpx 0;
-  position: relative;
-  border-radius: 8rpx;
+  margin: 20rpx 0;
+  border-radius: 12rpx;
   overflow: hidden;
-  background-color: #f5f5f5;
-  min-height: 120rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
 }
 
-/* 广告加载状态 */
+/* 加载状态 */
 .ad-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20rpx;
-  color: #999;
+  padding: 60rpx 20rpx;
+  background-color: #f8f9fa;
+  color: #6c757d;
 }
 
 .loading-icon {
-  width: 30rpx;
-  height: 30rpx;
-  border: 3rpx solid #e0e0e0;
-  border-top: 3rpx solid #007aff;
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid #e9ecef;
+  border-top: 6rpx solid #007bff;
   border-radius: 50%;
+  margin-bottom: 20rpx;
   animation: spin 1s linear infinite;
-  margin-bottom: 10rpx;
 }
 
 @keyframes spin {
@@ -39,66 +34,127 @@
 }
 
 .loading-text {
-  font-size: 24rpx;
-  color: #999;
+  font-size: 28rpx;
+  color: #6c757d;
 }
 
-/* 广告错误状态 */
+/* 错误状态 */
 .ad-error {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20rpx;
-  color: #ff4757;
-  text-align: center;
+  padding: 40rpx 20rpx;
+  background-color: #fff5f5;
+  border: 2rpx solid #fed7d7;
+  color: #c53030;
 }
 
 .error-icon {
-  width: 40rpx;
-  height: 40rpx;
-  background-color: #ff4757;
+  width: 50rpx;
+  height: 50rpx;
+  background-color: #fc8181;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24rpx;
+  font-size: 32rpx;
   font-weight: bold;
-  margin-bottom: 10rpx;
+  margin-bottom: 20rpx;
 }
 
 .error-text {
-  font-size: 22rpx;
-  color: #666;
-  margin-bottom: 15rpx;
-  max-width: 500rpx;
+  font-size: 26rpx;
+  text-align: center;
+  margin-bottom: 20rpx;
   line-height: 1.4;
 }
 
 .retry-btn {
-  background-color: #007aff;
+  background-color: #e53e3e;
   color: white;
   border: none;
-  border-radius: 20rpx;
-  padding: 8rpx 20rpx;
-  font-size: 22rpx;
+  padding: 12rpx 24rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
 }
 
-.retry-btn:active {
-  background-color: #0056b3;
+/* 模拟广告样式 */
+.mock-ad-banner {
+  width: 100%;
+  min-height: 120rpx;
+}
+
+.mock-banner-content {
+  position: relative;
+  width: 100%;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 120rpx;
+}
+
+.mock-banner-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+  line-height: 1.3;
+}
+
+.mock-banner-desc {
+  font-size: 26rpx;
+  opacity: 0.9;
+  line-height: 1.4;
+  margin-bottom: 12rpx;
+}
+
+.mock-banner-tag {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  opacity: 0.8;
 }
 
 /* 广告占位符 */
 .ad-placeholder {
-  display: none; /* 默认隐藏占位符 */
+  /* 完全隐藏，或者显示一些占位内容 */
+  display: none;
 }
 
-/* 实际广告样式调整 */
-.ad-banner-container ad {
-  width: 100%;
-  border-radius: 8rpx;
-  overflow: hidden;
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .ad-banner-container {
+    margin: 16rpx 0;
+  }
+  
+  .ad-loading {
+    padding: 50rpx 16rpx;
+  }
+  
+  .ad-error {
+    padding: 32rpx 16rpx;
+  }
+  
+  .mock-banner-content {
+    padding: 20rpx;
+    min-height: 100rpx;
+  }
+  
+  .mock-banner-title {
+    font-size: 28rpx;
+  }
+  
+  .mock-banner-desc {
+    font-size: 24rpx;
+  }
 }
 
 /* 响应式设计 */

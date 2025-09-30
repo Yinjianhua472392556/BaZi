@@ -25,7 +25,15 @@ Component({
     // 是否显示错误占位符
     showError: false,
     // 错误信息
-    errorMsg: ''
+    errorMsg: '',
+    // 是否为模拟模式
+    isSimulation: false,
+    // 广告配置
+    adConfig: {},
+    // 广告单元ID
+    adUnitId: '',
+    // 加载状态
+    loading: false
   },
 
   lifetimes: {
@@ -51,7 +59,7 @@ Component({
 
       // 获取广告配置
       const adConfig = this.adManager.getAdConfiguration('banner', pageName);
-      if (!adConfig || !adConfig.unitId) {
+      if (!adConfig) {
         console.log('Banner广告配置无效');
         this.setData({ showAd: false });
         return;
@@ -60,8 +68,37 @@ Component({
       // 使用配置中的unitId，如果组件没有传入的话
       const finalUnitId = adUnitId || adConfig.unitId;
       
-      this.setData({ showAd: true });
-      console.log('Banner广告组件初始化完成，unitId:', finalUnitId);
+      // 设置数据
+      this.setData({ 
+        showAd: true,
+        isSimulation: adConfig.isSimulation,
+        adConfig: adConfig.config || {},
+        adUnitId: finalUnitId
+      });
+      
+      console.log('Banner广告组件初始化完成', {
+        isSimulation: adConfig.isSimulation,
+        unitId: finalUnitId,
+        config: adConfig.config
+      });
+      
+      // 如果是模拟模式，模拟加载过程
+      if (adConfig.isSimulation) {
+        this.simulateAdLoad();
+      }
+    },
+
+    /**
+     * 模拟广告加载过程
+     */
+    simulateAdLoad() {
+      this.setData({ loading: true });
+      
+      // 模拟加载延迟
+      setTimeout(() => {
+        this.setData({ loading: false });
+        this.onAdLoad();
+      }, 500);
     },
 
     /**

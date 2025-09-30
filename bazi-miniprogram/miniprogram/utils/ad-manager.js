@@ -3,7 +3,7 @@
  * 支持模拟广告和真实广告的无缝切换
  */
 
-const { getAdConfig, isSimulationMode } = require('./ad-config');
+const { getAdConfig, isSimulationMode, AD_CONFIG } = require('./ad-config');
 const { getInstance: getFrequencyManager } = require('./ad-frequency-manager');
 
 // 模拟广告类
@@ -31,8 +31,9 @@ class MockAd {
     // 模拟加载延迟
     await this.simulateDelay(300);
 
-    // 模拟失败概率
-    if (Math.random() < 0.1) { // 10%失败率
+    // 模拟失败概率（使用配置文件中的失败率）
+    const failureRate = AD_CONFIG.errorHandling?.mockFailureRate || 0.1;
+    if (Math.random() < failureRate) {
       const error = { errCode: 1004, errMsg: '模拟网络错误' };
       if (this.callbacks.onError) {
         this.callbacks.onError(error);
@@ -84,80 +85,13 @@ class MockAd {
   }
 }
 
-// 模拟横幅广告
-class MockBannerAd extends MockAd {
-  constructor(config, options = {}) {
-    super('banner', config, options);
-  }
-
-  handleAdDisplay() {
-    console.log('模拟横幅广告展示:', this.config.title);
-    // 横幅广告通常持续显示，不自动关闭
-  }
-}
-
-// 模拟激励视频广告
-class MockRewardVideoAd extends MockAd {
-  constructor(config, options = {}) {
-    super('rewardVideo', config, options);
-  }
-
-  async handleAdDisplay() {
-    console.log('模拟激励视频广告开始播放:', this.config.title);
-    
-    // 模拟视频播放时长
-    const duration = this.config.duration || 15000;
-    await this.simulateDelay(duration);
-    
-    // 视频播放完成
-    if (this.callbacks.onClose) {
-      this.callbacks.onClose({ isEnded: true });
-    }
-    
-    this.visible = false;
-  }
-}
-
-// 模拟插屏广告
-class MockInterstitialAd extends MockAd {
-  constructor(config, options = {}) {
-    super('interstitial', config, options);
-  }
-
-  async handleAdDisplay() {
-    console.log('模拟插屏广告展示:', this.config.title);
-    
-    // 模拟自动关闭时间
-    const autoCloseTime = this.config.autoCloseTime || 3000;
-    await this.simulateDelay(autoCloseTime);
-    
-    // 自动关闭
-    if (this.callbacks.onClose) {
-      this.callbacks.onClose({});
-    }
-    
-    this.visible = false;
-  }
-}
-
-// 模拟原生广告
-class MockNativeAd extends MockAd {
-  constructor(config, options = {}) {
-    super('native', config, options);
-  }
-
-  handleAdDisplay() {
-    console.log('模拟原生广告展示:', this.config.title);
-    // 原生广告嵌入在页面中，不需要特殊处理
-  }
-}
-
 // 主广告管理器类
 class AdManager {
   constructor() {
     this.adInstances = new Map();
     this.retryCounters = new Map();
     this.frequencyManager = getFrequencyManager();
+    this.config = AD_CONFIG;
   }
 
   static getInstance() {
@@ -165,6 +99,99 @@ class AdManager {
       AdManager.instance = new AdManager();
     }
     return AdManager.instance;
+  }
+
+  /**
+   * 检查是否应该显示广告
+   * @param {string} adType 广告类型
+   * @param {string} pageName 页面名称
+   * @returns {boolean} 是否应该显示
+   */
+  shouldShowAd(adType, pageName = '') {
+    try {
+      console.log(`[广告管理器] 检查广告显示权限: ${adType} @ ${pageName}`);
+      
+      // 调试模式：强制显示广告
+      if (this.config.debug && this.config.debug.enabled && this.config.debug.forceShowAds) {
+        console.log('[广告管理器] 🔧 调试模式：强制显示广告');
+        return true;
+      }
+      
+      // 检查全局开关
+      if (!this.config.globalEnabled) {
+        console.log('[广告管理器] 广告全局开关已关闭');
+        return false;
+      }
+
+      // 检查广告类型是否启用
+      const adUnit = this.config.adUnits[adType];
+      if (!adUnit || !adUnit.enabled) {
+        console.log(`[广告管理器] 广告类型 ${adType} 未启用`, adUnit);
+        return false;
+      }
+
+      // 检查页面配置
+      if (pageName) {
+        const pageConfig = this.config.pages[pageName];
+        console.log(`[广告管理器] 页面配置:`, pageConfig);
+        
+        if (pageConfig && pageConfig[adType] === false) {
+          console.log(`[广告管理器] 页面 ${pageName} 明确禁止显示 ${adType} 广告`);
+          return false;
+        }
+        
+        // 如果页面配置存在但没有该广告类型的配置，允许显示（兼容模式）
+        if (pageConfig && pageConfig[adType] === undefined) {
+          console.log(`[广告管理器] 页面 ${pageName} 没有 ${adType} 广告配置，允许显示`);
+        }
+      }
+
+      // 检查频次限制（调试模式可忽略）
+      if (!(this.config.debug && this.config.debug.enabled && this.config.debug.ignoreFrequencyLimits)) {
+        if (!this.frequencyManager.canShowAd(adType, pageName)) {
+          console.log(`[广告管理器] 广告 ${adType} 受频次限制`);
+          return false;
+        }
+      } else {
+        console.log('[广告管理器] 🔧 调试模式：忽略频次限制');
+      }
+
+      console.log(`[广告管理器] ✅ 允许显示广告: ${adType} @ ${pageName}`);
+      return true;
+    } catch (error) {
+      console.error('[广告管理器] 检查广告显示权限时出错:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 获取广告配置（组件接口兼容方法）
+   * @param {string} adType 广告类型
+   * @param {string} pageName 页面名称
+   * @returns {object|null} 广告配置
+   */
+  getAdConfiguration(adType, pageName) {
+    try {
+      console.log(`[广告管理器] 获取广告配置: ${adType} @ ${pageName}`);
+      
+      const config = getAdConfig(adType, pageName);
+      if (!config) {
+        console.log(`[广告管理器] 无法获取广告配置: ${adType} @ ${pageName}`);
+        return null;
+      }
+      
+      console.log(`[广告管理器] 广告配置获取成功:`, config);
+      
+      // 返回组件期望的格式
+      return {
+        unitId: config.isSimulation ? 'mock-unit-id' : config.config.unitId,
+        isSimulation: config.isSimulation,
+        config: config.config
+      };
+    } catch (error) {
+      console.error('[广告管理器] 获取广告配置时出错:', error);
+      return null;
+    }
   }
 
   /**
@@ -201,18 +228,7 @@ class AdManager {
    * @returns {MockAd} 模拟广告实例
    */
   createMockAd(adType, config, options) {
-    switch (adType) {
-      case 'banner':
-        return new MockBannerAd(config, options);
-      case 'rewardVideo':
-        return new MockRewardVideoAd(config, options);
-      case 'interstitial':
-        return new MockInterstitialAd(config, options);
-      case 'native':
-        return new MockNativeAd(config, options);
-      default:
-        throw new Error(`不支持的模拟广告类型: ${adType}`);
-    }
+    return new MockAd(adType, config, options);
   }
 
   /**
@@ -326,53 +342,6 @@ class AdManager {
    */
   async showInterstitialAd(pageName) {
     return this.showAd('interstitial', { pageName });
-  }
-
-  /**
-   * 快捷方法：展示激励视频广告
-   * @param {string} pageName 页面名称
-   * @param {function} onReward 奖励回调
-   * @returns {Promise} 展示结果
-   */
-  async showRewardVideoAd(pageName, onReward) {
-    return this.showAd('rewardVideo', { pageName, onReward });
-  }
-
-  /**
-   * 快捷方法：展示横幅广告
-   * @param {string} pageName 页面名称
-   * @returns {Promise} 展示结果
-   */
-  async showBannerAd(pageName) {
-    return this.showAd('banner', { pageName });
-  }
-
-  /**
-   * 在列表中插入广告数据
-   * @param {Array} dataList 原始数据列表
-   * @param {string} adType 广告类型
-   * @returns {Array} 插入广告后的列表
-   */
-  insertAdsIntoList(dataList, adType = 'native') {
-    const positions = this.frequencyManager.calculateListAdPositions(dataList.length);
-    const result = [...dataList];
-    
-    // 从后往前插入，避免位置偏移
-    positions.reverse().forEach((position, index) => {
-      if (position < result.length) {
-        const adConfig = getAdConfig(adType);
-        if (adConfig) {
-          result.splice(position, 0, {
-            isAd: true,
-            adType: adType,
-            id: `ad_${adType}_${index}`,
-            config: adConfig.config
-          });
-        }
-      }
-    });
-    
-    return result;
   }
 
   /**

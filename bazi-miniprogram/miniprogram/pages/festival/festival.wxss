@@ -794,6 +794,112 @@
   outline-offset: 4rpx;
 }
 
+/* 节日列表中的原生广告样式 */
+ad-native {
+  display: block;
+  margin: 30rpx 0;
+  padding: 0;
+  border-radius: 24rpx;
+  overflow: hidden;
+  background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+  border: 2rpx dashed #C8860D;
+  opacity: 0.95;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+ad-native:hover {
+  opacity: 1;
+  transform: translateY(-2rpx);
+  box-shadow: 0 8rpx 24rpx rgba(200, 134, 13, 0.15);
+}
+
+/* 广告内部样式 - 使用小程序兼容的选择器 */
+ad-native {
+  background: transparent;
+  border: none;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+/* 注意：::part() 在微信小程序中不支持，已移除相关样式 */
+/* 广告标识和关闭按钮样式将通过组件内部实现 */
+
+/* 广告在节日列表中的特殊定位 */
+.festival-list ad-native {
+  /* 确保广告在列表中正确插入 */
+  order: 999; /* 给广告一个较高的order值，但通过布局逻辑控制实际位置 */
+}
+
+/* 广告加载状态 */
+ad-native[data-loading="true"] {
+  background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+              linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+              linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+              linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+  background-size: 20rpx 20rpx;
+  background-position: 0 0, 0 10rpx, 10rpx -10rpx, -10rpx 0rpx;
+  animation: loadingStripes 1s linear infinite;
+  min-height: 200rpx;
+}
+
+/* 广告错误状态 */
+ad-native[data-error="true"] {
+  background: linear-gradient(135deg, #FFE8E8 0%, #FFF0F0 100%);
+  border-color: #F44336;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120rpx;
+  color: #C62828;
+  font-size: 24rpx;
+}
+
+ad-native[data-error="true"]::before {
+  content: "⚠️ 广告加载失败";
+  display: block;
+}
+
+/* 广告入场动画延迟，与节日卡片协调 */
+.festival-list ad-native:nth-child(4) { animation-delay: 0.7s; }
+.festival-list ad-native:nth-child(7) { animation-delay: 1.0s; }
+.festival-list ad-native:nth-child(10) { animation-delay: 1.3s; }
+
+/* 适配不同屏幕尺寸 */
+@media (max-width: 375px) {
+  ad-native {
+    margin: 20rpx 0;
+  }
+  
+  /* 注意：移除了不兼容的::part()选择器 */
+  /* 广告按钮样式将通过组件内部实现 */
+}
+
+/* 加载条纹动画 */
+@keyframes loadingStripes {
+  0% {
+    background-position: 0 0, 0 10rpx, 10rpx -10rpx, -10rpx 0rpx;
+  }
+  100% {
+    background-position: 20rpx 0rpx, 20rpx 10rpx, 30rpx -10rpx, 10rpx 0rpx;
+  }
+}
+
+/* 广告悬浮效果优化 */
+ad-native:active {
+  transform: translateY(0rpx) scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(200, 134, 13, 0.1);
+}
+
+/* 确保广告与节日卡片在视觉上协调 */
+ad-native + .festival-card {
+  margin-top: 40rpx; /* 广告后的节日卡片增加间距 */
+}
+
+.festival-card + ad-native {
+  margin-top: 30rpx; /* 节日卡片后的广告保持正常间距 */
+}
+
 /* 深色模式适配（预留） */
 @media (prefers-color-scheme: dark) {
   .container {
@@ -809,5 +915,11 @@
     background: #333333;
     border-color: #444444;
     color: #ffffff;
+  }
+  
+  /* 深色模式下的广告样式 */
+  ad-native {
+    background: linear-gradient(135deg, #3a3a3a 0%, #4a4a4a 100%);
+    border-color: #DAA520;
   }
 }

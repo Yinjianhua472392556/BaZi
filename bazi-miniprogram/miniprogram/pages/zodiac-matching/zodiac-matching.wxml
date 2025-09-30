@@ -41,6 +41,20 @@
         </picker>
       </view>
 
+      <!-- 激励视频广告 - 配对前 -->
+      <view class="ad-section">
+        <ad-reward-video 
+          id="zodiacRewardVideo"
+          page-name="zodiacMatching" 
+          button-text="观看视频解锁详细配对分析"
+          button-class="secondary"
+          reward-desc="观看完整视频即可获得更详细的配对解读"
+          show-reward-desc="{{true}}"
+          bindreward="onVideoReward"
+          binderror="onVideoError">
+        </ad-reward-video>
+      </view>
+
       <!-- 配对按钮 -->
       <button class="match-button" bindtap="performMatching">
         配对

@@ -106,7 +106,7 @@ const AD_CONFIG = {
     },
     
     // 生肖配对页面
-    zodiacMatching: {
+    'zodiac-matching': {
       interstitial: true, // 配对按钮点击时
       banner: false
     },
@@ -128,31 +128,31 @@ const AD_CONFIG = {
     }
   },
   
-  // 防骚扰配置
+  // 防骚扰配置 - 调试模式优化
   antiHarassment: {
-    // 每日展示次数限制
+    // 每日展示次数限制 - 调试模式放宽限制
     dailyLimits: {
-      rewardVideo: 3,      // 激励视频每天3次
-      interstitial: 2,     // 插屏广告每天2次
-      banner: 10,          // 横幅广告每天10次
-      native: 8            // 原生广告每天8次
+      rewardVideo: 100,     // 激励视频每天100次（调试用）
+      interstitial: 100,    // 插屏广告每天100次（调试用）
+      banner: 100,          // 横幅广告每天100次（调试用）
+      native: 100           // 原生广告每天100次（调试用）
     },
-    // 时间间隔限制（毫秒）
+    // 时间间隔限制（毫秒） - 调试模式缩短间隔
     intervals: {
-      anyAd: 10 * 60 * 1000,        // 任意广告间隔10分钟
-      interstitial: 30 * 60 * 1000, // 插屏广告间隔30分钟
-      rewardVideo: 20 * 60 * 1000,  // 激励视频间隔20分钟
-      banner: 5 * 60 * 1000         // 横幅广告间隔5分钟
+      anyAd: 1000,          // 任意广告间隔1秒（调试用）
+      interstitial: 2000,   // 插屏广告间隔2秒（调试用）
+      rewardVideo: 2000,    // 激励视频间隔2秒（调试用）
+      banner: 1000          // 横幅广告间隔1秒（调试用）
     },
     // 自动关闭时间
     autoCloseTime: {
       interstitial: 3000,    // 插屏广告3秒后自动关闭
       banner: -1             // 横幅广告不自动关闭
     },
-    // 新用户保护（首次使用功能不展示广告）
-    newUserProtection: true,
+    // 新用户保护（首次使用功能不展示广告）- 调试模式关闭
+    newUserProtection: false,
     // 列表广告比例
-    listAdRatio: 5  // 每5个内容项最多1个广告
+    listAdRatio: 3  // 每3个内容项最多1个广告（调试用，更频繁显示）
   },
   
   // 错误处理配置
@@ -163,8 +163,20 @@ const AD_CONFIG = {
     retryDelay: 2000,
     // 是否在错误时隐藏广告容器
     hideOnError: true,
-    // 模拟失败率（仅在模拟模式下生效）
-    mockFailureRate: 0.1  // 10%的模拟失败率
+    // 模拟失败率（仅在模拟模式下生效） - 调试模式降低失败率
+    mockFailureRate: 0.01  // 1%的模拟失败率（调试用）
+  },
+  
+  // 调试模式配置
+  debug: {
+    // 是否开启调试模式
+    enabled: true,
+    // 是否在控制台显示详细日志
+    verbose: true,
+    // 是否忽略所有频次限制
+    ignoreFrequencyLimits: true,
+    // 是否强制显示广告（忽略所有条件）
+    forceShowAds: true
   }
 };
 

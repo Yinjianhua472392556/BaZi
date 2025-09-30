@@ -16,6 +16,18 @@ class AdFrequencyManager {
    */
   init() {
     try {
+      // 兼容模拟环境
+      if (typeof wx === 'undefined' || !wx.getStorageSync) {
+        console.log('[频次管理器] 模拟环境，使用内存存储');
+        this.data = {
+          dailyCount: {},
+          lastShowTime: {},
+          firstUseFlags: {},
+          lastResetDate: this.getCurrentDate()
+        };
+        return;
+      }
+
       this.data = wx.getStorageSync(this.storageKey) || {
         dailyCount: {},
         lastShowTime: {},
@@ -27,8 +39,10 @@ class AdFrequencyManager {
       if (this.data.lastResetDate !== this.getCurrentDate()) {
         this.resetDailyCount();
       }
+      
+      console.log('[频次管理器] 初始化成功:', this.data);
     } catch (error) {
-      console.warn('初始化广告频次管理器失败:', error);
+      console.warn('[频次管理器] 初始化失败，使用默认配置:', error);
       this.data = {
         dailyCount: {},
         lastShowTime: {},

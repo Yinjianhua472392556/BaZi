@@ -13,6 +13,15 @@
     <button class="retry-btn" size="mini" bindtap="reloadAd">重试</button>
   </view>
 
+  <!-- 模拟广告显示 -->
+  <view class="mock-ad-banner" wx:elif="{{isSimulation}}">
+    <view class="mock-banner-content" style="background-color: {{adConfig.backgroundColor}}; color: {{adConfig.textColor}};">
+      <view class="mock-banner-title">{{adConfig.title}}</view>
+      <view class="mock-banner-desc">{{adConfig.description}}</view>
+      <view class="mock-banner-tag">模拟广告</view>
+    </view>
+  </view>
+
   <!-- 实际广告组件 -->
   <ad wx:else
       unit-id="{{adUnitId}}"
