@@ -80,6 +80,8 @@ Page({
     if (!resultData) return;
 
     try {
+      console.log('处理结果数据:', resultData); // 调试日志
+
       // 处理农历日期
       const lunarInfo = resultData.lunar_info || {};
       const lunarDate = this.generateLunarDate(lunarInfo);
@@ -95,16 +97,40 @@ Page({
       // 计算五行缺陷
       const wuxingLack = this.calculateWuxingLack(wuxing);
 
+      // 获取正确的出生日期信息
+      const birthDate = this.extractBirthDate(resultData);
+      const solarDate = birthDate.solar;
+      const lunarDateStr = birthDate.lunar;
+
       // 计算生肖
-      const shengxiao = this.calculateShengxiao(resultData.user_info?.birth_date);
+      const shengxiao = this.calculateShengxiao(solarDate);
+
+      // 更新resultData中的用户信息，确保显示正确的日期
+      const updatedResultData = {
+        ...resultData,
+        user_info: {
+          ...resultData.user_info,
+          birth_date: solarDate,
+          solar_date: solarDate,
+          lunar_date: lunarDateStr
+        }
+      };
 
       this.setData({
-        lunarDate,
+        lunarDate: lunarDateStr,
         baziString,
         wuxingString,
         wuxingLack,
-        shengxiao
+        shengxiao,
+        resultData: updatedResultData
       });
+
+      console.log('数据处理完成:', {
+        solarDate,
+        lunarDate: lunarDateStr,
+        baziString,
+        calendarType: resultData.calendar_type
+      }); // 调试日志
 
     } catch (error) {
       console.error('处理结果数据出错:', error);
@@ -113,6 +139,185 @@ Page({
         icon: 'none'
       });
     }
+  },
+
+  /**
+   * 从结果数据中提取正确的出生日期信息
+   */
+  extractBirthDate(resultData) {
+    console.log('提取出生日期，原始数据:', resultData); // 调试日志
+    
+    // 尝试从多个可能的字段中提取日期信息
+    let inputYear = resultData.year;
+    let inputMonth = resultData.month;
+    let inputDay = resultData.day;
+    
+    // 如果主字段无效，尝试从其他字段获取
+    if (!inputYear || !inputMonth || !inputDay) {
+      // 尝试从 birthInfo 字段获取
+      if (resultData.birthInfo && resultData.birthInfo.date) {
+        const dateArr = resultData.birthInfo.date.split('-');
+        if (dateArr.length === 3) {
+          inputYear = parseInt(dateArr[0]);
+          inputMonth = parseInt(dateArr[1]);
+          inputDay = parseInt(dateArr[2]);
+        }
+      }
+      
+      // 尝试从 user_info 字段获取
+      if ((!inputYear || !inputMonth || !inputDay) && resultData.user_info && resultData.user_info.birth_date) {
+        const dateArr = resultData.user_info.birth_date.split('-');
+        if (dateArr.length === 3) {
+          inputYear = parseInt(dateArr[0]);
+          inputMonth = parseInt(dateArr[1]);
+          inputDay = parseInt(dateArr[2]);
+        }
+      }
+      
+      // 尝试从 solar_info 字段获取
+      if ((!inputYear || !inputMonth || !inputDay) && resultData.solar_info) {
+        inputYear = resultData.solar_info.year;
+        inputMonth = resultData.solar_info.month;
+        inputDay = resultData.solar_info.day;
+      }
+    }
+    
+    // 兼容不同的字段名称格式
+    const calendarType = resultData.calendar_type || resultData.calendarType || 'solar';
+    
+    console.log('提取的日期信息:', {
+      inputYear, inputMonth, inputDay, calendarType
+    }); // 调试日志
+
+    // 最终验证基础数据是否有效
+    if (!inputYear || !inputMonth || !inputDay || 
+        inputYear < 1900 || inputYear > 2100 ||
+        inputMonth < 1 || inputMonth > 12 ||
+        inputDay < 1 || inputDay > 31) {
+      console.error('🚨 无法获取有效的日期数据:', { 
+        inputYear, inputMonth, inputDay,
+        resultData: resultData 
+      });
+      
+      // 抛出错误而不是使用默认值
+      wx.showModal({
+        title: '数据错误',
+        content: '无法解析出生日期数据，请重新输入',
+        showCancel: false,
+        success: () => {
+          wx.switchTab({
+            url: '/pages/index/index'
+          });
+        }
+      });
+      
+      // 返回错误标识
+      return {
+        solar: 'ERROR',
+        lunar: 'ERROR'
+      };
+    }
+
+    let solarDate = '';
+    let lunarDate = '';
+
+    if (calendarType === 'lunar') {
+      // 如果输入的是农历，那么输入的就是农历日期
+      lunarDate = this.formatLunarDate(inputYear, inputMonth, inputDay);
+      
+      // 尝试获取对应的公历日期 - 多重来源
+      if (resultData.solar_info) {
+        solarDate = this.formatSolarDate(resultData.solar_info.year, resultData.solar_info.month, resultData.solar_info.day);
+      } else if (resultData.user_info && resultData.user_info.birth_date) {
+        solarDate = resultData.user_info.birth_date;
+      } else {
+        // 使用农历转公历的近似算法
+        const approximateSolar = this.approximateLunarToSolar(inputYear, inputMonth, inputDay);
+        solarDate = this.formatSolarDate(approximateSolar.year, approximateSolar.month, approximateSolar.day);
+      }
+    } else {
+      // 如果输入的是公历，那么输入的就是公历日期
+      solarDate = this.formatSolarDate(inputYear, inputMonth, inputDay);
+      
+      // 尝试获取对应的农历日期 - 多重来源
+      if (resultData.lunar_info) {
+        lunarDate = this.generateLunarDate(resultData.lunar_info);
+      } else {
+        // 使用公历转农历的近似算法
+        const approximateLunar = this.approximateSolarToLunar(inputYear, inputMonth, inputDay);
+        lunarDate = this.generateLunarDate(approximateLunar);
+      }
+    }
+
+    console.log('最终提取结果:', { solar: solarDate, lunar: lunarDate }); // 调试日志
+
+    return {
+      solar: solarDate,
+      lunar: lunarDate
+    };
+  },
+
+  /**
+   * 公历转农历的近似算法
+   */
+  approximateSolarToLunar(year, month, day) {
+    // 简单的近似转换算法
+    const lunarMonth = month === 1 ? 12 : month - 1;
+    const lunarYear = month === 1 ? year - 1 : year;
+    const lunarDay = day <= 15 ? day + 15 : day - 15;
+    
+    return {
+      year: lunarYear,
+      month: Math.max(1, Math.min(12, lunarMonth)),
+      day: Math.max(1, Math.min(30, lunarDay))
+    };
+  },
+
+  /**
+   * 农历转公历的近似算法
+   */
+  approximateLunarToSolar(year, month, day) {
+    // 简单的近似转换算法
+    const solarMonth = month === 12 ? 1 : month + 1;
+    const solarYear = month === 12 ? year + 1 : year;
+    const solarDay = day <= 15 ? day + 15 : day - 15;
+    
+    return {
+      year: solarYear,
+      month: Math.max(1, Math.min(12, solarMonth)),
+      day: Math.max(1, Math.min(28, solarDay)) // 保守估计28天
+    };
+  },
+
+  /**
+   * 格式化公历日期
+   */
+  formatSolarDate(year, month, day) {
+    const y = String(year).padStart(4, '0');
+    const m = String(month).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+
+  /**
+   * 格式化农历日期
+   */
+  formatLunarDate(year, month, day) {
+    const lunarMonths = [
+      '正月', '二月', '三月', '四月', '五月', '六月',
+      '七月', '八月', '九月', '十月', '十一月', '十二月'
+    ];
+    
+    const lunarDays = [
+      '', '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+      '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+      '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'
+    ];
+
+    const monthStr = lunarMonths[month - 1] || '正月';
+    const dayStr = lunarDays[day] || '初一';
+    
+    return `${year}年${monthStr}${dayStr}`;
   },
 
   /**

@@ -2,45 +2,63 @@
 <view class="container">
   <!-- 结果内容区域 -->
   <view class="main-content">
+    <!-- 页面标题 -->
+    <view class="result-title">八字命理解析</view>
     
     <!-- 信息展示表格 -->
     <view class="info-table">
       <view class="table-row">
         <view class="table-label">
-          {{resultData.calendar_type === 'lunar' ? '输入农历' : '公历生日'}}
+          📅 {{resultData.calendar_type === 'lunar' ? '输入农历' : '公历生日'}}
         </view>
         <view class="table-value">
-          {{resultData.calendar_type === 'lunar' ? lunarDate : (resultData.user_info.birth_date || '2020-09-22')}}
+          {{resultData.calendar_type === 'lunar' ? lunarDate : resultData.user_info.birth_date}}
         </view>
       </view>
       
       <view class="table-row">
         <view class="table-label">
-          {{resultData.calendar_type === 'lunar' ? '对应公历' : '对应农历'}}
+          🗓️ {{resultData.calendar_type === 'lunar' ? '对应公历' : '对应农历'}}
         </view>
         <view class="table-value">
-          {{resultData.calendar_type === 'lunar' ? (resultData.user_info.birth_date || '2020-09-22') : lunarDate}}
+          {{resultData.calendar_type === 'lunar' ? resultData.user_info.birth_date : lunarDate}}
         </view>
       </view>
       
       <view class="table-row">
-        <view class="table-label">天干地支</view>
-        <view class="table-value">{{baziString || '庚子-乙酉-戊辰-壬子'}}</view>
+        <view class="table-label">
+          🔮 天干地支
+        </view>
+        <view class="table-value bazi-text">
+          {{baziString || '庚子-乙酉-戊辰-壬子'}}
+        </view>
       </view>
       
       <view class="table-row">
-        <view class="table-label">所属五行</view>
-        <view class="table-value">{{wuxingString || '金水-木金-土土-水水'}}</view>
+        <view class="table-label">
+          ⚡ 所属五行
+        </view>
+        <view class="table-value wuxing-text">
+          {{wuxingString || '金水-木金-土土-水水'}}
+        </view>
       </view>
       
       <view class="table-row">
-        <view class="table-label">五行缺陷</view>
-        <view class="table-value">{{wuxingLack || '火'}}</view>
+        <view class="table-label">
+          ⚠️ 五行缺陷
+        </view>
+        <view class="table-value lack-text">
+          {{wuxingLack || '火'}}
+        </view>
       </view>
       
       <view class="table-row">
-        <view class="table-label">所属生肖</view>
-        <view class="table-value">{{shengxiao || '鼠'}}</view>
+        <view class="table-label">
+          🐭 所属生肖
+        </view>
+        <view class="table-value zodiac-text">
+          {{shengxiao || '鼠'}}
+        </view>
       </view>
     </view>
     
@@ -52,10 +70,14 @@
     <!-- 操作按钮 -->
     <view class="action-buttons">
       <!-- 主要按钮 - 八字解读 -->
-      <button class="btn-primary" bindtap="showAnalysis">八字解读</button>
+      <button class="btn-primary" bindtap="showAnalysis">
+        <text class="btn-icon">🔍</text>八字解读
+      </button>
       
       <!-- 次要按钮 - 重新计算 -->
-      <button class="btn-secondary" bindtap="calculateAgain">重新计算</button>
+      <button class="btn-secondary" bindtap="calculateAgain">
+        <text class="btn-icon">🔄</text>重新计算
+      </button>
     </view>
     
     <!-- 广告位 - 使用新的广告组件 -->
