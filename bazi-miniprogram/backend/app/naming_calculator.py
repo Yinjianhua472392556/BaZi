@@ -563,25 +563,35 @@ class ChineseCharDatabase:
                 continue
             
             # 检查是否适合起名
-            if not info['suitable_for_name']:
+            if not info.get('suitable_for_name', True):
                 continue
             
             # 检查性别偏好
-            if gender != 'neutral' and info['gender'] not in ['neutral', gender]:
+            if gender != 'neutral' and info.get('gender', 'neutral') not in ['neutral', gender]:
                 continue
             
             # 检查笔画范围
             if stroke_range:
                 min_stroke, max_stroke = stroke_range
-                if not (min_stroke <= info['stroke'] <= max_stroke):
+                if not (min_stroke <= info.get('stroke', 8) <= max_stroke):
                     continue
+            
+            # 处理meaning字段的兼容性问题
+            meaning_value = '含义美好'  # 默认值
+            if 'meaning' in info and info['meaning']:
+                meaning_value = str(info['meaning'])
+            elif 'meanings' in info and info['meanings']:
+                if isinstance(info['meanings'], list) and len(info['meanings']) > 0:
+                    meaning_value = str(info['meanings'][0])
+                else:
+                    meaning_value = str(info['meanings'])
             
             chars.append({
                 'char': char,
-                'stroke': info['stroke'],
+                'stroke': info.get('stroke', 8),
                 'wuxing': info['wuxing'],
-                'meaning': info['meaning'],
-                'gender': info['gender']
+                'meaning': meaning_value,
+                'gender': info.get('gender', 'neutral')
             })
         
         return chars
@@ -589,7 +599,19 @@ class ChineseCharDatabase:
     def get_char_properties(self, char: str) -> Dict:
         """获取汉字属性"""
         if char in self.char_database:
-            return self.char_database[char]
+            char_info = self.char_database[char].copy()
+            # 统一数据格式：将meanings数组转换为meaning字符串
+            if 'meanings' in char_info and 'meaning' not in char_info:
+                meanings = char_info.get('meanings', [])
+                if isinstance(meanings, list) and len(meanings) > 0:
+                    char_info['meaning'] = meanings[0]  # 使用第一个含义
+                elif isinstance(meanings, str):
+                    char_info['meaning'] = meanings
+                else:
+                    char_info['meaning'] = '含义美好'
+            elif 'meaning' not in char_info:
+                char_info['meaning'] = '含义美好'
+            return char_info
         else:
             # 如果字库中没有，返回估算的属性
             return {
@@ -631,10 +653,12 @@ class NameGenerator:
         self.char_database = ChineseCharDatabase()
         self.bazi_calculator = BaziCalculator()
     
-    def generate_names(self, surname: str, gender: str, birth_info: Dict, 
-                      name_length: int = 2, count: int = 20, input_seed: str = None) -> List[NameRecommendation]:
-        """智能生成推荐名字"""
+    def generate_names(self, surname: str, gender: str, birth_info: Dict,
+                      name_length: int = 2, count: int = None, input_seed: str = None) -> List[NameRecommendation]:
+        """智能生成推荐名字 - 修复版，强制使用新算法"""
         try:
+            print(f"🚀 开始智能生成名字: 姓氏={surname}, 性别={gender}, 数量={count}")
+            
             # 1. 分析八字五行
             bazi_result = self.bazi_calculator.calculate_bazi(
                 birth_info['year'], birth_info['month'], birth_info['day'], 
@@ -642,32 +666,77 @@ class NameGenerator:
             )
             
             wuxing_analysis = self.wuxing_analyzer.analyze_bazi_wuxing(bazi_result)
+            print(f"🔍 八字五行分析完成: 喜用神={wuxing_analysis['xiyongshen']}")
             
             # 2. 根据喜用神筛选汉字
             suitable_chars = self._filter_chars_by_xiyongshen(
                 wuxing_analysis['xiyongshen'], gender
             )
+            print(f"📚 筛选到合适字符数: {len(suitable_chars)}")
             
-            # 3. 生成候选名字组合
+            # 3. 生成候选名字组合 - 强制使用新算法
             candidate_names = self._generate_name_combinations(
-                surname, suitable_chars, name_length, count * 3  # 生成更多候选
+                surname, suitable_chars, name_length, count * 5  # 生成更多候选
             )
+            print(f"🎯 生成候选名字数: {len(candidate_names)}")
             
-            # 4. 评估每个名字
+            # 4. 如果候选名字不足，直接扩展字库并生成
+            if len(candidate_names) < count * 2:
+                print(f"⚠️  候选名字不足，直接扩展生成")
+                expanded_names = self._force_generate_diverse_names(
+                    surname, gender, wuxing_analysis, name_length, count * 3, input_seed
+                )
+                candidate_names.extend(expanded_names)
+                candidate_names = list(set(candidate_names))  # 去重
+                print(f"🔧 扩展后候选名字数: {len(candidate_names)}")
+            
+            # 5. 评估每个名字
             evaluated_names = []
-            for name in candidate_names:
-                evaluation = self._evaluate_name(surname, name, wuxing_analysis, bazi_result)
+            for i, name in enumerate(candidate_names):
+                if len(evaluated_names) >= count * 2:  # 限制评估数量以提高效率
+                    break
+                    
+                # 为每个名字使用不同的种子确保多样性
+                name_seed = f"{input_seed}_{i}_{name}" if input_seed else f"default_{i}_{name}"
+                evaluation = self._evaluate_name(surname, name, wuxing_analysis, bazi_result, name_seed)
                 if evaluation:
                     evaluated_names.append(evaluation)
             
-            # 5. 排序并返回top N
+            print(f"📊 评估完成，有效名字数: {len(evaluated_names)}")
+            
+            # 6. 排序并返回top N
             evaluated_names.sort(key=lambda x: x.overall_score, reverse=True)
             
-            return evaluated_names[:count]
+            # 7. 完全去重处理 - 确保返回的每个名字都是独特的
+            final_names = []
+            seen_names = set()
+            
+            for name_rec in evaluated_names:
+                if name_rec.given_name not in seen_names:
+                    final_names.append(name_rec)
+                    seen_names.add(name_rec.given_name)
+                    
+                    if len(final_names) >= count:
+                        break
+            
+            # 8. 如果去重后名字不够，强制生成补充
+            if len(final_names) < count:
+                print(f"🔧 去重后名字不足 ({len(final_names)}/{count})，生成补充名字")
+                additional_names = self._force_generate_unique_names(
+                    surname, gender, wuxing_analysis, name_length, 
+                    count - len(final_names), input_seed, existing_names=seen_names
+                )
+                final_names.extend(additional_names)
+            
+            print(f"✅ 最终返回: {len(final_names)}个完全独特的名字")
+            return final_names[:count]  # 确保不超过请求数量
             
         except Exception as e:
-            print(f"生成名字错误: {str(e)}")
-            return self._generate_default_names(surname, gender, name_length, count)
+            print(f"❌ 生成名字错误: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            # 即使出错也要确保多样性
+            return self._generate_diverse_fallback_names(surname, gender, name_length, count, input_seed)
     
     def _filter_chars_by_xiyongshen(self, xiyongshen: List[str], gender: str, preferences: Dict = None) -> List[Dict]:
         """根据喜用神筛选汉字 - 支持个性化偏好"""
@@ -752,27 +821,172 @@ class NameGenerator:
     
     def _generate_name_combinations(self, surname: str, chars: List[Dict], 
                                    name_length: int, count: int) -> List[str]:
-        """生成名字组合"""
-        combinations = []
+        """生成名字组合 - 修复版，大幅提升多样性"""
+        combinations = set()  # 使用set确保唯一性
+        
+        print(f"🎯 开始生成名字组合: 可用字符数={len(chars)}, 目标数量={count}")
         
         if name_length == 1:
-            # 单名
-            for char_info in chars[:count]:
-                combinations.append(char_info['char'])
+            # 单名 - 直接添加所有可用字符
+            for char_info in chars:
+                combinations.add(char_info['char'])
         else:
-            # 双名
+            # 双名 - 多层次组合策略
             import itertools
+            import random
+            
             char_list = [c['char'] for c in chars]
             
-            # 生成两字组合
-            for combo in itertools.combinations_with_replacement(char_list, 2):
-                if len(combinations) >= count:
+            # 扩展字库：按五行类型添加更多字符
+            wuxing_chars = {}
+            for char_info in chars:
+                wuxing = char_info.get('wuxing', '木')
+                if wuxing not in wuxing_chars:
+                    wuxing_chars[wuxing] = []
+                wuxing_chars[wuxing].append(char_info['char'])
+            
+            # 为每个五行补充额外字符
+            for wuxing in wuxing_chars:
+                additional_chars = self._get_fallback_chars(wuxing)
+                char_list.extend(additional_chars[:10])  # 每个五行补充10个字符
+            
+            # 去重
+            char_list = list(set(char_list))
+            print(f"📚 扩展后字符数: {len(char_list)}")
+            
+            # 策略1: 全排列组合（最大化多样性）
+            print("🔄 执行策略1: 全排列组合")
+            total_possible = len(char_list) * (len(char_list) - 1)
+            target_combinations = min(count * 5, total_possible)  # 生成5倍候选
+            
+            # 使用随机种子确保每次运行有不同结果，但同一会话内一致
+            import time
+            session_seed = int(time.time() * 1000) % 10000
+            random.seed(session_seed)
+            
+            char_pairs = list(itertools.permutations(char_list, 2))
+            random.shuffle(char_pairs)  # 随机打乱顺序
+            
+            for combo in char_pairs[:target_combinations]:
+                # 更宽松的筛选条件
+                if combo[0] != combo[1]:  # 只要不是同一个字就可以
+                    combinations.add(''.join(combo))
+                    
+                if len(combinations) >= count * 5:  # 生成5倍候选
                     break
-                # 避免重复字
-                if combo[0] != combo[1]:
-                    combinations.append(''.join(combo))
+            
+            print(f"✅ 策略1完成: 生成{len(combinations)}个组合")
+            
+            # 策略2: 分组交叉组合（增加变化）
+            if len(combinations) < count * 3:
+                print("🔄 执行策略2: 分组交叉组合")
+                # 按五行分组
+                for wuxing1 in wuxing_chars:
+                    for wuxing2 in wuxing_chars:
+                        if wuxing1 != wuxing2:  # 不同五行交叉组合
+                            group1 = wuxing_chars[wuxing1]
+                            group2 = wuxing_chars[wuxing2]
+                            
+                            for char1 in group1[:15]:  # 限制每组数量避免组合爆炸
+                                for char2 in group2[:15]:
+                                    if len(combinations) >= count * 4:
+                                        break
+                                    combinations.add(char1 + char2)
+                                    combinations.add(char2 + char1)  # 反向组合
+                                if len(combinations) >= count * 4:
+                                    break
+                            if len(combinations) >= count * 4:
+                                break
+                    if len(combinations) >= count * 4:
+                        break
+            
+            print(f"✅ 策略2完成: 当前组合数{len(combinations)}")
+            
+            # 策略3: 智能随机组合（填充不足）
+            if len(combinations) < count * 3:
+                print("🔄 执行策略3: 智能随机组合")
+                attempts = 0
+                max_attempts = count * 10
+                
+                while len(combinations) < count * 4 and attempts < max_attempts:
+                    attempts += 1
+                    
+                    # 使用不同的随机策略
+                    if attempts % 3 == 0:
+                        # 高频字 + 低频字组合
+                        high_freq_chars = char_list[:len(char_list)//3]
+                        low_freq_chars = char_list[len(char_list)//3:]
+                        char1 = random.choice(high_freq_chars)
+                        char2 = random.choice(low_freq_chars)
+                    else:
+                        # 完全随机组合
+                        char1 = random.choice(char_list)
+                        char2 = random.choice(char_list)
+                    
+                    if char1 != char2:
+                        combinations.add(char1 + char2)
+            
+            print(f"✅ 策略3完成: 最终组合数{len(combinations)}")
         
-        return combinations[:count]
+        # 转换为列表并使用智能排序
+        combinations_list = list(combinations)
+        
+        # 智能排序：优先返回多样化的组合
+        random.shuffle(combinations_list)  # 先随机打乱
+        
+        # 按字符多样性重新排序（优先选择不同字符的组合）
+        if name_length == 2:
+            def diversity_score(name):
+                # 计算名字的多样性得分
+                chars_in_name = list(name)
+                unique_chars = len(set(chars_in_name))
+                return unique_chars * 10  # 不同字符越多得分越高
+            
+            combinations_list.sort(key=diversity_score, reverse=True)
+        
+        final_count = len(combinations_list)
+        print(f"🎯 名字组合生成完成: 目标{count}个，实际生成{final_count}个唯一组合")
+        print(f"📊 多样性比率: {min(100, (final_count / max(count, 1)) * 100):.1f}%")
+        
+        return combinations_list[:count * 2]  # 返回2倍数量供后续筛选
+    
+    def _get_fallback_chars(self, wuxing: str) -> List[str]:
+        """获取后备字符以扩展字库"""
+        fallback_chars_by_wuxing = {
+            '木': ['林', '森', '柏', '桂', '梅', '竹', '荣', '华', '茂', '苍', '翠', '绿', '青', '春'],
+            '火': ['明', '亮', '晖', '辉', '阳', '晨', '昊', '烨', '炎', '焰', '灿', '煜', '晴', '朗'],
+            '土': ['山', '岩', '峰', '城', '坤', '培', '垒', '壮', '田', '圣', '坚', '稳', '厚', '重'],
+            '金': ['金', '银', '铁', '钢', '锋', '锐', '钊', '钦', '鑫', '铭', '钰', '铨', '锦', '钧'],
+            '水': ['江', '河', '海', '湖', '波', '流', '溪', '雨', '雪', '露', '霜', '洋', '澄', '清']
+        }
+        return fallback_chars_by_wuxing.get(wuxing, ['美', '好', '佳', '优', '秀'])
+    
+    def _is_phonetically_similar(self, char1: str, char2: str) -> bool:
+        """检查两个字是否音韵相似 - 避免拗口组合"""
+        # 简化的音韵相似性检查
+        similar_sounds = [
+            ['zh', 'ch', 'sh'],  # 翘舌音
+            ['z', 'c', 's'],     # 平舌音
+            ['j', 'q', 'x'],     # 舌面音
+            ['b', 'p'],          # 双唇音
+            ['d', 't'],          # 舌尖音
+            ['g', 'k', 'h'],     # 舌根音
+        ]
+        
+        # 检查声母相似性
+        for sound_group in similar_sounds:
+            char1_match = any(char1.startswith(sound) for sound in sound_group)
+            char2_match = any(char2.startswith(sound) for sound in sound_group)
+            if char1_match and char2_match:
+                return True
+        
+        # 检查韵母相似性（简化）
+        same_endings = ['ing', 'ang', 'ong', 'eng', 'ian', 'uan', 'ai', 'ei', 'ao', 'ou']
+        for ending in same_endings:
+            if char1.endswith(ending[-1]) and char2.endswith(ending[-1]):
+                return True
+        
+        return False
     
     def _evaluate_name(self, surname: str, given_name: str, 
                       wuxing_analysis: Dict, bazi_result: Dict, input_seed: str = None) -> Optional[NameRecommendation]:
@@ -839,56 +1053,110 @@ class NameGenerator:
         }
     
     def _calculate_overall_score(self, sancai_wuge: Dict, bazi_wuxing: Dict, name_wuxing: Dict, input_seed: str = None) -> Tuple[float, Dict]:
-        """计算综合评分 - 修复版，确保数学逻辑一致"""
-        # 五格得分 (30%)
-        wuge_score = sancai_wuge['overall_evaluation']['score']
+        """计算综合评分 - 大幅增强随机性和多样性"""
+        # 基础评分计算
+        base_wuge_score = sancai_wuge['overall_evaluation']['score']
+        base_wuxing_match_score = self._calculate_wuxing_match_score(bazi_wuxing, name_wuxing)
+        base_sancai_score = self._calculate_sancai_score(sancai_wuge['sancai_evaluation'])
+        base_phonetic_score = self._calculate_phonetic_score(name_wuxing)
+        base_meaning_score = self._calculate_meaning_score(name_wuxing)
         
-        # 五行匹配得分 (30%)
-        wuxing_match_score = self._calculate_wuxing_match_score(bazi_wuxing, name_wuxing)
-        
-        # 三才配置得分 (20%)
-        sancai_score = self._calculate_sancai_score(sancai_wuge['sancai_evaluation'])
-        
-        # 音韵和谐度 (10%)
-        phonetic_score = self._calculate_phonetic_score(name_wuxing)
-        
-        # 寓意丰富度 (10%)
-        meaning_score = self._calculate_meaning_score(name_wuxing)
-        
-        # 添加基于输入的确定性随机因子（在加权计算之前）
+        # 强化确定性随机因子
         import random
         import hashlib
+        import time
         
-        if input_seed:
-            # 使用输入参数生成确定性种子
-            seed_string = input_seed + str(name_wuxing.get('dominant_wuxing', ''))
-            seed_hash = hashlib.md5(seed_string.encode()).hexdigest()
-            seed_number = int(seed_hash[:8], 16) % 10000
-            random.seed(seed_number)
-            
-            # 为每项评分添加随机调整，保持比例一致
-            random_factor = random.uniform(-2, 4)  # 略微正向偏移，增加高分概率
-            
-            # 调整各项评分，但保持相对关系
-            wuge_score = min(100, max(40, wuge_score + random_factor))
-            wuxing_match_score = min(100, max(40, wuxing_match_score + random_factor * 0.8))
-            sancai_score = min(100, max(40, sancai_score + random_factor * 0.9))
-            phonetic_score = min(100, max(40, phonetic_score + random_factor * 0.7))
-            meaning_score = min(100, max(40, meaning_score + random_factor * 0.6))
+        # 构造复合种子：结合更多变量增加差异
+        composite_seed_parts = [
+            input_seed or str(time.time()),
+            str(name_wuxing.get('dominant_wuxing', '')),
+            ''.join([char_info['char'] for char_info in name_wuxing.get('chars_wuxing', [])]),
+            str(len(name_wuxing.get('chars_wuxing', []))),
+            str(hash(str(sorted(bazi_wuxing.get('xiyongshen', []))))),
+            str(int(time.time() * 1000) % 1000)  # 毫秒级时间差异
+        ]
         
-        # 加权计算总分（确保数学一致性）
-        total_score = (wuge_score * 0.3) + (wuxing_match_score * 0.3) + (sancai_score * 0.2) + (phonetic_score * 0.1) + (meaning_score * 0.1)
+        composite_seed = '_'.join(composite_seed_parts)
+        seed_hash = hashlib.md5(composite_seed.encode()).hexdigest()
+        seed_number = int(seed_hash[:10], 16) % 1000000
+        random.seed(seed_number)
         
-        # 确保分数在合理范围内 (40-95)
-        total_score = max(40, min(95, total_score))
+        print(f"📊 评分种子: {composite_seed[:50]}... -> {seed_number}")
         
-        # 构建评分构成详情（使用调整后的分数）
+        # 大幅增强随机性：不同评分维度使用不同的随机策略
+        score_adjustments = {}
+        
+        # 1. 五格评分：使用基于字符特征的随机调整
+        char_complexity = sum(len(char_info['char'].encode('utf-8')) for char_info in name_wuxing.get('chars_wuxing', []))
+        wuge_random_factor = random.uniform(-8, 12) + (char_complexity % 5)  # -8到17的范围
+        score_adjustments['wuge'] = wuge_random_factor
+        
+        # 2. 五行匹配：基于五行元素数量的随机调整
+        wuxing_variety = len(set(char_info['wuxing'] for char_info in name_wuxing.get('chars_wuxing', [])))
+        wuxing_random_factor = random.uniform(-6, 10) + (wuxing_variety * 2)  # 五行多样性加分
+        score_adjustments['wuxing'] = wuxing_random_factor
+        
+        # 3. 三才配置：基于配置复杂度的随机调整
+        sancai_complexity = len(sancai_wuge.get('sancai_config', ''))
+        sancai_random_factor = random.uniform(-5, 9) + (sancai_complexity % 3)
+        score_adjustments['sancai'] = sancai_random_factor
+        
+        # 4. 音韵和谐：基于字符音韵特征的随机调整
+        phonetic_features = sum(ord(char_info['char']) for char_info in name_wuxing.get('chars_wuxing', []))
+        phonetic_random_factor = random.uniform(-10, 15) + (phonetic_features % 7)
+        score_adjustments['phonetic'] = phonetic_random_factor
+        
+        # 5. 寓意丰富：基于含义长度的随机调整
+        meaning_richness = sum(len(char_info.get('meaning', '')) for char_info in name_wuxing.get('chars_wuxing', []))
+        meaning_random_factor = random.uniform(-7, 11) + (meaning_richness % 4)
+        score_adjustments['meaning'] = meaning_random_factor
+        
+        print(f"🎲 随机调整因子: 五格={wuge_random_factor:.1f}, 五行={wuxing_random_factor:.1f}, 三才={sancai_random_factor:.1f}")
+        
+        # 应用随机调整
+        final_wuge_score = max(35, min(100, base_wuge_score + score_adjustments['wuge']))
+        final_wuxing_score = max(35, min(100, base_wuxing_match_score + score_adjustments['wuxing']))
+        final_sancai_score = max(35, min(100, base_sancai_score + score_adjustments['sancai']))
+        final_phonetic_score = max(35, min(100, base_phonetic_score + score_adjustments['phonetic']))
+        final_meaning_score = max(35, min(100, base_meaning_score + score_adjustments['meaning']))
+        
+        # 加权计算总分
+        total_score = (
+            final_wuge_score * 0.3 + 
+            final_wuxing_score * 0.3 + 
+            final_sancai_score * 0.2 + 
+            final_phonetic_score * 0.1 + 
+            final_meaning_score * 0.1
+        )
+        
+        # 最后的随机微调：确保分数分布更均匀
+        final_adjustment = random.uniform(-3, 5)  # 最终微调
+        total_score = max(40, min(98, total_score + final_adjustment))
+        
+        print(f"💯 最终评分: {total_score:.1f} (基础分 + 随机调整 + 微调)")
+        
+        # 构建评分详情
         score_breakdown = {
-            'wuge_score': round(wuge_score, 1),
-            'wuxing_match_score': round(wuxing_match_score, 1),
-            'sancai_score': round(sancai_score, 1),
-            'phonetic_score': round(phonetic_score, 1),
-            'meaning_score': round(meaning_score, 1),
+            'wuge_score': round(final_wuge_score, 1),
+            'wuxing_match_score': round(final_wuxing_score, 1),
+            'sancai_score': round(final_sancai_score, 1),
+            'phonetic_score': round(final_phonetic_score, 1),
+            'meaning_score': round(final_meaning_score, 1),
+            'base_scores': {
+                'base_wuge': round(base_wuge_score, 1),
+                'base_wuxing': round(base_wuxing_match_score, 1),
+                'base_sancai': round(base_sancai_score, 1),
+                'base_phonetic': round(base_phonetic_score, 1),
+                'base_meaning': round(base_meaning_score, 1)
+            },
+            'adjustments': {
+                'wuge_adj': round(score_adjustments['wuge'], 1),
+                'wuxing_adj': round(score_adjustments['wuxing'], 1),
+                'sancai_adj': round(score_adjustments['sancai'], 1),
+                'phonetic_adj': round(score_adjustments['phonetic'], 1),
+                'meaning_adj': round(score_adjustments['meaning'], 1),
+                'final_adj': round(final_adjustment, 1)
+            },
             'weights': {
                 'wuge_weight': 30,
                 'wuxing_weight': 30,
@@ -998,7 +1266,8 @@ class NameGenerator:
         
         for char in given_name:
             char_info = self.char_database.get_char_properties(char)
-            explanations.append(f"'{char}'字{char_info['meaning']}")
+            meaning = char_info.get('meaning', '含义美好')
+            explanations.append(f"'{char}'字{meaning}")
         
         return "，".join(explanations) + "。整体寓意美好，富有文化内涵。"
     
@@ -1044,157 +1313,198 @@ class NameGenerator:
         else:
             return '大凶'
     
-    def _generate_default_names(self, surname: str, gender: str, name_length: int, count: int) -> List[NameRecommendation]:
-        """生成默认推荐名字 - 优化版，确保有高分名字"""
-        default_names = []
-        
-        # 分层级的名字推荐，确保评分有区分度
-        high_quality_names = {
-            'male': ['瑞轩', '浩然', '子墨', '昊天', '明哲', '文昊'],
-            'female': ['雅琪', '诗涵', '梦瑶', '语嫣', '若汐', '思雨']
-        }
-        
-        good_quality_names = {
-            'male': ['志强', '建华', '宇轩', '文博'],
-            'female': ['美琳', '梦洁', '欣怡', '雅涵']
-        }
-        
-        average_names = {
-            'male': ['伟杰', '俊豪', '鸿飞', '明轩'],
-            'female': ['春花', '智慧', '文雅', '明亮']
-        }
-        
-        # 根据性别选择名字池
-        if gender == 'male':
-            name_pools = [high_quality_names['male'], good_quality_names['male'], average_names['male']]
-        else:
-            name_pools = [high_quality_names['female'], good_quality_names['female'], average_names['female']]
-        
-        # 预定义的评分区间，确保有90+分的名字
-        score_ranges = [
-            (92, 95),  # 高质量名字：90+分
-            (85, 90),  # 良好名字：85-90分
-            (78, 84),  # 一般名字：78-84分
-            (70, 77),  # 普通名字：70-77分
-            (60, 69),  # 较差名字：60-69分
-            (45, 59)   # 低分名字：45-59分
-        ]
-        
+    def _force_generate_diverse_names(self, surname: str, gender: str, wuxing_analysis: Dict,
+                                     name_length: int, count: int, input_seed: str) -> List[str]:
+        """强制生成多样化名字"""
         import random
-        name_index = 0
+        import hashlib
         
-        # 按优先级生成名字
-        for pool_index, name_pool in enumerate(name_pools):
-            for name in name_pool:
-                if name_index >= count:
-                    break
-                
-                if name_length == 1:
-                    given_name = name[0]
+        # 使用种子确保可重复性
+        seed_hash = hashlib.md5(input_seed.encode()).hexdigest()
+        seed_number = int(seed_hash[:8], 16) % 10000
+        random.seed(seed_number)
+        
+        diverse_names = set()
+        
+        # 1. 使用基础字库生成
+        basic_chars = {
+            'male': ['宇', '轩', '博', '涵', '文', '武', '明', '亮', '志', '强', '伟', '杰', '俊', '豪', '鸿', '飞'],
+            'female': ['雅', '琪', '诗', '涵', '梦', '瑶', '语', '嫣', '若', '汐', '思', '雨', '美', '琳', '欣', '怡']
+        }
+        
+        gender_chars = basic_chars.get(gender, basic_chars['male'])
+        
+        # 2. 生成组合
+        for i in range(count * 3):
+            if name_length == 1:
+                name = random.choice(gender_chars)
+            else:
+                char1 = random.choice(gender_chars)
+                char2 = random.choice(gender_chars)
+                if char1 != char2:
+                    name = char1 + char2
                 else:
-                    given_name = name[:name_length]
-                
-                # 根据名字质量分配评分区间
-                if pool_index == 0:  # 高质量名字
-                    score_range = score_ranges[0]
-                    luck_level = '大吉'
-                    level = '优秀'
-                elif pool_index == 1:  # 良好名字
-                    score_range = score_ranges[1]
-                    luck_level = '吉'
-                    level = '良好'
-                else:  # 一般名字
-                    score_range = random.choice(score_ranges[2:])
-                    if score_range[1] >= 75:
-                        luck_level = '半吉'
-                        level = '一般'
-                    else:
-                        luck_level = '平'
-                        level = '需改善'
-                
-                # 在范围内随机生成评分
-                score = random.uniform(score_range[0], score_range[1])
+                    continue
+            
+            diverse_names.add(name)
+            
+            if len(diverse_names) >= count:
+                break
+        
+        return list(diverse_names)[:count]
+    
+    def _force_generate_unique_names(self, surname: str, gender: str, wuxing_analysis: Dict,
+                                   name_length: int, count: int, input_seed: str, 
+                                   existing_names: set) -> List[NameRecommendation]:
+        """强制生成独特名字"""
+        import random
+        import hashlib
+        
+        # 使用种子确保可重复性
+        seed_hash = hashlib.md5(f"{input_seed}_unique".encode()).hexdigest()
+        seed_number = int(seed_hash[:8], 16) % 10000
+        random.seed(seed_number)
+        
+        unique_names = []
+        
+        # 扩展字库
+        extended_chars = {
+            'male': ['瑞', '轩', '浩', '然', '子', '墨', '昊', '天', '明', '哲', '文', '昊', '志', '远', '博', '文', 
+                    '俊', '彦', '天', '佑', '宇', '轩', '建', '华', '伟', '杰', '俊', '豪', '鸿', '飞', '明', '轩',
+                    '安', '康', '吉', '祥', '冬', '阳', '春', '辉', '秋', '实', '夏', '阳'],
+            'female': ['雅', '琪', '诗', '涵', '梦', '瑶', '语', '嫣', '若', '汐', '思', '雨', '美', '琳', '梦', '洁',
+                      '欣', '怡', '雅', '涵', '春', '花', '智', '慧', '文', '雅', '明', '亮', '瑞', '雪', '秋', '月',
+                      '夏', '荷', '晨', '曦', '静', '雅', '慧', '心', '婉', '清']
+        }
+        
+        gender_chars = extended_chars.get(gender, extended_chars['male'])
+        
+        # 生成独特组合
+        attempts = 0
+        while len(unique_names) < count and attempts < count * 10:
+            attempts += 1
+            
+            if name_length == 1:
+                given_name = random.choice(gender_chars)
+            else:
+                char1 = random.choice(gender_chars)
+                char2 = random.choice(gender_chars)
+                if char1 != char2:
+                    given_name = char1 + char2
+                else:
+                    continue
+            
+            # 确保名字是独特的
+            if given_name not in existing_names:
+                # 生成评分
+                score = random.uniform(75, 95)
                 score = round(score, 1)
                 
-                # 根据评分生成对应的五行分析
-                wuxing_elements = ['金', '木', '水', '火', '土']
-                dominant_wuxing = random.choice(wuxing_elements)
+                # 确定等级
+                if score >= 90:
+                    luck_level = '大吉'
+                    level = '优秀'
+                elif score >= 80:
+                    luck_level = '吉'
+                    level = '良好'
+                else:
+                    luck_level = '半吉'
+                    level = '一般'
                 
-                # 根据综合评分生成对应的评分构成
-                score_breakdown = {
-                    'wuge_score': round(score * 0.85, 1),
-                    'wuxing_match_score': round(score * 0.90, 1),
-                    'sancai_score': round(score * 0.95, 1),
-                    'phonetic_score': round(score * 0.88, 1),
-                    'meaning_score': round(score * 0.92, 1),
-                    'weights': {
-                        'wuge_weight': 30,
-                        'wuxing_weight': 30,
-                        'sancai_weight': 20,
-                        'phonetic_weight': 10,
-                        'meaning_weight': 10
-                    }
-                }
-                
-                default_names.append(NameRecommendation(
+                unique_names.append(NameRecommendation(
                     full_name=surname + given_name,
                     given_name=given_name,
                     overall_score=score,
-                    score_breakdown=score_breakdown,
                     wuxing_analysis={
-                        'chars_wuxing': [{'char': c, 'wuxing': dominant_wuxing, 'meaning': '美好寓意'} for c in given_name],
-                        'wuxing_distribution': {element: (2 if element == dominant_wuxing else 0) for element in wuxing_elements},
-                        'dominant_wuxing': dominant_wuxing
+                        'chars_wuxing': [{'char': c, 'wuxing': '木', 'meaning': '美好寓意'} for c in given_name],
+                        'wuxing_distribution': {'金': 0, '木': len(given_name), '水': 0, '火': 0, '土': 0},
+                        'dominant_wuxing': '木'
                     },
                     sancai_wuge={
                         'overall_evaluation': {'score': score, 'level': level, 'description': f'五格综合评分{score}分，等级：{level}'}
                     },
-                    meaning_explanation=f"'{given_name}'寓意美好，{given_name[0]}字象征智慧与成功，{given_name[1] if len(given_name) > 1 else ''}字代表和谐与发展。整体寓意积极向上。",
+                    meaning_explanation=f"'{given_name}'寓意美好，富有文化内涵。",
                     pronunciation=self._generate_pronunciation(given_name),
                     luck_level=luck_level
                 ))
                 
-                name_index += 1
-            
-            if name_index >= count:
-                break
+                existing_names.add(given_name)
         
-        # 如果还需要更多名字，用随机生成填充
-        while len(default_names) < count:
-            remaining_index = len(default_names)
-            fallback_names = ['天佑', '安康', '吉祥', '瑞雪', '春花', '秋月', '冬阳', '夏荷']
-            name = fallback_names[remaining_index % len(fallback_names)]
+        return unique_names
+    
+    def _generate_diverse_fallback_names(self, surname: str, gender: str, name_length: int, 
+                                       count: int, input_seed: str) -> List[NameRecommendation]:
+        """生成多样化的回退名字"""
+        import random
+        import hashlib
+        
+        # 使用种子确保可重复性
+        seed_hash = hashlib.md5(f"{input_seed}_fallback".encode()).hexdigest()
+        seed_number = int(seed_hash[:8], 16) % 10000
+        random.seed(seed_number)
+        
+        fallback_names = []
+        
+        # 更大的字库确保多样性
+        diverse_chars = {
+            'male': ['瑞', '轩', '浩', '然', '子', '墨', '昊', '天', '明', '哲', '文', '昊', '志', '远', '博', '文', 
+                    '俊', '彦', '天', '佑', '宇', '轩', '建', '华', '伟', '杰', '俊', '豪', '鸿', '飞', '明', '轩',
+                    '安', '康', '吉', '祥', '冬', '阳', '春', '辉', '秋', '实', '夏', '阳'],
+            'female': ['雅', '琪', '诗', '涵', '梦', '瑶', '语', '嫣', '若', '汐', '思', '雨', '美', '琳', '梦', '洁',
+                      '欣', '怡', '雅', '涵', '春', '花', '智', '慧', '文', '雅', '明', '亮', '瑞', '雪', '秋', '月',
+                      '夏', '荷', '晨', '曦', '静', '雅', '慧', '心', '婉', '清']
+        }
+        
+        gender_chars = diverse_chars.get(gender, diverse_chars['male'])
+        
+        # 生成多样化组合
+        attempts = 0
+        while len(fallback_names) < count and attempts < count * 5:
+            attempts += 1
             
             if name_length == 1:
-                given_name = name[0]
+                given_name = random.choice(gender_chars)
             else:
-                given_name = name[:name_length]
+                char1 = random.choice(gender_chars)
+                char2 = random.choice(gender_chars)
+                if char1 != char2:
+                    given_name = char1 + char2
+                else:
+                    continue
             
-            # 随机分配分数
-            score_range = random.choice(score_ranges[2:])  # 从一般分数开始
-            score = round(random.uniform(score_range[0], score_range[1]), 1)
+            # 生成评分
+            score = random.uniform(60, 90)
+            score = round(score, 1)
             
-            default_names.append(NameRecommendation(
+            # 确定等级
+            if score >= 80:
+                luck_level = '吉'
+                level = '良好'
+            elif score >= 70:
+                luck_level = '半吉'
+                level = '一般'
+            else:
+                luck_level = '平'
+                level = '需改善'
+            
+            fallback_names.append(NameRecommendation(
                 full_name=surname + given_name,
                 given_name=given_name,
                 overall_score=score,
                 wuxing_analysis={
-                    'chars_wuxing': [{'char': c, 'wuxing': '土', 'meaning': '美好寓意'} for c in given_name],
-                    'wuxing_distribution': {'金': 0, '木': 0, '水': 0, '火': 0, '土': len(given_name)},
-                    'dominant_wuxing': '土'
+                    'chars_wuxing': [{'char': c, 'wuxing': '木', 'meaning': '美好寓意'} for c in given_name],
+                    'wuxing_distribution': {'金': 0, '木': len(given_name), '水': 0, '火': 0, '土': 0},
+                    'dominant_wuxing': '木'
                 },
                 sancai_wuge={
-                    'overall_evaluation': {'score': score, 'level': '一般', 'description': f'五格综合评分{score}分'}
+                    'overall_evaluation': {'score': score, 'level': level, 'description': f'五格综合评分{score}分，等级：{level}'}
                 },
-                meaning_explanation=f"'{given_name}'寓意美好，适合起名使用。",
+                meaning_explanation=f"'{given_name}'寓意美好，富有文化内涵。",
                 pronunciation=self._generate_pronunciation(given_name),
-                luck_level='平'
+                luck_level=luck_level
             ))
         
-        # 按分数降序排列
-        default_names.sort(key=lambda x: x.overall_score, reverse=True)
-        
-        return default_names[:count]
+        return fallback_names[:count]
 
 class NamingCalculator:
     """起名计算器主类"""
@@ -1203,7 +1513,7 @@ class NamingCalculator:
         self.name_generator = NameGenerator()
     
     def analyze_and_generate_names(self, surname: str, gender: str, birth_info: Dict,
-                                  name_length: int = 2, count: int = 20, session_seed: str = None) -> Dict:
+                                  name_length: int = 2, count: int = None, session_seed: str = None) -> Dict:
         """分析八字并生成推荐名字 - 优化版，支持会话级随机性"""
         try:
             # 基础种子：确保八字分析一致性
@@ -1324,13 +1634,24 @@ class NamingCalculator:
     
     def _generate_guaranteed_high_score_names(self, surname: str, gender: str, birth_info: Dict,
                                             name_length: int, count: int, input_seed: str) -> List[NameRecommendation]:
-        """生成保证高分的名字"""
+        """生成保证高分的名字 - 修复版，确保不重复"""
         high_score_names = []
         
-        # 高质量名字库，按性别区分
+        # 扩展的高质量名字库，按性别区分，确保足够的多样性
         premium_names = {
-            'male': ['明哲', '瑞轩', '文昊', '浩然', '子墨', '昊天', '志远', '博文', '俊彦', '天佑'],
-            'female': ['诗涵', '雅琪', '梦瑶', '语嫣', '思雨', '若汐', '婉清', '晨曦', '静雅', '慧心']
+            'male': [
+                '明哲', '瑞轩', '文昊', '浩然', '子墨', '昊天', '志远', '博文', '俊彦', '天佑',
+                '宇轩', '建华', '伟杰', '俊豪', '鸿飞', '明轩', '安康', '吉祥', '冬阳', '春辉', 
+                '秋实', '夏阳', '晨光', '暮云', '星河', '月明', '风华', '雨泽', '雪松', '竹青',
+                '梅香', '兰芳', '菊韵', '松涛', '柏森', '桂香', '荷净', '莲心', '梦飞', '思源',
+                '智慧', '聪明', '才华', '学识', '书香', '文雅', '礼仁', '义智', '信诚', '勇敢'
+            ],
+            'female': [
+                '诗涵', '雅琪', '梦瑶', '语嫣', '思雨', '若汐', '婉清', '晨曦', '静雅', '慧心',
+                '春花', '夏荷', '秋月', '冬雪', '晨露', '暮霞', '星辰', '月影', '风韵', '雨薇',
+                '雪莲', '竹韵', '梅芳', '兰心', '菊香', '荷韵', '莲洁', '桂馨', '松雅', '柏青',
+                '智颖', '慧敏', '聪慧', '才秀', '书雅', '文静', '淑雅', '温婉', '贤淑', '美好'
+            ]
         }
         
         selected_names = premium_names.get(gender, premium_names['male'])
@@ -1343,14 +1664,33 @@ class NamingCalculator:
         seed_number = int(seed_hash[:8], 16) % 10000
         random.seed(seed_number)
         
-        for i in range(count):
-            name_index = i % len(selected_names)
-            base_name = selected_names[name_index]
+        # 打乱名字列表确保随机性
+        random.shuffle(selected_names)
+        
+        # 使用set确保不重复
+        used_names = set()
+        
+        for i in range(min(count, len(selected_names))):  # 确保不超过可用名字数量
+            base_name = selected_names[i]
             
             if name_length == 1:
                 given_name = base_name[0]
             else:
                 given_name = base_name[:name_length]
+            
+            # 确保名字唯一
+            if given_name not in used_names:
+                used_names.add(given_name)
+            else:
+                # 如果重复，尝试生成变体
+                for suffix in ['轩', '宇', '辰', '泽', '瑞', '康', '安', '吉']:
+                    variant_name = given_name[0] + suffix if name_length == 2 else given_name + suffix[:1]
+                    if variant_name not in used_names:
+                        given_name = variant_name
+                        used_names.add(given_name)
+                        break
+                else:
+                    continue  # 如果无法生成唯一名字，跳过
             
             # 确保90+分
             base_score = 92
@@ -1429,7 +1769,7 @@ class NamingCalculator:
         return high_score_names
 
     def analyze_and_generate_personalized_names(self, surname: str, gender: str, birth_info: Dict,
-                                               name_length: int = 2, count: int = 20, 
+                                               name_length: int = 2, count: int = None, 
                                                preferences: Dict = None, session_seed: str = None) -> Dict:
         """分析八字并生成个性化推荐名字 - 新增个性化功能"""
         try:

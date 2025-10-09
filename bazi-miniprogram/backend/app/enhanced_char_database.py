@@ -59,9 +59,18 @@ class EnhancedCharDatabase:
             self._load_fallback_database()
     
     def _load_main_chars(self):
-        """加载主字库"""
-        chars_file = os.path.join(self.chars_dir, 'chars_main.json')
+        """加载主字库 - 优先使用扩展字库"""
+        # 首先尝试加载扩展字库
+        expanded_chars_file = os.path.join(self.chars_dir, 'expanded_chars_database.json')
+        if os.path.exists(expanded_chars_file):
+            with open(expanded_chars_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                self.char_database = data.get('chars', {})
+                print(f"🚀 扩展字库加载: {len(self.char_database)} 个字符")
+                return
         
+        # 回退到原有主字库
+        chars_file = os.path.join(self.chars_dir, 'chars_main.json')
         if os.path.exists(chars_file):
             with open(chars_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -350,7 +359,7 @@ class EnhancedCharDatabase:
         
         return user_profile
     
-    def get_personalized_recommendations(self, wuxing, user_profile, count=20):
+    def get_personalized_recommendations(self, wuxing, user_profile, count=None):
         """
         基于用户偏好档案的个性化推荐
         
@@ -454,7 +463,8 @@ class EnhancedCharDatabase:
         elif user_profile.get('avoid_trends') and info.get('trend') == 'hot':
             score -= 15
         
-        if user_profile.get('avoid_complexity') and info.get('stroke', 8) > 15:
+        stroke_val = info.get('stroke')
+        if user_profile.get('avoid_complexity') and stroke_val is not None and stroke_val > 15:
             score -= 5
         
         return max(score, 0)  # 确保分数不为负
@@ -894,22 +904,27 @@ class EnhancedCharDatabase:
             meaning_value = '含义美好'  # 默认值
             
             # 尝试获取meaning值，处理多种数据格式
-            if 'meaning' in info and info['meaning']:
+            if 'meaning' in info and info['meaning'] and str(info['meaning']).strip():
                 # 如果有meaning字段且不为空
-                meaning_value = str(info['meaning'])
+                meaning_value = str(info['meaning']).strip()
             elif 'meanings' in info and info['meanings']:
                 # 如果有meanings数组字段
                 meanings = info['meanings']
                 if isinstance(meanings, list) and len(meanings) > 0:
                     # 取第一个有效含义
-                    meaning_value = str(meanings[0]) if meanings[0] else '含义美好'
-                    # 如果有多个含义，用逗号连接前3个
-                    if len(meanings) > 1:
-                        valid_meanings = [str(m) for m in meanings[:3] if m]
-                        if valid_meanings:
-                            meaning_value = '，'.join(valid_meanings)
-                elif isinstance(meanings, str):
-                    meaning_value = str(meanings)
+                    first_meaning = meanings[0]
+                    if first_meaning and str(first_meaning).strip():
+                        meaning_value = str(first_meaning).strip()
+                        # 如果有多个含义，用逗号连接前3个
+                        if len(meanings) > 1:
+                            valid_meanings = []
+                            for m in meanings[:3]:
+                                if m and str(m).strip():
+                                    valid_meanings.append(str(m).strip())
+                            if valid_meanings:
+                                meaning_value = '，'.join(valid_meanings)
+                elif isinstance(meanings, str) and meanings.strip():
+                    meaning_value = meanings.strip()
             
             # 设置meaning字段
             normalized_info['meaning'] = meaning_value

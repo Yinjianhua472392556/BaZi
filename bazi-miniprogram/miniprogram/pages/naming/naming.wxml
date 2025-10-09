@@ -141,6 +141,21 @@
           </picker>
         </view>
 
+        <view class="input-row">
+          <view class="input-label">生成数量</view>
+          <picker 
+            bindchange="onNameCountChange" 
+            range="{{nameCountOptions}}"
+            range-key="text"
+            value="{{nameCountIndex}}"
+          >
+            <view class="picker-display">
+              {{nameCountOptions[nameCountIndex].text}}
+              <text class="picker-arrow">▼</text>
+            </view>
+          </picker>
+        </view>
+
         <!-- 个性化偏好设置 -->
         <view class="preference-section">
           <view class="preference-title" bindtap="togglePreferences">

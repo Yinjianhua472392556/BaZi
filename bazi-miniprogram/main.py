@@ -122,7 +122,7 @@ class NamingRequest(BaseModel):
     birth_hour: int = 12
     calendar_type: str = "solar"
     name_length: int = 2
-    count: int = 10
+    count: Optional[int] = None
     session_seed: Optional[str] = None
 
 class ZodiacMatchingRequest(BaseModel):
@@ -148,7 +148,7 @@ class PersonalizedNamingRequest(BaseModel):
     birth_hour: int = 12
     calendar_type: str = "solar"
     name_length: int = 2
-    count: int = 10
+    count: Optional[int] = None
     session_seed: Optional[str] = None
     preferences: Optional[Dict] = None
 
@@ -156,13 +156,13 @@ class CharacterSearchRequest(BaseModel):
     keyword: str
     wuxing: Optional[str] = None
     gender: Optional[str] = None
-    count: int = 20
+    count: Optional[int] = None
 
 class CharacterCombinationRequest(BaseModel):
     wuxing_list: List[str]
     gender: Optional[str] = None
     style_preference: Optional[str] = None
-    count: int = 30
+    count: Optional[int] = None
 
 class LunarToSolarRequest(BaseModel):
     year: int

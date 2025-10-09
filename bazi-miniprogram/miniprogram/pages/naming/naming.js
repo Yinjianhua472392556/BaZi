@@ -34,6 +34,7 @@ Page({
     
     // 起名偏好
     nameLength: 2,
+    nameCount: 20, // 默认生成20个名字
     
     // 个性化偏好设置
     showPreferences: false,
@@ -78,6 +79,7 @@ Page({
     // 选择器索引
     genderIndex: 0,
     nameLengthIndex: 1,
+    nameCountIndex: 1, // 默认选择20个
     
     // 性别选项
     genderOptions: [
@@ -89,6 +91,15 @@ Page({
     nameLengthOptions: [
       { value: 1, text: '单名' },
       { value: 2, text: '双名' }
+    ],
+    
+    // 名字数量选项
+    nameCountOptions: [
+      { value: 10, text: '10个名字' },
+      { value: 20, text: '20个名字' },
+      { value: 50, text: '50个名字' },
+      { value: 100, text: '100个名字' },
+      { value: 200, text: '200个名字' }
     ],
     
     // 分析结果
@@ -272,6 +283,14 @@ Page({
     this.setData({
       nameLengthIndex: index,
       nameLength: this.data.nameLengthOptions[index].value
+    });
+  },
+
+  onNameCountChange(e) {
+    const index = parseInt(e.detail.value);
+    this.setData({
+      nameCountIndex: index,
+      nameCount: this.data.nameCountOptions[index].value
     });
   },
 
@@ -747,7 +766,7 @@ Page({
       birth_hour: birthData.hour,
       calendar_type: birthData.calendarType,
       name_length: this.data.nameLength,
-      count: 10,
+      count: this.data.nameCount,
       session_seed: sessionSeed
     };
 
