@@ -329,8 +329,13 @@ async def calculate_bazi_fallback(birth_data: BirthData):
         }
     }
 
-# 起名接口 - 使用真实算法
-@app.post("/api/v1/naming/generate-names")
+# 起名接口 - 使用真实算法  
+@app.post("/api/v1/naming/generate")
+async def generate_names_v1(naming_data: NamingRequest):
+    """标准起名接口"""
+    return await generate_names(naming_data)
+
+@app.post("/api/v1/naming/generate-names") 
 async def generate_names(naming_data: NamingRequest):
     """起名接口 - 真实算法版"""
     try:

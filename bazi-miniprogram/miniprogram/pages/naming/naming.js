@@ -716,21 +716,26 @@ Page({
     // 获取当前偏好设置
     const preferences = this.getCurrentPreferences();
 
-    // 修复判断逻辑：使用正确的API端点判断条件
+    // 修复判断逻辑：根据实际的个性化设置判断
     const hasCustomPreferences = preferences.selected_characters.length > 0 || 
                                  preferences.meaning_keyword.length > 0 ||
-                                 preferences.cultural_level !== 'modern' ||
-                                 preferences.popularity !== 'medium' ||
-                                 preferences.era !== 'contemporary' ||
-                                 preferences.rarity !== 'common';  // 修复：默认值应该是 'common'
+                                 this.data.culturalLevelIndex !== 0 ||
+                                 this.data.popularityIndex !== 1 ||
+                                 this.data.eraIndex !== 0 ||
+                                 this.data.rarityIndex !== 1;
 
-    // 强制使用个性化API来解决字义搜索问题
-    const apiUrl = '/api/v1/naming/personalized-generate';
+    // 根据是否有个性化偏好选择API端点
+    const apiUrl = hasCustomPreferences ? '/api/v1/naming/personalized-generate' : '/api/v1/naming/generate';
     
-    console.log('🔧 前端判断条件修复:');
-    console.log('- 偏好设置:', preferences);
+    console.log('🔧 前端个性化判断修复:');
+    console.log('- 文化层次索引:', this.data.culturalLevelIndex, '!=', 0);
+    console.log('- 流行度索引:', this.data.popularityIndex, '!=', 1);
+    console.log('- 时代特征索引:', this.data.eraIndex, '!=', 0);
+    console.log('- 稀有度索引:', this.data.rarityIndex, '!=', 1);
+    console.log('- 选中字符:', preferences.selected_characters.length);
+    console.log('- 字义关键词:', preferences.meaning_keyword);
     console.log('- hasCustomPreferences:', hasCustomPreferences);
-    console.log('- 强制使用个性化API:', apiUrl);
+    console.log('- 使用API端点:', apiUrl);
 
     // 准备请求数据
     const requestData = {
@@ -746,13 +751,10 @@ Page({
       session_seed: sessionSeed
     };
 
-    // 如果使用个性化API，添加偏好设置
-    if (hasCustomPreferences) {
-      requestData.preferences = preferences;
-    }
+    // 总是添加偏好设置，让后端决定如何使用
+    requestData.preferences = preferences;
 
-    console.log('使用API端点:', apiUrl);
-    console.log('请求数据:', requestData);
+    console.log('发送到后端的完整数据:', requestData);
 
     // 调用起名API
     app.request({

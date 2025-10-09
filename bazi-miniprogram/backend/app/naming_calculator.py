@@ -1593,20 +1593,40 @@ class NamingCalculator:
             
             recommendations = []
             for char, info in chars_tuples:
-                # 确保所有字段都有值，添加默认值处理
-                char_data = {
-                    'char': char or '',
-                    'wuxing': info.get('wuxing', '木'),
-                    'meaning': info.get('meaning', '含义美好'),
-                    'stroke': info.get('stroke', 8),
-                    'gender': info.get('gender', 'neutral'),
-                    'cultural_level': info.get('cultural_level', 'classic'),
-                    'popularity': info.get('popularity', 'high'),
-                    'era': info.get('era', 'classical')
-                }
-                
-                print(f"✨ 字符详情: {char_data}")
-                recommendations.append(char_data)
+                # 确保所有字段都有值，添加默认值处理和数据验证
+                try:
+                    # 处理meaning字段的数据不一致问题
+                    meaning_value = '含义美好'  # 默认值
+                    
+                    if 'meaning' in info and info['meaning']:
+                        # 如果有meaning字段且不为空
+                        meaning_value = str(info['meaning'])
+                    elif 'meanings' in info and info['meanings']:
+                        # 如果有meanings数组字段
+                        if isinstance(info['meanings'], list) and len(info['meanings']) > 0:
+                            meaning_value = str(info['meanings'][0])
+                        else:
+                            meaning_value = str(info['meanings'])
+                    
+                    char_data = {
+                        'char': char or '',
+                        'wuxing': info.get('wuxing', '木'),
+                        'meaning': meaning_value,
+                        'stroke': int(info.get('stroke', 8)),
+                        'gender': info.get('gender', 'neutral'),
+                        'cultural_level': info.get('cultural_level', 'classic'),
+                        'popularity': info.get('popularity', 'high'),
+                        'era': info.get('era', 'classical')
+                    }
+                    
+                    print(f"✨ 字符详情: {char_data}")
+                    recommendations.append(char_data)
+                    
+                except Exception as char_error:
+                    print(f"⚠️  处理字符 '{char}' 时出错: {str(char_error)}")
+                    print(f"📋 原始字符信息: {info}")
+                    # 跳过有问题的字符，继续处理下一个
+                    continue
             
             result = {
                 'success': True,

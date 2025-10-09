@@ -887,36 +887,73 @@ class EnhancedCharDatabase:
     
     def _normalize_char_info(self, char, info):
         """统一字符信息数据结构，将JSON格式转换为API期望格式"""
-        normalized_info = info.copy()
-        
-        # 处理meanings字段：将数组转换为字符串
-        meanings = info.get('meanings', [])
-        if meanings:
-            # 将meanings数组的第一个作为主要含义
-            normalized_info['meaning'] = meanings[0]
-            # 如果有多个含义，用逗号连接
-            if len(meanings) > 1:
-                normalized_info['meaning'] = '，'.join(meanings[:3])  # 最多取前3个
-        else:
-            # 如果没有meanings，检查是否有单个meaning字段
-            if 'meaning' not in normalized_info:
-                normalized_info['meaning'] = '含义美好'
-        
-        # 确保所有必需字段都存在
-        required_fields = {
-            'wuxing': '木',
-            'stroke': 8,
-            'gender': 'neutral',
-            'cultural_level': 'classic',
-            'popularity': 'high',
-            'era': 'classical'
-        }
-        
-        for field, default_value in required_fields.items():
-            if field not in normalized_info or not normalized_info[field]:
-                normalized_info[field] = default_value
-        
-        return normalized_info
+        try:
+            normalized_info = info.copy() if info else {}
+            
+            # 处理meanings字段：将数组转换为字符串
+            meaning_value = '含义美好'  # 默认值
+            
+            # 尝试获取meaning值，处理多种数据格式
+            if 'meaning' in info and info['meaning']:
+                # 如果有meaning字段且不为空
+                meaning_value = str(info['meaning'])
+            elif 'meanings' in info and info['meanings']:
+                # 如果有meanings数组字段
+                meanings = info['meanings']
+                if isinstance(meanings, list) and len(meanings) > 0:
+                    # 取第一个有效含义
+                    meaning_value = str(meanings[0]) if meanings[0] else '含义美好'
+                    # 如果有多个含义，用逗号连接前3个
+                    if len(meanings) > 1:
+                        valid_meanings = [str(m) for m in meanings[:3] if m]
+                        if valid_meanings:
+                            meaning_value = '，'.join(valid_meanings)
+                elif isinstance(meanings, str):
+                    meaning_value = str(meanings)
+            
+            # 设置meaning字段
+            normalized_info['meaning'] = meaning_value
+            
+            # 确保所有必需字段都存在，添加更多默认值处理
+            required_fields = {
+                'wuxing': '木',
+                'stroke': 8,
+                'gender': 'neutral',
+                'cultural_level': 'classic',
+                'popularity': 'high',
+                'era': 'classical',
+                'rarity': 'common',
+                'suitable_for_name': True
+            }
+            
+            for field, default_value in required_fields.items():
+                if field not in normalized_info or normalized_info[field] is None or normalized_info[field] == '':
+                    normalized_info[field] = default_value
+            
+            # 确保数字字段是数字类型
+            if 'stroke' in normalized_info:
+                try:
+                    normalized_info['stroke'] = int(normalized_info['stroke'])
+                except (ValueError, TypeError):
+                    normalized_info['stroke'] = 8
+            
+            return normalized_info
+            
+        except Exception as e:
+            print(f"⚠️  规范化字符信息时出错 '{char}': {str(e)}")
+            # 返回最小化的默认信息
+            return {
+                'char': char,
+                'wuxing': '木',
+                'meaning': '含义美好',
+                'stroke': 8,
+                'gender': 'neutral',
+                'cultural_level': 'classic',
+                'popularity': 'high',
+                'era': 'classical',
+                'rarity': 'common',
+                'suitable_for_name': True
+            }
     
     def _filter_char(self, info, wuxing=None, gender=None):
         """字符筛选条件"""
