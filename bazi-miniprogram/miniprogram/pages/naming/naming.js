@@ -35,6 +35,46 @@ Page({
     // 起名偏好
     nameLength: 2,
     
+    // 个性化偏好设置
+    showPreferences: false,
+    
+    // 文化层次偏好
+    culturalLevelIndex: 0,
+    culturalLevelOptions: [
+      { value: 'modern', text: '现代时尚' },
+      { value: 'classic', text: '古典雅致' },
+      { value: 'traditional', text: '传统文化' }
+    ],
+    
+    // 流行度偏好
+    popularityIndex: 1,
+    popularityOptions: [
+      { value: 'high', text: '流行常用' },
+      { value: 'medium', text: '适中平衡' },
+      { value: 'low', text: '独特稀少' }
+    ],
+    
+    // 时代特征偏好
+    eraIndex: 0,
+    eraOptions: [
+      { value: 'contemporary', text: '现代感' },
+      { value: 'classical', text: '古典韵味' },
+      { value: 'ancient', text: '古风雅韵' }
+    ],
+    
+    // 稀有度偏好
+    rarityIndex: 1,
+    rarityOptions: [
+      { value: 'common', text: '常用字' },
+      { value: 'moderate', text: '中等稀有' },
+      { value: 'rare', text: '稀有字' }
+    ],
+    
+    // 字义搜索
+    meaningKeyword: '',
+    meaningSearchResults: [],
+    selectedCharacters: [],
+    
     // 选择器索引
     genderIndex: 0,
     nameLengthIndex: 1,
@@ -400,6 +440,166 @@ Page({
   },
 
   /**
+   * 个性化偏好设置相关方法
+   */
+  
+  // 切换偏好设置显示/隐藏
+  togglePreferences() {
+    this.setData({
+      showPreferences: !this.data.showPreferences
+    });
+  },
+
+  // 文化层次偏好选择
+  onCulturalLevelChange(e) {
+    const index = parseInt(e.detail.value);
+    this.setData({
+      culturalLevelIndex: index
+    });
+  },
+
+  // 流行度偏好选择
+  onPopularityChange(e) {
+    const index = parseInt(e.detail.value);
+    this.setData({
+      popularityIndex: index
+    });
+  },
+
+  // 时代特征偏好选择
+  onEraChange(e) {
+    const index = parseInt(e.detail.value);
+    this.setData({
+      eraIndex: index
+    });
+  },
+
+  // 稀有度偏好选择
+  onRarityChange(e) {
+    const index = parseInt(e.detail.value);
+    this.setData({
+      rarityIndex: index
+    });
+  },
+
+  // 字义关键词输入
+  onMeaningInput(e) {
+    this.setData({
+      meaningKeyword: e.detail.value
+    });
+  },
+
+  // 根据字义搜索字符
+  searchCharactersByMeaning() {
+    const keyword = this.data.meaningKeyword.trim();
+    if (!keyword) {
+      wx.showToast({
+        title: '请输入关键词',
+        icon: 'none'
+      });
+      return;
+    }
+
+    wx.showLoading({
+      title: '搜索中...'
+    });
+
+    // 调用字义搜索API
+    app.request({
+      url: '/api/v1/naming/search-characters',
+      method: 'POST',
+      data: {
+        keyword: keyword,
+        wuxing: null, // 不限制五行
+        gender: this.data.gender,
+        count: 15
+      },
+      success: (result) => {
+        wx.hideLoading();
+        if (result.success && result.data.recommendations) {
+          const searchResults = result.data.recommendations.map(item => ({
+            ...item,
+            selected: false
+          }));
+          
+          this.setData({
+            meaningSearchResults: searchResults
+          });
+
+          if (searchResults.length === 0) {
+            wx.showToast({
+              title: '未找到相关字',
+              icon: 'none'
+            });
+          }
+        } else {
+          wx.showToast({
+            title: '搜索失败',
+            icon: 'none'
+          });
+        }
+      },
+      fail: (error) => {
+        wx.hideLoading();
+        console.error('字义搜索失败:', error);
+        wx.showToast({
+          title: '搜索失败',
+          icon: 'none'
+        });
+      }
+    });
+  },
+
+  // 切换字符选择状态
+  toggleCharacterSelection(e) {
+    const char = e.currentTarget.dataset.char;
+    const results = this.data.meaningSearchResults.map(item => {
+      if (item.char === char) {
+        item.selected = !item.selected;
+      }
+      return item;
+    });
+
+    // 更新选中的字符列表
+    const selectedChars = results.filter(item => item.selected).map(item => item.char);
+
+    this.setData({
+      meaningSearchResults: results,
+      selectedCharacters: selectedChars
+    });
+  },
+
+  // 重置所有偏好设置
+  resetPreferences() {
+    this.setData({
+      culturalLevelIndex: 0,
+      popularityIndex: 1,
+      eraIndex: 0,
+      rarityIndex: 1,
+      meaningKeyword: '',
+      meaningSearchResults: [],
+      selectedCharacters: []
+    });
+
+    wx.showToast({
+      title: '偏好已重置',
+      icon: 'success'
+    });
+  },
+
+  // 获取当前偏好设置
+  getCurrentPreferences() {
+    return {
+      cultural_level: this.data.culturalLevelOptions[this.data.culturalLevelIndex].value,
+      popularity: this.data.popularityOptions[this.data.popularityIndex].value,
+      era: this.data.eraOptions[this.data.eraIndex].value,
+      rarity: this.data.rarityOptions[this.data.rarityIndex].value,
+      selected_characters: this.data.selectedCharacters,
+      meaning_keyword: this.data.meaningKeyword.trim()
+    };
+  },
+
+  /**
    * 开始起名 - 使用与八字测算页面一致的数据结构
    */
   async startNaming() {
@@ -513,22 +713,52 @@ Page({
     // 生成会话级随机种子，确保每次点击产生不同结果
     const sessionSeed = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 
+    // 获取当前偏好设置
+    const preferences = this.getCurrentPreferences();
+
+    // 修复判断逻辑：使用正确的API端点判断条件
+    const hasCustomPreferences = preferences.selected_characters.length > 0 || 
+                                 preferences.meaning_keyword.length > 0 ||
+                                 preferences.cultural_level !== 'modern' ||
+                                 preferences.popularity !== 'medium' ||
+                                 preferences.era !== 'contemporary' ||
+                                 preferences.rarity !== 'common';  // 修复：默认值应该是 'common'
+
+    // 强制使用个性化API来解决字义搜索问题
+    const apiUrl = '/api/v1/naming/personalized-generate';
+    
+    console.log('🔧 前端判断条件修复:');
+    console.log('- 偏好设置:', preferences);
+    console.log('- hasCustomPreferences:', hasCustomPreferences);
+    console.log('- 强制使用个性化API:', apiUrl);
+
+    // 准备请求数据
+    const requestData = {
+      surname: this.data.surname.trim(),
+      gender: this.data.gender,
+      birth_year: birthData.year,
+      birth_month: birthData.month,
+      birth_day: birthData.day,
+      birth_hour: birthData.hour,
+      calendar_type: birthData.calendarType,
+      name_length: this.data.nameLength,
+      count: 10,
+      session_seed: sessionSeed
+    };
+
+    // 如果使用个性化API，添加偏好设置
+    if (hasCustomPreferences) {
+      requestData.preferences = preferences;
+    }
+
+    console.log('使用API端点:', apiUrl);
+    console.log('请求数据:', requestData);
+
     // 调用起名API
     app.request({
-      url: '/api/v1/naming/generate-names',
+      url: apiUrl,
       method: 'POST',
-      data: {
-        surname: this.data.surname.trim(),
-        gender: this.data.gender,
-        birth_year: birthData.year,
-        birth_month: birthData.month,
-        birth_day: birthData.day,
-        birth_hour: birthData.hour,
-        calendar_type: birthData.calendarType,
-        name_length: this.data.nameLength,
-        count: 10,
-        session_seed: sessionSeed  // 新增会话种子参数
-      },
+      data: requestData,
       success: (result) => {
         wx.hideLoading()
         this.setData({

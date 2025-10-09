@@ -6,8 +6,23 @@ import json
 import re
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
-from bazi_calculator import BaziCalculator
-from enhanced_char_database import EnhancedCharDatabase
+try:
+    # 尝试相对导入（当作为包的一部分导入时）
+    from .bazi_calculator import BaziCalculator
+    from .enhanced_char_database import EnhancedCharDatabase
+except ImportError:
+    # 回退到直接导入（当直接运行或从同目录导入时）
+    try:
+        from bazi_calculator import BaziCalculator
+        from enhanced_char_database import EnhancedCharDatabase
+    except ImportError:
+        # 最后尝试从当前目录的app子目录导入
+        import sys
+        import os
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.insert(0, current_dir)
+        from bazi_calculator import BaziCalculator
+        from enhanced_char_database import EnhancedCharDatabase
 
 @dataclass
 class NameRecommendation:
@@ -15,12 +30,12 @@ class NameRecommendation:
     full_name: str
     given_name: str
     overall_score: float
-    score_breakdown: Dict
     wuxing_analysis: Dict
     sancai_wuge: Dict
     meaning_explanation: str
     pronunciation: str
     luck_level: str
+    score_breakdown: Dict = None
 
 class WuxingAnalyzer:
     """五行分析器"""
@@ -429,12 +444,13 @@ class NameologyCalculator:
         }
 
 class ChineseCharDatabase:
-    """汉字库管理器 - 企业级3000字数据库"""
+    """汉字库管理器 - 企业级个性化数据库"""
     
     def __init__(self):
-        # 使用企业级3000字数据库
+        # 使用企业级个性化数据库
         enhanced_db = EnhancedCharDatabase()
         self.char_database = enhanced_db.char_database
+        self.enhanced_db = enhanced_db  # 保存实例以使用个性化方法
     
     def load_char_database(self):
         """加载汉字数据库 - 已集成企业级数据库"""
@@ -616,7 +632,7 @@ class NameGenerator:
         self.bazi_calculator = BaziCalculator()
     
     def generate_names(self, surname: str, gender: str, birth_info: Dict, 
-                      name_length: int = 2, count: int = 10, input_seed: str = None) -> List[NameRecommendation]:
+                      name_length: int = 2, count: int = 20, input_seed: str = None) -> List[NameRecommendation]:
         """智能生成推荐名字"""
         try:
             # 1. 分析八字五行
@@ -653,24 +669,86 @@ class NameGenerator:
             print(f"生成名字错误: {str(e)}")
             return self._generate_default_names(surname, gender, name_length, count)
     
-    def _filter_chars_by_xiyongshen(self, xiyongshen: List[str], gender: str) -> List[Dict]:
-        """根据喜用神筛选汉字"""
+    def _filter_chars_by_xiyongshen(self, xiyongshen: List[str], gender: str, preferences: Dict = None) -> List[Dict]:
+        """根据喜用神筛选汉字 - 支持个性化偏好"""
         suitable_chars = []
         
         for wuxing in xiyongshen:
-            chars = self.char_database.get_chars_by_wuxing(
-                wuxing, stroke_range=(3, 20), gender=gender
-            )
-            suitable_chars.extend(chars)
+            if preferences:
+                # 使用个性化偏好筛选
+                chars_tuples = self.char_database.enhanced_db.get_chars_by_preferences(
+                    wuxing=wuxing,
+                    gender=gender,
+                    cultural_level=preferences.get('cultural_level'),
+                    popularity=preferences.get('popularity'),
+                    rarity=preferences.get('rarity'),
+                    era=preferences.get('era'),
+                    count=30
+                )
+                
+                # 转换格式
+                for char, info in chars_tuples:
+                    suitable_chars.append({
+                        'char': char,
+                        'stroke': info['stroke'],
+                        'wuxing': info['wuxing'],
+                        'meaning': info['meaning'],
+                        'gender': info['gender'],
+                        'cultural_level': info['cultural_level'],
+                        'popularity': info['popularity'],
+                        'era': info['era']
+                    })
+            else:
+                # 使用原有方法
+                chars = self.char_database.get_chars_by_wuxing(
+                    wuxing, stroke_range=(3, 20), gender=gender
+                )
+                suitable_chars.extend(chars)
         
-        # 去重并按笔画数排序
+        # 去重并按个性化权重排序
         unique_chars = {}
         for char_info in suitable_chars:
             char = char_info['char']
             if char not in unique_chars:
                 unique_chars[char] = char_info
         
-        return list(unique_chars.values())
+        chars_list = list(unique_chars.values())
+        
+        # 个性化排序
+        if preferences:
+            chars_list.sort(key=lambda x: self._calculate_preference_score(x, preferences), reverse=True)
+        
+        return chars_list
+    
+    def _calculate_preference_score(self, char_info: Dict, preferences: Dict) -> float:
+        """计算个性化偏好得分"""
+        score = 0
+        
+        # 流行度偏好权重
+        popularity_pref = preferences.get('popularity_preference', 'balanced')
+        if popularity_pref == 'popular' and char_info.get('popularity') == 'high':
+            score += 3
+        elif popularity_pref == 'unique' and char_info.get('popularity') == 'low':
+            score += 3
+        elif popularity_pref == 'balanced' and char_info.get('popularity') == 'medium':
+            score += 2
+        
+        # 文化层次偏好
+        cultural_pref = preferences.get('cultural_preference', 'modern')
+        if cultural_pref == char_info.get('cultural_level'):
+            score += 2
+        
+        # 时代特征偏好
+        era_pref = preferences.get('era_preference', 'contemporary')
+        if era_pref == char_info.get('era'):
+            score += 2
+        
+        # 稀有度偏好
+        rarity_pref = preferences.get('rarity_preference', 'common')
+        if rarity_pref == char_info.get('rarity'):
+            score += 1
+        
+        return score
     
     def _generate_name_combinations(self, surname: str, chars: List[Dict], 
                                    name_length: int, count: int) -> List[str]:
@@ -1125,7 +1203,7 @@ class NamingCalculator:
         self.name_generator = NameGenerator()
     
     def analyze_and_generate_names(self, surname: str, gender: str, birth_info: Dict,
-                                  name_length: int = 2, count: int = 10, session_seed: str = None) -> Dict:
+                                  name_length: int = 2, count: int = 20, session_seed: str = None) -> Dict:
         """分析八字并生成推荐名字 - 优化版，支持会话级随机性"""
         try:
             # 基础种子：确保八字分析一致性
@@ -1350,6 +1428,267 @@ class NamingCalculator:
         
         return high_score_names
 
+    def analyze_and_generate_personalized_names(self, surname: str, gender: str, birth_info: Dict,
+                                               name_length: int = 2, count: int = 20, 
+                                               preferences: Dict = None, session_seed: str = None) -> Dict:
+        """分析八字并生成个性化推荐名字 - 新增个性化功能"""
+        try:
+            # 基础种子：确保八字分析一致性
+            base_seed = f"{surname}_{gender}_{birth_info['year']}_{birth_info['month']}_{birth_info['day']}_{birth_info['hour']}"
+            
+            # 名字生成种子：增加会话随机性和偏好
+            if session_seed:
+                import time
+                pref_str = str(sorted(preferences.items())) if preferences else "default"
+                naming_seed = f"{base_seed}_{session_seed}_{pref_str}_{int(time.time() * 1000)}_{name_length}"
+            else:
+                import random
+                import time
+                pref_str = str(sorted(preferences.items())) if preferences else "default"
+                naming_seed = f"{base_seed}_{random.randint(1000, 9999)}_{pref_str}_{int(time.time() * 1000)}_{name_length}"
+            
+            # 分析八字五行
+            bazi_result = self.name_generator.bazi_calculator.calculate_bazi(
+                birth_info['year'], birth_info['month'], birth_info['day'],
+                birth_info['hour'], gender, birth_info.get('calendar_type', 'solar')
+            )
+            
+            wuxing_analysis = self.name_generator.wuxing_analyzer.analyze_bazi_wuxing(bazi_result)
+            
+            # 根据个性化偏好和喜用神筛选汉字
+            suitable_chars = self.name_generator._filter_chars_by_xiyongshen(
+                wuxing_analysis['xiyongshen'], gender, preferences
+            )
+            
+            # 生成候选名字组合
+            candidate_names = self.name_generator._generate_name_combinations(
+                surname, suitable_chars, name_length, count * 3  # 生成更多候选
+            )
+            
+            # 评估每个名字
+            evaluated_names = []
+            for name in candidate_names:
+                evaluation = self.name_generator._evaluate_name(surname, name, wuxing_analysis, bazi_result, naming_seed)
+                if evaluation:
+                    evaluated_names.append(evaluation)
+            
+            # 如果候选名字不够，使用增强字库生成更多
+            if len(evaluated_names) < count:
+                additional_names = self._generate_personalized_names_from_enhanced_db(
+                    surname, gender, wuxing_analysis, preferences, naming_seed, count - len(evaluated_names)
+                )
+                evaluated_names.extend(additional_names)
+            
+            # 排序并返回top N
+            evaluated_names.sort(key=lambda x: x.overall_score, reverse=True)
+            
+            # 确保至少有40%的名字达到90+分
+            high_score_count = sum(1 for rec in evaluated_names if rec.overall_score >= 90)
+            target_high_score = max(2, int(count * 0.4))  # 至少40%，最少2个
+            
+            # 如果高分名字不够，生成更多高质量名字
+            if high_score_count < target_high_score:
+                additional_high_score = self._generate_guaranteed_high_score_names(
+                    surname, gender, birth_info, name_length, target_high_score - high_score_count, naming_seed
+                )
+                
+                # 替换最低分的名字
+                evaluated_names.sort(key=lambda x: x.overall_score)
+                evaluated_names = evaluated_names[len(additional_high_score):] + additional_high_score
+            
+            # 按分数降序排列，确保高分在前
+            evaluated_names.sort(key=lambda x: x.overall_score, reverse=True)
+            
+            return {
+                'success': True,
+                'bazi_analysis': {
+                    'paipan': bazi_result.get('paipan', {}),
+                    'wuxing_analysis': wuxing_analysis
+                },
+                'recommendations': [
+                    {
+                        'full_name': rec.full_name,
+                        'given_name': rec.given_name,
+                        'overall_score': rec.overall_score,
+                        'score_breakdown': getattr(rec, 'score_breakdown', None),
+                        'wuxing_analysis': rec.wuxing_analysis,
+                        'sancai_wuge': rec.sancai_wuge,
+                        'meaning_explanation': rec.meaning_explanation,
+                        'pronunciation': rec.pronunciation,
+                        'luck_level': rec.luck_level
+                    }
+                    for rec in evaluated_names[:count]  # 确保返回指定数量
+                ],
+                'analysis_summary': wuxing_analysis.get('analysis_summary', ''),
+                'naming_suggestions': self._generate_personalized_suggestions(wuxing_analysis, preferences),
+                'preferences_applied': preferences or {}
+            }
+            
+        except Exception as e:
+            print(f"个性化起名分析错误: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'recommendations': []
+            }
+    
+    def _generate_personalized_names_from_enhanced_db(self, surname: str, gender: str, 
+                                                     wuxing_analysis: Dict, preferences: Dict,
+                                                     naming_seed: str, count: int) -> List[NameRecommendation]:
+        """从增强字库生成个性化名字"""
+        personalized_names = []
+        
+        # 获取喜用神五行的字
+        xiyongshen = wuxing_analysis.get('xiyongshen', ['木', '火'])
+        
+        for wuxing in xiyongshen:
+            # 使用增强字库的个性化方法
+            chars_tuples = self.name_generator.char_database.enhanced_db.get_chars_by_preferences(
+                wuxing=wuxing,
+                gender=gender,
+                cultural_level=preferences.get('cultural_level') if preferences else None,
+                popularity=preferences.get('popularity') if preferences else None,
+                rarity=preferences.get('rarity') if preferences else None,
+                era=preferences.get('era') if preferences else None,
+                count=15
+            )
+            
+            # 生成名字组合
+            chars = [char for char, info in chars_tuples]
+            
+            # 生成双字名
+            import itertools
+            for combo in itertools.combinations_with_replacement(chars, 2):
+                if len(personalized_names) >= count:
+                    break
+                    
+                # 避免重复字
+                if combo[0] != combo[1]:
+                    given_name = ''.join(combo)
+                    
+                    # 评估名字
+                    evaluation = self.name_generator._evaluate_name(
+                        surname, given_name, wuxing_analysis, {}, naming_seed
+                    )
+                    
+                    if evaluation:
+                        personalized_names.append(evaluation)
+        
+        return personalized_names[:count]
+    
+    def get_character_recommendations_by_meaning(self, keyword: str, wuxing: str = None, 
+                                                gender: str = None, count: int = 20) -> Dict:
+        """根据含义关键词推荐字 - 修复版，确保返回完整信息"""
+        try:
+            print(f"🔍 字义搜索API调用: keyword='{keyword}', wuxing={wuxing}, gender={gender}, count={count}")
+            
+            chars_tuples = self.name_generator.char_database.enhanced_db.search_chars_by_meaning(
+                keyword=keyword,
+                wuxing=wuxing,
+                gender=gender,
+                count=count
+            )
+            
+            print(f"📊 字库返回结果数量: {len(chars_tuples)}")
+            
+            recommendations = []
+            for char, info in chars_tuples:
+                # 确保所有字段都有值，添加默认值处理
+                char_data = {
+                    'char': char or '',
+                    'wuxing': info.get('wuxing', '木'),
+                    'meaning': info.get('meaning', '含义美好'),
+                    'stroke': info.get('stroke', 8),
+                    'gender': info.get('gender', 'neutral'),
+                    'cultural_level': info.get('cultural_level', 'classic'),
+                    'popularity': info.get('popularity', 'high'),
+                    'era': info.get('era', 'classical')
+                }
+                
+                print(f"✨ 字符详情: {char_data}")
+                recommendations.append(char_data)
+            
+            result = {
+                'success': True,
+                'keyword': keyword,
+                'recommendations': recommendations,
+                'total_count': len(recommendations)
+            }
+            
+            print(f"🎯 API最终返回: 成功={result['success']}, 推荐数量={len(result['recommendations'])}")
+            return result
+            
+        except Exception as e:
+            print(f"❌ 字义搜索错误: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'success': False,
+                'error': str(e),
+                'recommendations': []
+            }
+    
+    def get_character_combinations(self, wuxing_list: List[str], gender: str = None, 
+                                  style_preference: str = None, count: int = 30) -> Dict:
+        """获取字的组合建议 - 新增功能"""
+        try:
+            combinations = self.name_generator.char_database.enhanced_db.get_char_combinations(
+                wuxing_list=wuxing_list,
+                gender=gender,
+                style_preference=style_preference
+            )
+            
+            recommendations = []
+            for combo in combinations[:count]:
+                recommendations.append({
+                    'combination': combo['combination'],
+                    'first_char': combo['first_char'],
+                    'second_char': combo['second_char'],
+                    'score': combo['score'],
+                    'first_info': {
+                        'wuxing': combo['first_info']['wuxing'],
+                        'meaning': combo['first_info']['meaning'],
+                        'stroke': combo['first_info']['stroke']
+                    },
+                    'second_info': {
+                        'wuxing': combo['second_info']['wuxing'],
+                        'meaning': combo['second_info']['meaning'],
+                        'stroke': combo['second_info']['stroke']
+                    }
+                })
+            
+            return {
+                'success': True,
+                'wuxing_list': wuxing_list,
+                'recommendations': recommendations,
+                'total_count': len(recommendations)
+            }
+            
+        except Exception as e:
+            print(f"字组合推荐错误: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e),
+                'recommendations': []
+            }
+    
+    def get_database_statistics(self) -> Dict:
+        """获取字库统计信息 - 新增功能"""
+        try:
+            stats = self.name_generator.char_database.enhanced_db.get_database_stats()
+            
+            return {
+                'success': True,
+                'statistics': stats
+            }
+            
+        except Exception as e:
+            print(f"获取统计信息错误: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
     def _generate_naming_suggestions(self, wuxing_analysis: Dict) -> str:
         """生成起名建议"""
         xiyongshen = wuxing_analysis.get('xiyongshen', [])
@@ -1358,6 +1697,94 @@ class NamingCalculator:
         suggestions = []
         suggestions.append(f"建议选用{'/'.join(xiyongshen)}属性的字")
         suggestions.append(f"避免使用{'/'.join(jishen)}属性的字")
+        suggestions.append("注重名字的音韵和谐")
+        suggestions.append("考虑字的寓意和文化内涵")
+        
+        return "；".join(suggestions) + "。"
+    
+    def get_recommended_chars_enhanced(self, wuxing, gender=None, count=20, user_preferences=None):
+        """
+        增强版个性化字符推荐
+        
+        Args:
+            wuxing: 需要的五行属性
+            gender: 性别偏好 ('male', 'female', None)
+            count: 返回字符数量
+            user_preferences: 用户偏好设置字典
+        
+        Returns:
+            推荐字符列表，按个性化匹配度排序
+        """
+        print(f"🎯 获取增强推荐: 五行={wuxing}, 性别={gender}, 数量={count}")
+        
+        if user_preferences:
+            print(f"📋 用户偏好: {user_preferences}")
+        
+        # 使用增强字库进行推荐
+        char_db = self.name_generator.char_database.enhanced_db
+        
+        if user_preferences:
+            # 创建用户偏好档案
+            user_profile = char_db.create_user_preference_profile(user_preferences)
+            
+            # 获取个性化推荐
+            recommended_chars = char_db.get_personalized_recommendations(
+                wuxing, user_profile, count
+            )
+        else:
+            # 使用基础推荐
+            recommended_chars = char_db.get_chars_by_wuxing(wuxing, gender, count)
+        
+        # 格式化返回结果
+        result = []
+        for char, info in recommended_chars:
+            char_data = {
+                'char': char,
+                'stroke': info.get('stroke', 8),
+                'wuxing': info['wuxing'],
+                'meaning': info.get('meaning', info.get('meanings', ['寓意美好'])[0] if isinstance(info.get('meanings'), list) else '寓意美好'),
+                'pinyin': info.get('pinyin', 'unknown'),
+                'popularity': info.get('popularity', 'medium'),
+                'cultural_level': info.get('cultural_level', 'classic'),
+                'era': info.get('era', 'classical'),
+                'gender': info.get('gender', 'neutral'),
+                'source': info.get('source', ''),
+                'trend': info.get('trend', '')
+            }
+            result.append(char_data)
+        
+        if result:
+            sample_chars = [item['char'] for item in result[:5]]
+            print(f"✅ 推荐完成: 前5个字符 {', '.join(sample_chars)}")
+        
+        return result
+    
+    def _generate_personalized_suggestions(self, wuxing_analysis: Dict, preferences: Dict = None) -> str:
+        """生成个性化起名建议"""
+        xiyongshen = wuxing_analysis.get('xiyongshen', [])
+        jishen = wuxing_analysis.get('jishen', [])
+        
+        suggestions = []
+        suggestions.append(f"建议选用{'/'.join(xiyongshen)}属性的字")
+        suggestions.append(f"避免使用{'/'.join(jishen)}属性的字")
+        
+        if preferences:
+            # 添加个性化建议
+            if preferences.get('cultural_level') == 'classic':
+                suggestions.append("推荐选用古典文化内涵深厚的字")
+            elif preferences.get('cultural_level') == 'modern':
+                suggestions.append("推荐选用现代时尚的字")
+            
+            if preferences.get('popularity') == 'high':
+                suggestions.append("优先选择流行度较高的常用字")
+            elif preferences.get('popularity') == 'low':
+                suggestions.append("推荐选用独特稀少的字")
+            
+            if preferences.get('era') == 'contemporary':
+                suggestions.append("注重现代感和时代特征")
+            elif preferences.get('era') == 'ancient':
+                suggestions.append("体现古典韵味和传统文化")
+        
         suggestions.append("注重名字的音韵和谐")
         suggestions.append("考虑字的寓意和文化内涵")
         

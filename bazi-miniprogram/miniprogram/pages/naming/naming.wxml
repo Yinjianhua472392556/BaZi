@@ -140,6 +140,125 @@
             </view>
           </picker>
         </view>
+
+        <!-- 个性化偏好设置 -->
+        <view class="preference-section">
+          <view class="preference-title" bindtap="togglePreferences">
+            <text>个性化偏好设置</text>
+            <text class="toggle-icon">{{showPreferences ? '▲' : '▼'}}</text>
+          </view>
+          
+          <view class="preferences-content" wx:if="{{showPreferences}}">
+            <!-- 文化层次偏好 -->
+            <view class="preference-item">
+              <view class="preference-label">文化风格</view>
+              <picker 
+                bindchange="onCulturalLevelChange" 
+                range="{{culturalLevelOptions}}"
+                range-key="text"
+                value="{{culturalLevelIndex}}"
+              >
+                <view class="preference-picker">
+                  {{culturalLevelOptions[culturalLevelIndex].text}}
+                  <text class="picker-arrow">▼</text>
+                </view>
+              </picker>
+            </view>
+
+            <!-- 流行度偏好 -->
+            <view class="preference-item">
+              <view class="preference-label">流行程度</view>
+              <picker 
+                bindchange="onPopularityChange" 
+                range="{{popularityOptions}}"
+                range-key="text"
+                value="{{popularityIndex}}"
+              >
+                <view class="preference-picker">
+                  {{popularityOptions[popularityIndex].text}}
+                  <text class="picker-arrow">▼</text>
+                </view>
+              </picker>
+            </view>
+
+            <!-- 时代特征偏好 -->
+            <view class="preference-item">
+              <view class="preference-label">时代特征</view>
+              <picker 
+                bindchange="onEraChange" 
+                range="{{eraOptions}}"
+                range-key="text"
+                value="{{eraIndex}}"
+              >
+                <view class="preference-picker">
+                  {{eraOptions[eraIndex].text}}
+                  <text class="picker-arrow">▼</text>
+                </view>
+              </picker>
+            </view>
+
+            <!-- 字的稀有度偏好 -->
+            <view class="preference-item">
+              <view class="preference-label">字的稀有度</view>
+              <picker 
+                bindchange="onRarityChange" 
+                range="{{rarityOptions}}"
+                range-key="text"
+                value="{{rarityIndex}}"
+              >
+                <view class="preference-picker">
+                  {{rarityOptions[rarityIndex].text}}
+                  <text class="picker-arrow">▼</text>
+                </view>
+              </picker>
+            </view>
+
+            <!-- 个性化搜索功能 -->
+            <view class="preference-item">
+              <view class="preference-label">字义偏好</view>
+              <view class="meaning-search">
+                <input 
+                  class="meaning-input" 
+                  placeholder="如：智慧、美好、成功等"
+                  value="{{meaningKeyword}}"
+                  bindinput="onMeaningInput"
+                  bindblur="searchCharactersByMeaning"
+                />
+                <button 
+                  class="search-btn"
+                  bindtap="searchCharactersByMeaning"
+                  disabled="{{!meaningKeyword}}"
+                >
+                  搜索
+                </button>
+              </view>
+              
+              <!-- 字义搜索结果 -->
+              <view class="meaning-results" wx:if="{{meaningSearchResults.length > 0}}">
+                <view class="results-title">相关推荐字：</view>
+                <view class="character-tags">
+                  <view 
+                    class="character-tag {{item.selected ? 'selected' : ''}}"
+                    wx:for="{{meaningSearchResults}}"
+                    wx:key="char"
+                    bindtap="toggleCharacterSelection"
+                    data-char="{{item.char}}"
+                  >
+                    {{item.char}}
+                    <text class="char-meaning">{{item.meaning}}</text>
+                  </view>
+                </view>
+              </view>
+            </view>
+
+            <!-- 偏好重置 -->
+            <view class="preference-actions">
+              <button class="reset-preferences-btn" bindtap="resetPreferences">
+                重置偏好
+              </button>
+            </view>
+          </view>
+        </view>
       </view>
 
       <view class="action-section">

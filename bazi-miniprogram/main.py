@@ -19,16 +19,47 @@ from typing import Optional, Dict, List
 # 添加backend路径以导入算法模块
 sys.path.append('backend/app')
 
+# 分别导入各个模块，允许部分功能可用
+bazi_calculator = None
+naming_calculator = None
+icon_generator = None
+zodiac_matching_func = None
+
+# 尝试导入八字计算器
 try:
     from bazi_calculator import BaziCalculator
-    from naming_calculator import NamingCalculator
-    from icon_generator import IconGenerator
-    from zodiac_matching import calculate_zodiac_compatibility
-    ALGORITHMS_AVAILABLE = True
-    print("✅ 算法模块导入成功")
+    bazi_calculator = BaziCalculator()
+    print("✅ 八字计算器导入成功")
 except ImportError as e:
-    print(f"❌ 算法模块导入失败: {e}")
-    ALGORITHMS_AVAILABLE = False
+    print(f"❌ 八字计算器导入失败: {e}")
+
+# 尝试导入起名计算器
+try:
+    from naming_calculator import NamingCalculator
+    naming_calculator = NamingCalculator()
+    print("✅ 起名计算器导入成功")
+except ImportError as e:
+    print(f"❌ 起名计算器导入失败: {e}")
+
+# 尝试导入图标生成器（可选）
+try:
+    from icon_generator import IconGenerator
+    icon_generator = IconGenerator()
+    print("✅ 图标生成器导入成功")
+except ImportError as e:
+    print(f"⚠️  图标生成器导入失败（可选功能）: {e}")
+
+# 尝试导入生肖配对
+try:
+    from zodiac_matching import calculate_zodiac_compatibility
+    zodiac_matching_func = calculate_zodiac_compatibility
+    print("✅ 生肖配对导入成功")
+except ImportError as e:
+    print(f"❌ 生肖配对导入失败: {e}")
+
+# 检查核心算法是否可用
+ALGORITHMS_AVAILABLE = bool(bazi_calculator and naming_calculator)
+print(f"🧮 算法状态: {'核心算法已启用' if ALGORITHMS_AVAILABLE else '降级到模拟数据'}")
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
@@ -70,15 +101,7 @@ SERVER_INFO = {
     "features": ["真实八字算法", "专业起名算法", "图标生成", "健康检查", "CORS支持"]
 }
 
-# 初始化算法实例
-if ALGORITHMS_AVAILABLE:
-    bazi_calculator = BaziCalculator()
-    naming_calculator = NamingCalculator()
-    icon_generator = IconGenerator()
-else:
-    bazi_calculator = None
-    naming_calculator = None
-    icon_generator = None
+# 算法实例已在导入时初始化，无需重复初始化
 
 # 请求数据模型
 class BirthData(BaseModel):
@@ -115,6 +138,31 @@ class NameEvaluationRequest(BaseModel):
     birth_day: int
     birth_hour: int = 12
     calendar_type: str = "solar"
+
+class PersonalizedNamingRequest(BaseModel):
+    surname: str
+    gender: str
+    birth_year: int
+    birth_month: int
+    birth_day: int
+    birth_hour: int = 12
+    calendar_type: str = "solar"
+    name_length: int = 2
+    count: int = 10
+    session_seed: Optional[str] = None
+    preferences: Optional[Dict] = None
+
+class CharacterSearchRequest(BaseModel):
+    keyword: str
+    wuxing: Optional[str] = None
+    gender: Optional[str] = None
+    count: int = 20
+
+class CharacterCombinationRequest(BaseModel):
+    wuxing_list: List[str]
+    gender: Optional[str] = None
+    style_preference: Optional[str] = None
+    count: int = 30
 
 class LunarToSolarRequest(BaseModel):
     year: int
@@ -851,6 +899,291 @@ async def evaluate_name(evaluation_data: NameEvaluationRequest):
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"名字评估失败: {str(e)}")
+
+# 个性化起名接口 - 新增功能
+@app.post("/api/v1/naming/personalized-generate")
+async def generate_personalized_names(naming_data: PersonalizedNamingRequest):
+    """个性化起名接口 - 支持用户偏好设置"""
+    try:
+        if ALGORITHMS_AVAILABLE and naming_calculator:
+            # 使用个性化算法
+            try:
+                birth_info = {
+                    'year': naming_data.birth_year,
+                    'month': naming_data.birth_month,
+                    'day': naming_data.birth_day,
+                    'hour': naming_data.birth_hour,
+                    'calendar_type': naming_data.calendar_type
+                }
+                
+                result = naming_calculator.analyze_and_generate_personalized_names(
+                    naming_data.surname, naming_data.gender, birth_info,
+                    naming_data.name_length, naming_data.count, 
+                    naming_data.preferences, naming_data.session_seed
+                )
+                
+                return {
+                    "success": True,
+                    "data": result,
+                    "timestamp": datetime.now().isoformat(),
+                    "algorithm_version": "个性化推荐算法v2.0"
+                }
+                
+            except Exception as algo_error:
+                print(f"个性化起名算法出错，使用标准方案: {str(algo_error)}")
+                # 降级到标准起名算法
+                return await generate_names(naming_data)
+        else:
+            return await generate_names_fallback(naming_data)
+        
+    except Exception as e:
+        print(f"个性化起名生成出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"个性化起名生成失败: {str(e)}")
+
+# 字义搜索接口 - 新增功能
+@app.post("/api/v1/naming/search-characters")
+async def search_characters(search_data: CharacterSearchRequest):
+    """根据含义关键词搜索汉字"""
+    try:
+        if ALGORITHMS_AVAILABLE and naming_calculator:
+            try:
+                result = naming_calculator.get_character_recommendations_by_meaning(
+                    search_data.keyword,
+                    search_data.wuxing,
+                    search_data.gender,
+                    search_data.count
+                )
+                
+                return {
+                    "success": True,
+                    "data": result,
+                    "timestamp": datetime.now().isoformat(),
+                    "algorithm_version": "字义搜索算法v2.0"
+                }
+                
+            except Exception as algo_error:
+                print(f"字义搜索算法出错: {str(algo_error)}")
+                return await search_characters_fallback(search_data)
+        else:
+            return await search_characters_fallback(search_data)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"字义搜索失败: {str(e)}")
+
+async def search_characters_fallback(search_data: CharacterSearchRequest):
+    """字义搜索降级方案"""
+    keyword = search_data.keyword
+    
+    # 简化的字义搜索
+    character_map = {
+        '智慧': [
+            {'char': '智', 'wuxing': '火', 'meaning': '智慧，聪明，智谋'},
+            {'char': '慧', 'wuxing': '水', 'meaning': '慧心，智慧，聪颖'},
+            {'char': '聪', 'wuxing': '金', 'meaning': '聪明，智慧，机敏'},
+            {'char': '明', 'wuxing': '火', 'meaning': '明亮，聪明，光明'},
+            {'char': '睿', 'wuxing': '金', 'meaning': '睿智，深明，通达'}
+        ],
+        '美好': [
+            {'char': '美', 'wuxing': '水', 'meaning': '美丽，美好，优美'},
+            {'char': '好', 'wuxing': '水', 'meaning': '好的，美好，善良'},
+            {'char': '雅', 'wuxing': '木', 'meaning': '雅致，高雅，文雅'},
+            {'char': '佳', 'wuxing': '木', 'meaning': '佳美，美好，优秀'},
+            {'char': '优', 'wuxing': '土', 'meaning': '优秀，优美，卓越'}
+        ],
+        '成功': [
+            {'char': '成', 'wuxing': '金', 'meaning': '成功，成就，完成'},
+            {'char': '功', 'wuxing': '木', 'meaning': '功劳，功绩，成果'},
+            {'char': '达', 'wuxing': '火', 'meaning': '到达，通达，成功'},
+            {'char': '胜', 'wuxing': '金', 'meaning': '胜利，超越，成功'},
+            {'char': '凯', 'wuxing': '木', 'meaning': '凯旋，胜利，成功'}
+        ]
+    }
+    
+    # 查找相关字
+    found_chars = []
+    for meaning, char_list in character_map.items():
+        if keyword in meaning:
+            found_chars.extend(char_list)
+    
+    if not found_chars:
+        # 默认推荐一些常用字
+        found_chars = [
+            {'char': '文', 'wuxing': '水', 'meaning': '文化，文雅，有文采'},
+            {'char': '武', 'wuxing': '水', 'meaning': '武功，勇敢，坚强'},
+            {'char': '明', 'wuxing': '火', 'meaning': '明亮，聪明，光明'},
+            {'char': '亮', 'wuxing': '火', 'meaning': '明亮，清楚，光明'},
+            {'char': '华', 'wuxing': '水', 'meaning': '华丽，精华，光彩'}
+        ]
+    
+    recommendations = []
+    for i, char_info in enumerate(found_chars[:search_data.count]):
+        recommendations.append({
+            'char': char_info['char'],
+            'wuxing': char_info['wuxing'],
+            'meaning': char_info['meaning'],
+            'stroke': 8 + (i % 5),  # 简化处理，给不同笔画数
+            'gender': 'neutral',
+            'cultural_level': 'classic',
+            'popularity': 'high',
+            'era': 'classical'
+        })
+    
+    return {
+        "success": True,
+        "data": {
+            "keyword": keyword,
+            "recommendations": recommendations,
+            "total_count": len(recommendations)
+        },
+        "timestamp": datetime.now().isoformat(),
+        "algorithm_version": "简化搜索算法"
+    }
+
+# 字组合推荐接口 - 新增功能
+@app.post("/api/v1/naming/character-combinations")
+async def get_character_combinations(combination_data: CharacterCombinationRequest):
+    """获取字的组合建议"""
+    try:
+        if ALGORITHMS_AVAILABLE and naming_calculator:
+            try:
+                result = naming_calculator.get_character_combinations(
+                    combination_data.wuxing_list,
+                    combination_data.gender,
+                    combination_data.style_preference,
+                    combination_data.count
+                )
+                
+                return {
+                    "success": True,
+                    "data": result,
+                    "timestamp": datetime.now().isoformat(),
+                    "algorithm_version": "字组合推荐算法v2.0"
+                }
+                
+            except Exception as algo_error:
+                print(f"字组合推荐算法出错: {str(algo_error)}")
+                return await get_character_combinations_fallback(combination_data)
+        else:
+            return await get_character_combinations_fallback(combination_data)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"字组合推荐失败: {str(e)}")
+
+async def get_character_combinations_fallback(combination_data: CharacterCombinationRequest):
+    """字组合推荐降级方案"""
+    wuxing_list = combination_data.wuxing_list
+    gender = combination_data.gender
+    
+    # 简化的字组合生成
+    wuxing_chars = {
+        '木': ['林', '森', '梅', '兰', '竹', '桂'],
+        '火': ['明', '亮', '辉', '阳', '晨', '昊'],
+        '土': ['山', '岩', '城', '坤', '培', '基'],
+        '金': ['金', '银', '铁', '锋', '锐', '铭'],
+        '水': ['江', '河', '海', '波', '流', '溪']
+    }
+    
+    # 根据五行列表生成组合
+    combinations = []
+    if len(wuxing_list) >= 2:
+        chars1 = wuxing_chars.get(wuxing_list[0], ['文'])
+        chars2 = wuxing_chars.get(wuxing_list[1], ['华'])
+        
+        for i, char1 in enumerate(chars1[:5]):
+            for j, char2 in enumerate(chars2[:5]):
+                if len(combinations) >= combination_data.count:
+                    break
+                
+                combinations.append({
+                    'combination': char1 + char2,
+                    'first_char': char1,
+                    'second_char': char2,
+                    'score': 85 - (i + j),
+                    'first_info': {
+                        'wuxing': wuxing_list[0],
+                        'meaning': f'{char1}字美好',
+                        'stroke': 8
+                    },
+                    'second_info': {
+                        'wuxing': wuxing_list[1],
+                        'meaning': f'{char2}字美好',
+                        'stroke': 8
+                    }
+                })
+    
+    return {
+        "success": True,
+        "data": {
+            "wuxing_list": wuxing_list,
+            "recommendations": combinations,
+            "total_count": len(combinations)
+        },
+        "timestamp": datetime.now().isoformat(),
+        "algorithm_version": "简化组合算法"
+    }
+
+# 字库统计接口 - 新增功能
+@app.get("/api/v1/naming/database-stats")
+async def get_database_statistics():
+    """获取字库统计信息"""
+    try:
+        if ALGORITHMS_AVAILABLE and naming_calculator:
+            try:
+                result = naming_calculator.get_database_statistics()
+                
+                return {
+                    "success": True,
+                    "data": result,
+                    "timestamp": datetime.now().isoformat(),
+                    "algorithm_version": "字库统计算法v2.0"
+                }
+                
+            except Exception as algo_error:
+                print(f"字库统计算法出错: {str(algo_error)}")
+                return await get_database_statistics_fallback()
+        else:
+            return await get_database_statistics_fallback()
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取字库统计失败: {str(e)}")
+
+async def get_database_statistics_fallback():
+    """字库统计降级方案"""
+    mock_stats = {
+        'total_chars': 150,
+        'by_wuxing': {
+            '木': 30,
+            '火': 30,
+            '土': 30,
+            '金': 30,
+            '水': 30
+        },
+        'by_gender': {
+            'male': 60,
+            'female': 60,
+            'neutral': 30
+        },
+        'by_era': {
+            'ancient': 40,
+            'classical': 40,
+            'modern': 35,
+            'contemporary': 35
+        },
+        'by_popularity': {
+            'high': 70,
+            'medium': 50,
+            'low': 30
+        }
+    }
+    
+    return {
+        "success": True,
+        "data": {
+            "statistics": mock_stats
+        },
+        "timestamp": datetime.now().isoformat(),
+        "algorithm_version": "模拟统计数据"
+    }
 
 # 异常处理
 @app.exception_handler(404)
