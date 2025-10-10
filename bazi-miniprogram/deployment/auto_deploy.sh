@@ -594,7 +594,7 @@ EOF" "创建Nginx站点配置"
 }
 
 # ===============================================
-# 配置SSL证书和HTTPS（整合修复逻辑）
+# 配置SSL证书和HTTPS（智能修复逻辑）
 # ===============================================
 configure_ssl() {
     show_enhanced_progress "配置SSL证书和HTTPS"
@@ -602,33 +602,93 @@ configure_ssl() {
     if [[ "$ENABLE_SSL" == "yes" ]]; then
         log_info "🔒 开始SSL和HTTPS配置..."
         
-        # 1. 停止服务以避免端口冲突
-        execute_command "systemctl stop nginx" "停止Nginx服务"
-        execute_command "fuser -k 80/tcp" "释放80端口" || true
-        execute_command "fuser -k 443/tcp" "释放443端口" || true
+        # 先启动HTTP版本的Nginx，确保80端口可用
+        log_info "🔧 第一阶段：启动HTTP服务"
+        execute_command "systemctl start nginx" "启动HTTP版本Nginx"
+        execute_command "sleep 3" "等待Nginx启动"
         
-        # 2. 清理现有证书（如果存在问题）
-        execute_command "if [[ -d '/etc/letsencrypt/live/$API_SUBDOMAIN' ]]; then certbot delete --cert-name $API_SUBDOMAIN --non-interactive; fi" "清理现有问题证书" || true
+        # 验证HTTP访问正常
+        execute_command "curl -I http://$API_SUBDOMAIN/health || curl -I http://$SERVER_IP:80/health" "验证HTTP访问"
         
-        # 3. 申请新的SSL证书
-        execute_command "certbot certonly --standalone -d $API_SUBDOMAIN --email $SSL_EMAIL --agree-tos --non-interactive --force-renewal" "申请SSL证书"
+        log_info "🔒 第二阶段：申请SSL证书"
         
-        # 4. 验证证书文件
-        execute_command "ls -la /etc/letsencrypt/live/$API_SUBDOMAIN/" "验证证书文件"
+        # 使用webroot方式申请证书（更安全）
+        execute_command "mkdir -p /var/www/html/.well-known/acme-challenge" "创建证书验证目录"
+        execute_command "chown -R www-data:www-data /var/www/html" "设置目录权限"
         
-        # 5. 修复证书权限
-        execute_command "chown -R root:root /etc/letsencrypt/" "设置证书目录所有者"
-        execute_command "chmod -R 755 /etc/letsencrypt/live/" "设置目录权限"
-        execute_command "chmod -R 755 /etc/letsencrypt/archive/" "设置归档目录权限"
-        execute_command "chmod 644 /etc/letsencrypt/live/$API_SUBDOMAIN/fullchain.pem" "设置证书文件权限"
-        execute_command "chmod 600 /etc/letsencrypt/live/$API_SUBDOMAIN/privkey.pem" "设置私钥文件权限"
+        # 添加临时的验证location到nginx配置
+        local temp_nginx_config="server {
+    listen 80;
+    server_name $API_SUBDOMAIN;
+    
+    # Let's Encrypt验证
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+        try_files \$uri =404;
+    }
+    
+    location / {
+        proxy_pass http://127.0.0.1:$SERVICE_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}"
+
+        execute_command "cat > /etc/nginx/sites-available/$SERVICE_NAME << 'EOF'
+$temp_nginx_config
+EOF" "创建临时Nginx配置"
         
-        # 6. 创建完整的HTTPS Nginx配置
-        local https_nginx_config="# HTTP重定向到HTTPS
+        execute_command "nginx -t && systemctl reload nginx" "重载Nginx配置"
+        
+        # 清理现有证书（如果有问题）
+        execute_command "if [[ -d '/etc/letsencrypt/live/$API_SUBDOMAIN' ]]; then rm -rf /etc/letsencrypt/live/$API_SUBDOMAIN /etc/letsencrypt/archive/$API_SUBDOMAIN /etc/letsencrypt/renewal/$API_SUBDOMAIN.conf; fi" "清理现有证书" || true
+        
+        # 申请SSL证书（使用webroot方式）
+        local cert_success=false
+        
+        # 尝试方法1：webroot方式
+        if execute_command "certbot certonly --webroot -w /var/www/html -d $API_SUBDOMAIN --email $SSL_EMAIL --agree-tos --non-interactive" "使用webroot方式申请SSL证书"; then
+            cert_success=true
+        # 尝试方法2：nginx插件方式
+        elif execute_command "certbot --nginx -d $API_SUBDOMAIN --email $SSL_EMAIL --agree-tos --non-interactive --redirect" "使用nginx插件申请SSL证书"; then
+            cert_success=true
+        # 尝试方法3：standalone方式（停止nginx）
+        elif execute_command "systemctl stop nginx && certbot certonly --standalone -d $API_SUBDOMAIN --email $SSL_EMAIL --agree-tos --non-interactive && systemctl start nginx" "使用standalone方式申请SSL证书"; then
+            cert_success=true
+        fi
+        
+        if [[ "$cert_success" == "true" ]]; then
+            log "✅ SSL证书申请成功"
+            
+            # 验证证书文件存在
+            if execute_command "ls -la /etc/letsencrypt/live/$API_SUBDOMAIN/fullchain.pem /etc/letsencrypt/live/$API_SUBDOMAIN/privkey.pem" "验证证书文件"; then
+                
+                log_info "🔧 第三阶段：配置HTTPS"
+                
+                # 修复证书权限
+                execute_command "chown -R root:root /etc/letsencrypt/" "设置证书目录所有者"
+                execute_command "chmod -R 755 /etc/letsencrypt/live/ /etc/letsencrypt/archive/" "设置目录权限"
+                execute_command "chmod 644 /etc/letsencrypt/live/$API_SUBDOMAIN/fullchain.pem" "设置证书文件权限"
+                execute_command "chmod 600 /etc/letsencrypt/live/$API_SUBDOMAIN/privkey.pem" "设置私钥文件权限"
+                
+                # 创建完整的HTTPS配置
+                local https_nginx_config="# HTTP重定向到HTTPS
 server {
     listen 80;
     server_name $API_SUBDOMAIN;
-    return 301 https://\$server_name\$request_uri;
+    
+    # Let's Encrypt验证路径
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+        try_files \$uri =404;
+    }
+    
+    # 其他请求重定向到HTTPS
+    location / {
+        return 301 https://\$server_name\$request_uri;
+    }
 }
 
 # HTTPS配置
@@ -688,26 +748,70 @@ server {
     access_log /var/log/nginx/${API_SUBDOMAIN}_access.log;
     error_log /var/log/nginx/${API_SUBDOMAIN}_error.log;
 }"
-        
-        # 7. 重新创建HTTPS配置
-        execute_command "cat > /etc/nginx/sites-available/$SERVICE_NAME << 'EOF'
+                
+                # 应用HTTPS配置
+                execute_command "cat > /etc/nginx/sites-available/$SERVICE_NAME << 'EOF'
 $https_nginx_config
-EOF" "创建HTTPS Nginx配置"
+EOF" "创建最终HTTPS配置"
+                
+                # 测试配置
+                if execute_command "nginx -t" "测试HTTPS配置"; then
+                    execute_command "systemctl reload nginx" "重载Nginx配置"
+                    
+                    # 设置自动续期
+                    execute_command "echo '0 12 * * * /usr/bin/certbot renew --quiet && systemctl reload nginx' | crontab -" "设置SSL证书自动续期"
+                    
+                    # 验证HTTPS访问
+                    execute_command "sleep 5" "等待服务启动"
+                    execute_command "curl -s -I https://$API_SUBDOMAIN/health | head -1 || echo '⚠️ HTTPS访问测试失败'" "验证HTTPS访问"
+                    
+                    log "✅ SSL证书和HTTPS配置完成"
+                else
+                    log_warn "HTTPS配置测试失败，保持HTTP配置"
+                fi
+            else
+                log_warn "证书文件验证失败，保持HTTP配置"
+            fi
+        else
+            log_warn "SSL证书申请失败，使用HTTP配置"
+            
+            # 如果SSL申请失败，保持HTTP配置
+            local fallback_nginx_config="server {
+    listen 80;
+    server_name $API_SUBDOMAIN;
+    
+    location / {
+        proxy_pass http://127.0.0.1:$SERVICE_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         
-        # 8. 测试Nginx配置
-        execute_command "nginx -t" "测试Nginx HTTPS配置"
-        
-        # 9. 重启Nginx
-        execute_command "systemctl start nginx" "启动Nginx服务"
-        
-        # 10. 设置自动续期
-        execute_command "echo '0 12 * * * /usr/bin/certbot renew --quiet' | crontab -" "设置SSL证书自动续期"
-        
-        # 11. 验证HTTPS访问
-        execute_command "sleep 5" "等待服务启动"
-        execute_command "curl -s -I https://$API_SUBDOMAIN/health | head -1" "验证HTTPS访问"
-        
-        log "✅ SSL证书和HTTPS配置完成"
+        # 超时设置
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+    
+    # 健康检查端点
+    location /health {
+        proxy_pass http://127.0.0.1:$SERVICE_PORT/health;
+        access_log off;
+    }
+    
+    # 日志配置
+    access_log /var/log/nginx/${API_SUBDOMAIN}_access.log;
+    error_log /var/log/nginx/${API_SUBDOMAIN}_error.log;
+}"
+            
+            execute_command "cat > /etc/nginx/sites-available/$SERVICE_NAME << 'EOF'
+$fallback_nginx_config
+EOF" "创建HTTP备用配置"
+            
+            execute_command "nginx -t && systemctl reload nginx" "应用HTTP配置"
+            
+            log "✅ HTTP配置完成（SSL申请失败，可稍后手动重试）"
+        fi
     else
         log_warn "跳过SSL配置 (ENABLE_SSL=no)"
     fi
