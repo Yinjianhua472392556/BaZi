@@ -18,7 +18,7 @@ export API_SUBDOMAIN="api.bazi365.top"                # API子域名
 
 # 🔐 【必填】SSH连接信息
 # ===============================================
-export SSH_USER="ubuntu"                              # SSH用户名（腾讯云轻量服务器默认ubuntu）
+export SSH_USER="root"                                # SSH用户名（根据您的实际情况调整）
 export SSH_PORT="22"                                  # SSH端口（默认22）
 export SSH_KEY_PATH=""                                # SSH私钥路径（可选，不填则使用密码）
 

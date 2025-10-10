@@ -88,35 +88,11 @@ show_progress() {
 detect_environment() {
     log_step "检测部署环境"
     
-    # 获取当前机器的IP地址
-    local current_ip=""
-    
-    # 尝试多种方式获取IP
-    if command -v curl &> /dev/null; then
-        current_ip=$(curl -s --connect-timeout 5 ifconfig.me 2>/dev/null || curl -s --connect-timeout 5 ipinfo.io/ip 2>/dev/null)
-    fi
-    
-    if [[ -z "$current_ip" ]]; then
-        current_ip=$(hostname -I 2>/dev/null | awk '{print $1}')
-    fi
-    
-    if [[ -z "$current_ip" ]]; then
-        current_ip=$(ip route get 8.8.8.8 2>/dev/null | grep -oP 'src \K\S+')
-    fi
-    
-    log_info "当前机器IP: $current_ip"
-    log_info "目标服务器IP: $SERVER_IP"
-    
-    # 检查是否在目标服务器上
-    if [[ "$current_ip" == "$SERVER_IP" ]] || [[ -z "$current_ip" && "$(hostname -I 2>/dev/null | grep -q "$SERVER_IP")" ]]; then
-        LOCAL_MODE=true
-        log "🏠 检测到本地部署模式 - 在目标服务器上直接执行"
-        log_info "跳过SSH连接，直接执行本地命令"
-    else
-        LOCAL_MODE=false
-        log "🌐 检测到远程部署模式 - 需要SSH连接到服务器"
-        log_info "将通过SSH连接执行远程命令"
-    fi
+    # 强制设置为本地模式（适合直接在服务器终端操作）
+    LOCAL_MODE=true
+    log "🏠 本地部署模式 - 直接在服务器上执行"
+    log_info "跳过SSH连接，直接执行本地命令"
+    log_info "目标服务器: $SERVER_IP"
 }
 
 # ===============================================
