@@ -7,8 +7,8 @@ const AD_CONFIG = {
   // 核心开关：true=模拟广告，false=真实广告
   simulationMode: true,
   
-  // 全局广告开关
-  globalEnabled: true,
+  // 全局广告开关 - 临时关闭所有广告
+  globalEnabled: false,
   
   // 统一广告单元配置
   adUnits: {
