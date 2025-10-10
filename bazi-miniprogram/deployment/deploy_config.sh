@@ -12,13 +12,13 @@
 
 # 🔧 【必填】服务器基本信息
 # ===============================================
-export SERVER_IP="your_server_ip"                     # 替换为你的阿里云服务器公网IP
-export DOMAIN_NAME="yourdomain.com"                   # 替换为你的主域名
-export API_SUBDOMAIN="api.yourdomain.com"             # API子域名（建议保持）
+export SERVER_IP="119.91.146.128"                    # 腾讯云轻量服务器公网IP
+export DOMAIN_NAME="bazi365.top"                      # 八字运势域名
+export API_SUBDOMAIN="api.bazi365.top"                # API子域名
 
 # 🔐 【必填】SSH连接信息
 # ===============================================
-export SSH_USER="root"                                # SSH用户名（通常是root）
+export SSH_USER="ubuntu"                              # SSH用户名（腾讯云轻量服务器默认ubuntu）
 export SSH_PORT="22"                                  # SSH端口（默认22）
 export SSH_KEY_PATH=""                                # SSH私钥路径（可选，不填则使用密码）
 
@@ -30,7 +30,7 @@ export PROJECT_BRANCH="main"                          # 分支名（建议保持
 # 🌐 【必填】SSL证书配置
 # ===============================================
 export ENABLE_SSL="yes"                               # 是否启用SSL证书（强烈建议yes）
-export SSL_EMAIL="your-email@example.com"             # 替换为你的邮箱（用于SSL证书申请）
+export SSL_EMAIL="18620526218@163.com"                # SSL证书申请邮箱
 
 # ⚙️ 【可选】部署路径配置（通常不需要修改）
 # ===============================================
