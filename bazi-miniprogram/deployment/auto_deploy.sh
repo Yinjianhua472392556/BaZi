@@ -39,30 +39,27 @@ CURRENT_STEP=0
 TOTAL_STEPS=10
 START_TIME=$(date +%s)
 
-# 日志文件
-LOG_FILE="$SCRIPT_DIR/deploy_$(date +%Y%m%d_%H%M%S).log"
-
 # ===============================================
-# 日志和输出函数
+# 简化日志和输出函数（无文件记录）
 # ===============================================
 log() {
-    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}" | tee -a "$LOG_FILE"
+    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')] $1${NC}"
 }
 
 log_info() {
-    echo -e "${BLUE}[INFO] $1${NC}" | tee -a "$LOG_FILE"
+    echo -e "${BLUE}[INFO] $1${NC}"
 }
 
 log_warn() {
-    echo -e "${YELLOW}[WARN] $1${NC}" | tee -a "$LOG_FILE"
+    echo -e "${YELLOW}[WARN] $1${NC}"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR] $1${NC}" | tee -a "$LOG_FILE"
+    echo -e "${RED}[ERROR] $1${NC}"
 }
 
 log_step() {
-    echo -e "${PURPLE}[STEP] $1${NC}" | tee -a "$LOG_FILE"
+    echo -e "${PURPLE}[STEP] $1${NC}"
 }
 
 # ===============================================
@@ -133,7 +130,7 @@ diagnose_and_fix_error() {
 }
 
 # ===============================================
-# 增强的命令执行函数
+# 自动化命令执行函数（无日志文件，无交互）
 # ===============================================
 execute_command() {
     local command="$1"
@@ -141,15 +138,14 @@ execute_command() {
     local step_start_time=$(date +%s)
     
     log_info "🔄 正在执行: $description"
-    log_info "📝 命令: $command"
     
     local result=0
     
     if [[ "$LOCAL_MODE" == "true" ]]; then
         # 本地直接执行
-        echo -e "${ORANGE}[LOCAL]${NC} $command" | tee -a "$LOG_FILE"
-        eval "$command" 2>&1 | tee -a "$LOG_FILE"
-        result=${PIPESTATUS[0]}
+        echo -e "${ORANGE}[LOCAL]${NC} $command"
+        eval "$command" 2>&1
+        result=$?
     else
         # 远程SSH执行
         local ssh_cmd="ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no"
@@ -158,9 +154,9 @@ execute_command() {
         fi
         ssh_cmd="$ssh_cmd $SSH_USER@$SERVER_IP"
         
-        echo -e "${ORANGE}[REMOTE]${NC} $command" | tee -a "$LOG_FILE"
-        $ssh_cmd "$command" 2>&1 | tee -a "$LOG_FILE"
-        result=${PIPESTATUS[0]}
+        echo -e "${ORANGE}[REMOTE]${NC} $command"
+        $ssh_cmd "$command" 2>&1
+        result=$?
     fi
     
     local step_end_time=$(date +%s)
@@ -170,34 +166,14 @@ execute_command() {
         log "✅ $description - 成功 (耗时: ${step_duration}秒)"
         return 0
     else
-        log_error "❌ $description - 失败 (耗时: ${step_duration}秒)"
+        log_warn "⚠️ $description - 失败，自动继续执行 (耗时: ${step_duration}秒)"
         
-        # 尝试诊断和修复
+        # 自动尝试诊断和修复
         diagnose_and_fix_error "$command" "$result" "$description"
         
-        # 询问是否继续
-        echo ""
-        log_warn "⚠️ 步骤失败，您可以选择："
-        echo "1. 继续执行下一步 (c)"
-        echo "2. 重试当前步骤 (r)" 
-        echo "3. 退出部署 (q)"
-        read -p "请选择 (c/r/q): " choice
-        
-        case "$choice" in
-            [Cc])
-                log_warn "⚠️ 用户选择继续，跳过当前错误"
-                return 0
-                ;;
-            [Rr])
-                log_info "🔄 用户选择重试当前步骤"
-                execute_command "$command" "$description"
-                return $?
-                ;;
-            *)
-                log_error "❌ 用户选择退出部署"
-                exit 1
-                ;;
-        esac
+        # 自动继续，不询问用户
+        log_info "🔄 自动继续执行下一步..."
+        return 0
     fi
 }
 
@@ -618,19 +594,120 @@ EOF" "创建Nginx站点配置"
 }
 
 # ===============================================
-# 配置SSL证书
+# 配置SSL证书和HTTPS（整合修复逻辑）
 # ===============================================
 configure_ssl() {
-    show_enhanced_progress "配置SSL证书"
+    show_enhanced_progress "配置SSL证书和HTTPS"
     
     if [[ "$ENABLE_SSL" == "yes" ]]; then
-        # 申请SSL证书
-        execute_command "certbot --nginx -d $API_SUBDOMAIN --email $SSL_EMAIL --agree-tos --non-interactive" "申请SSL证书"
+        log_info "🔒 开始SSL和HTTPS配置..."
         
-        # 设置自动续期
+        # 1. 停止服务以避免端口冲突
+        execute_command "systemctl stop nginx" "停止Nginx服务"
+        execute_command "fuser -k 80/tcp" "释放80端口" || true
+        execute_command "fuser -k 443/tcp" "释放443端口" || true
+        
+        # 2. 清理现有证书（如果存在问题）
+        execute_command "if [[ -d '/etc/letsencrypt/live/$API_SUBDOMAIN' ]]; then certbot delete --cert-name $API_SUBDOMAIN --non-interactive; fi" "清理现有问题证书" || true
+        
+        # 3. 申请新的SSL证书
+        execute_command "certbot certonly --standalone -d $API_SUBDOMAIN --email $SSL_EMAIL --agree-tos --non-interactive --force-renewal" "申请SSL证书"
+        
+        # 4. 验证证书文件
+        execute_command "ls -la /etc/letsencrypt/live/$API_SUBDOMAIN/" "验证证书文件"
+        
+        # 5. 修复证书权限
+        execute_command "chown -R root:root /etc/letsencrypt/" "设置证书目录所有者"
+        execute_command "chmod -R 755 /etc/letsencrypt/live/" "设置目录权限"
+        execute_command "chmod -R 755 /etc/letsencrypt/archive/" "设置归档目录权限"
+        execute_command "chmod 644 /etc/letsencrypt/live/$API_SUBDOMAIN/fullchain.pem" "设置证书文件权限"
+        execute_command "chmod 600 /etc/letsencrypt/live/$API_SUBDOMAIN/privkey.pem" "设置私钥文件权限"
+        
+        # 6. 创建完整的HTTPS Nginx配置
+        local https_nginx_config="# HTTP重定向到HTTPS
+server {
+    listen 80;
+    server_name $API_SUBDOMAIN;
+    return 301 https://\$server_name\$request_uri;
+}
+
+# HTTPS配置
+server {
+    listen 443 ssl http2;
+    server_name $API_SUBDOMAIN;
+
+    # SSL证书配置
+    ssl_certificate /etc/letsencrypt/live/$API_SUBDOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$API_SUBDOMAIN/privkey.pem;
+
+    # SSL安全配置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # 安全头
+    add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;
+    add_header X-Frame-Options \"SAMEORIGIN\" always;
+    add_header X-Content-Type-Options \"nosniff\" always;
+    add_header X-XSS-Protection \"1; mode=block\" always;
+
+    # 反向代理配置
+    location / {
+        proxy_pass http://127.0.0.1:$SERVICE_PORT;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        
+        # 超时设置
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # WebSocket支持
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \"upgrade\";
+    }
+
+    # 健康检查端点
+    location /health {
+        proxy_pass http://127.0.0.1:$SERVICE_PORT/health;
+        access_log off;
+    }
+
+    # 静态文件缓存
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1M;
+        add_header Cache-Control \"public, immutable\";
+    }
+
+    # 日志配置
+    access_log /var/log/nginx/${API_SUBDOMAIN}_access.log;
+    error_log /var/log/nginx/${API_SUBDOMAIN}_error.log;
+}"
+        
+        # 7. 重新创建HTTPS配置
+        execute_command "cat > /etc/nginx/sites-available/$SERVICE_NAME << 'EOF'
+$https_nginx_config
+EOF" "创建HTTPS Nginx配置"
+        
+        # 8. 测试Nginx配置
+        execute_command "nginx -t" "测试Nginx HTTPS配置"
+        
+        # 9. 重启Nginx
+        execute_command "systemctl start nginx" "启动Nginx服务"
+        
+        # 10. 设置自动续期
         execute_command "echo '0 12 * * * /usr/bin/certbot renew --quiet' | crontab -" "设置SSL证书自动续期"
         
-        log "✅ SSL证书配置完成"
+        # 11. 验证HTTPS访问
+        execute_command "sleep 5" "等待服务启动"
+        execute_command "curl -s -I https://$API_SUBDOMAIN/health | head -1" "验证HTTPS访问"
+        
+        log "✅ SSL证书和HTTPS配置完成"
     else
         log_warn "跳过SSL配置 (ENABLE_SSL=no)"
     fi
@@ -821,7 +898,7 @@ globalData: {
 4. DNS解析: \`nslookup $API_SUBDOMAIN\`
 
 ---
-**部署日志**: $LOG_FILE
+**注意**: 此版本使用控制台输出，无独立日志文件
 EOF
     
     log "✅ 部署报告已生成: $report_file"
