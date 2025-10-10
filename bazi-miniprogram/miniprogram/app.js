@@ -49,7 +49,7 @@ App({
   
   globalData: {
     userInfo: null,
-    apiBaseUrl: 'http://10.60.20.222:8001',  // 后端API地址（内网IP，用于真机测试）
+    apiBaseUrl: 'https://api.bazi365.top',  // 后端API地址（正式生产环境）
     baziHistory: [],  // 八字测算历史记录
     baziResult: null,  // 当前八字测算结果
     currentUser: null
