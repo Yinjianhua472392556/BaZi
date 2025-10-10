@@ -878,7 +878,14 @@ main() {
     
     echo ""
     log "🎯 开始自动部署..."
+    log "⏰ 开始时间: $(date '+%Y-%m-%d %H:%M:%S')"
+    log "🖥️  服务器: $SERVER_IP"
+    log "🌐 域名: $API_SUBDOMAIN"
+    log "📁 部署路径: $DEPLOY_PATH"
     echo ""
+    
+    # 立即显示第一步进度
+    sleep 1
     
     # 执行部署步骤
     install_system_dependencies
