@@ -22,6 +22,21 @@
             value="{{surname}}"
             bindinput="onSurnameInput"
             maxlength="3"
+            cursor-spacing="50"
+            show-confirm-bar="{{false}}"
+            adjust-position="{{false}}"
+            confirm-type="done"
+            selection-start="-1"
+            selection-end="-1"
+            hold-keyboard="{{false}}"
+            safe-password-cert-path=""
+            safe-password-length=""
+            safe-password-time-stamp=""
+            safe-password-nonce=""
+            safe-password-salt=""
+            safe-password-custom-hash=""
+            always-embed="{{false}}"
+            always-system="{{false}}"
           />
         </view>
 

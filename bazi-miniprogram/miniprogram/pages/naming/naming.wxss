@@ -110,20 +110,44 @@
 /* 统一的输入框样式 */
 .input-field {
   width: 100%;
-  padding: 25rpx 20rpx;
+  padding: 0 20rpx;
   border: 2rpx solid #DDD;
   border-radius: 10rpx;
   font-size: 30rpx;
   background: white;
   box-sizing: border-box;
-  line-height: 1.4;
-  height: 80rpx;
+  line-height: 1.2;
+  height: 100rpx;
+  text-align: left;
+  vertical-align: middle;
+  margin: 0;
+  /* 确保文字垂直居中显示 */
+  display: flex;
+  align-items: center;
+  /* 临时调试边框 - 帮助可视化区域 */
+  position: relative;
 }
 
 .input-field:focus {
   border-color: #C8860D;
-  box-shadow: 0 0 0 4rpx rgba(200, 134, 13, 0.1);
   outline: none;
+  background: #FFFEF7;
+  /* 移除可能导致遮挡的box-shadow和transform效果 */
+  /* 焦点状态下的调试样式 */
+  box-shadow: inset 0 0 0 1rpx rgba(200, 134, 13, 0.3);
+}
+
+/* 输入框内部文字样式优化 */
+.input-field::placeholder {
+  color: #999;
+  font-size: 30rpx;
+  line-height: 1.2;
+}
+
+/* 小程序input组件的特殊处理 */
+.input-field[type="text"] {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 /* 统一的选择器样式 */
@@ -1540,10 +1564,10 @@
   }
 }
 
-/* 增强交互效果 */
-.input-field:focus,
+/* 增强交互效果 - 移除可能导致遮挡的transform */
 .date-input:focus {
-  transform: scale(1.02);
+  border-color: #C8860D;
+  box-shadow: 0 0 0 4rpx rgba(200, 134, 13, 0.1);
   transition: all 0.3s ease;
 }
 
