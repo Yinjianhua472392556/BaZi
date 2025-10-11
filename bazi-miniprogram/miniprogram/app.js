@@ -49,7 +49,8 @@ App({
   
   globalData: {
     userInfo: null,
-    apiBaseUrl: 'https://api.bazi365.top',  // 后端API地址（正式生产环境）
+    apiBaseUrl: 'http://119.91.146.128:8001',  // 临时使用IP地址（备案期间）
+    // 正式域名：'https://api.bazi365.top' （备案完成后恢复）
     baziHistory: [],  // 八字测算历史记录
     baziResult: null,  // 当前八字测算结果
     currentUser: null
