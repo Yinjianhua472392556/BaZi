@@ -1800,10 +1800,39 @@ class NamingCalculator:
                 wuxing_analysis['xiyongshen'], gender, preferences
             )
             
+            print(f"🔍 个性化筛选结果: 找到{len(suitable_chars)}个合适字符")
+            
+            # 如果个性化筛选结果太少，回退到标准筛选并混合个性化元素
+            if len(suitable_chars) < 20:
+                print("⚠️  个性化筛选结果不足，使用混合策略")
+                
+                # 获取标准筛选结果
+                standard_chars = self.name_generator._filter_chars_by_xiyongshen(
+                    wuxing_analysis['xiyongshen'], gender, None  # 不使用偏好
+                )
+                print(f"📚 标准筛选结果: {len(standard_chars)}个字符")
+                
+                # 合并并优先排序个性化字符
+                suitable_chars.extend(standard_chars)
+                
+                # 去重但保持个性化字符优先
+                seen = set()
+                deduplicated = []
+                for char_info in suitable_chars:
+                    char = char_info['char']
+                    if char not in seen:
+                        seen.add(char)
+                        deduplicated.append(char_info)
+                
+                suitable_chars = deduplicated[:50]  # 限制字符数量
+                print(f"🔀 混合策略结果: {len(suitable_chars)}个字符")
+            
             # 生成候选名字组合
             candidate_names = self.name_generator._generate_name_combinations(
                 surname, suitable_chars, name_length, count * 3  # 生成更多候选
             )
+            
+            print(f"🎯 候选名字生成: {len(candidate_names)}个")
             
             # 评估每个名字
             evaluated_names = []
@@ -1812,12 +1841,16 @@ class NamingCalculator:
                 if evaluation:
                     evaluated_names.append(evaluation)
             
+            print(f"📊 名字评估完成: {len(evaluated_names)}个有效名字")
+            
             # 如果候选名字不够，使用增强字库生成更多
             if len(evaluated_names) < count:
+                print(f"🔧 评估结果不足({len(evaluated_names)}/{count})，使用增强字库补充")
                 additional_names = self._generate_personalized_names_from_enhanced_db(
                     surname, gender, wuxing_analysis, preferences, naming_seed, count - len(evaluated_names)
                 )
                 evaluated_names.extend(additional_names)
+                print(f"✨ 增强字库补充: +{len(additional_names)}个名字")
             
             # 排序并返回top N
             evaluated_names.sort(key=lambda x: x.overall_score, reverse=True)

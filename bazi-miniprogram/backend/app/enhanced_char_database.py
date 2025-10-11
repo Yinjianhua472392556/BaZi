@@ -694,57 +694,122 @@ class EnhancedCharDatabase:
     
     def get_chars_by_preferences(self, wuxing, gender=None, cultural_level=None, 
                                 popularity=None, rarity=None, era=None, count=None):
-        """根据个性化偏好获取字"""
-        chars = []
+        """根据个性化偏好获取字 - 修复版，确保数据格式一致"""
+        print(f"🎯 个性化筛选: 五行={wuxing}, 性别={gender}, 文化={cultural_level}, 流行度={popularity}, 时代={era}")
+        
+        candidates = []
         for char, info in self.char_database.items():
-            if info['wuxing'] == wuxing and info['suitable_for_name']:
-                # 性别筛选
-                if gender and info['gender'] != gender and info['gender'] != 'neutral':
-                    continue
+            try:
+                # 安全的字段访问
+                char_wuxing = info.get('wuxing', '木')
+                suitable_for_name = info.get('suitable_for_name', True)
+                char_gender = info.get('gender', 'neutral')
                 
-                # 文化层次筛选
-                if cultural_level and info['cultural_level'] != cultural_level:
-                    continue
-                
-                # 流行度筛选
-                if popularity and info['popularity'] != popularity:
-                    continue
-                
-                # 稀有度筛选  
-                if rarity and info['rarity'] != rarity:
-                    continue
-                
-                # 时代特征筛选
-                if era and info['era'] != era:
-                    continue
-                
-                chars.append((char, info))
+                if char_wuxing == wuxing and suitable_for_name:
+                    # 性别筛选（保持严格）
+                    if gender and char_gender != gender and char_gender != 'neutral':
+                        continue
+                    
+                    # 计算偏好匹配得分，而不是严格筛选
+                    preference_score = self._calculate_preference_match_score(
+                        info, cultural_level, popularity, rarity, era
+                    )
+                    
+                    # 规范化字符信息
+                    normalized_info = self._normalize_char_info(char, info)
+                    candidates.append((char, normalized_info, preference_score))
+                    
+            except Exception as e:
+                print(f"⚠️  处理字符 '{char}' 时出错: {str(e)}")
+                continue
         
-        # 智能排序
-        def smart_sort_key(item):
-            char, info = item
-            score = 0
-            
-            # 流行度权重
-            popularity_weights = {'high': 5, 'medium': 3, 'low': 1}
-            score += popularity_weights.get(info['popularity'], 1)
-            
-            # 时代特征权重
-            era_weights = {'contemporary': 4, 'modern': 3, 'classical': 2, 'ancient': 1}
-            score += era_weights.get(info['era'], 1)
-            
-            # 稀有度权重（稀有的字加分较少）
-            rarity_weights = {'common': 3, 'uncommon': 2, 'rare': 1}
-            score += rarity_weights.get(info['rarity'], 1)
-            
-            return score
+        print(f"📊 候选字符数: {len(candidates)}")
         
-        chars.sort(key=smart_sort_key, reverse=True)
+        # 按偏好匹配得分排序
+        candidates.sort(key=lambda x: x[2], reverse=True)
+        
+        # 如果严格匹配结果太少，放宽条件
+        if len(candidates) < (count or 10):
+            print("⚠️  严格匹配结果不足，扩展搜索范围")
+            # 添加五行匹配但偏好不完全匹配的字符
+            for char, info in self.char_database.items():
+                try:
+                    char_wuxing = info.get('wuxing', '木')
+                    suitable_for_name = info.get('suitable_for_name', True)
+                    char_gender = info.get('gender', 'neutral')
+                    
+                    if (char_wuxing == wuxing and 
+                        suitable_for_name and 
+                        not any(char == c[0] for c in candidates)):
+                        
+                        # 性别筛选
+                        if gender and char_gender != gender and char_gender != 'neutral':
+                            continue
+                        
+                        # 给予较低的基础分数
+                        base_score = self._calculate_preference_match_score(
+                            info, cultural_level, popularity, rarity, era
+                        ) * 0.7  # 降权处理
+                        
+                        # 规范化字符信息
+                        normalized_info = self._normalize_char_info(char, info)
+                        candidates.append((char, normalized_info, base_score))
+                        
+                except Exception as e:
+                    print(f"⚠️  扩展搜索时处理字符 '{char}' 出错: {str(e)}")
+                    continue
+        
+        # 重新排序
+        candidates.sort(key=lambda x: x[2], reverse=True)
+        
+        # 提取结果
+        result = [(char, info) for char, info, _ in candidates]
         
         if count:
-            chars = chars[:count]
+            result = result[:count]
         
-        return chars
+        if result:
+            top_chars = [char for char, _ in result[:5]]
+            top_scores = [score for _, _, score in candidates[:5]]
+            print(f"🏆 偏好匹配前5: {', '.join(top_chars)} (得分: {[f'{s:.1f}' for s in top_scores]})")
+        
+        return result
+    
+    def _calculate_preference_match_score(self, info, cultural_level=None, popularity=None, rarity=None, era=None):
+        """计算偏好匹配得分"""
+        score = 50  # 基础分
+        
+        # 文化层次匹配
+        if cultural_level and info.get('cultural_level') == cultural_level:
+            score += 20
+        elif cultural_level:
+            score += 5  # 部分分数，避免完全排除
+        
+        # 流行度匹配
+        if popularity and info.get('popularity') == popularity:
+            score += 15
+        elif popularity:
+            score += 3
+        
+        # 稀有度匹配
+        if rarity and info.get('rarity') == rarity:
+            score += 10
+        elif rarity:
+            score += 2
+        
+        # 时代特征匹配
+        if era and info.get('era') == era:
+            score += 15
+        elif era:
+            score += 3
+        
+        # 基础质量分数
+        popularity_bonus = {'high': 10, 'medium': 5, 'low': 2}.get(info.get('popularity'), 0)
+        era_bonus = {'contemporary': 8, 'modern': 6, 'classical': 4, 'ancient': 2}.get(info.get('era'), 0)
+        
+        score += popularity_bonus + era_bonus
+        
+        return score
     
     def search_chars_by_meaning(self, keyword, wuxing=None, gender=None, count=None):
         """
@@ -898,33 +963,46 @@ class EnhancedCharDatabase:
     def _normalize_char_info(self, char, info):
         """统一字符信息数据结构，将JSON格式转换为API期望格式"""
         try:
-            normalized_info = info.copy() if info else {}
+            if not info:
+                info = {}
+            
+            normalized_info = {}
+            
+            # 安全的字段复制，避免引用原始数据
+            for key, value in info.items():
+                normalized_info[key] = value
             
             # 处理meanings字段：将数组转换为字符串
             meaning_value = '含义美好'  # 默认值
             
-            # 尝试获取meaning值，处理多种数据格式
-            if 'meaning' in info and info['meaning'] and str(info['meaning']).strip():
-                # 如果有meaning字段且不为空
-                meaning_value = str(info['meaning']).strip()
-            elif 'meanings' in info and info['meanings']:
-                # 如果有meanings数组字段
-                meanings = info['meanings']
-                if isinstance(meanings, list) and len(meanings) > 0:
-                    # 取第一个有效含义
-                    first_meaning = meanings[0]
-                    if first_meaning and str(first_meaning).strip():
-                        meaning_value = str(first_meaning).strip()
-                        # 如果有多个含义，用逗号连接前3个
-                        if len(meanings) > 1:
-                            valid_meanings = []
-                            for m in meanings[:3]:
-                                if m and str(m).strip():
-                                    valid_meanings.append(str(m).strip())
-                            if valid_meanings:
-                                meaning_value = '，'.join(valid_meanings)
-                elif isinstance(meanings, str) and meanings.strip():
-                    meaning_value = meanings.strip()
+            # 安全的meaning字段处理
+            try:
+                # 尝试获取meaning值，处理多种数据格式
+                if 'meaning' in info and info['meaning'] is not None:
+                    meaning_str = str(info['meaning']).strip()
+                    if meaning_str:
+                        meaning_value = meaning_str
+                elif 'meanings' in info and info['meanings'] is not None:
+                    # 如果有meanings数组字段
+                    meanings = info['meanings']
+                    if isinstance(meanings, list) and len(meanings) > 0:
+                        # 过滤并取第一个有效含义
+                        valid_meanings = []
+                        for m in meanings[:3]:  # 最多取前3个
+                            if m is not None:
+                                m_str = str(m).strip()
+                                if m_str:
+                                    valid_meanings.append(m_str)
+                        
+                        if valid_meanings:
+                            meaning_value = '，'.join(valid_meanings)
+                    elif isinstance(meanings, str):
+                        meanings_str = meanings.strip()
+                        if meanings_str:
+                            meaning_value = meanings_str
+            except Exception as meaning_error:
+                print(f"⚠️  处理meaning字段时出错 '{char}': {str(meaning_error)}")
+                meaning_value = '含义美好'  # 回退到默认值
             
             # 设置meaning字段
             normalized_info['meaning'] = meaning_value
@@ -945,20 +1023,28 @@ class EnhancedCharDatabase:
                 if field not in normalized_info or normalized_info[field] is None or normalized_info[field] == '':
                     normalized_info[field] = default_value
             
-            # 确保数字字段是数字类型
+            # 安全的数字字段转换
             if 'stroke' in normalized_info:
                 try:
-                    normalized_info['stroke'] = int(normalized_info['stroke'])
-                except (ValueError, TypeError):
+                    stroke_value = normalized_info['stroke']
+                    if stroke_value is not None:
+                        normalized_info['stroke'] = int(float(stroke_value))  # 先转float再转int，处理"8.0"的情况
+                    else:
+                        normalized_info['stroke'] = 8
+                except (ValueError, TypeError) as e:
+                    print(f"⚠️  转换stroke字段失败 '{char}': {str(e)}, 原值: {normalized_info.get('stroke')}")
                     normalized_info['stroke'] = 8
             
             return normalized_info
             
         except Exception as e:
-            print(f"⚠️  规范化字符信息时出错 '{char}': {str(e)}")
+            print(f"❌ 规范化字符信息时发生严重错误 '{char}': {str(e)}")
+            print(f"📋 原始信息: {info}")
+            import traceback
+            traceback.print_exc()
+            
             # 返回最小化的默认信息
             return {
-                'char': char,
                 'wuxing': '木',
                 'meaning': '含义美好',
                 'stroke': 8,
