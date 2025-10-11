@@ -22,28 +22,20 @@ App({
     })
   },
 
-  // 初始化图标系统
+  // 初始化图标系统 - 简化版本
   async initIcons() {
     try {
-      console.log('开始初始化动态图标系统...')
+      console.log('使用静态图标配置，无需动态下载')
       
-      // 确保 globalData 已初始化
-      if (!this.globalData) {
-        console.warn('globalData 未初始化，跳过图标系统初始化')
-        return
-      }
-      
+      // 简单初始化，仅用于兼容性
       const success = await iconManager.init()
       
       if (success) {
-        console.log('动态图标系统初始化成功')
-        // 将图标管理器添加到全局数据
+        console.log('静态图标配置确认正常')
         this.globalData.iconManager = iconManager
-      } else {
-        console.log('动态图标系统初始化失败，使用默认图标')
       }
     } catch (error) {
-      console.error('图标系统初始化出错，将使用默认图标:', error)
+      console.error('图标系统检查出错:', error)
     }
   },
   

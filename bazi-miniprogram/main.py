@@ -41,13 +41,9 @@ try:
 except ImportError as e:
     print(f"❌ 起名计算器导入失败: {e}")
 
-# 尝试导入图标生成器（可选）
-try:
-    from icon_generator import IconGenerator
-    icon_generator = IconGenerator()
-    print("✅ 图标生成器导入成功")
-except ImportError as e:
-    print(f"⚠️  图标生成器导入失败（可选功能）: {e}")
+# 图标生成器已移除 - Tab图标现在使用静态配置
+icon_generator = None
+print("ℹ️  图标生成器已禁用 - 使用静态Tab图标配置")
 
 # 尝试导入生肖配对
 try:
@@ -570,107 +566,9 @@ async def get_festivals():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"节日查询失败: {str(e)}")
 
-# Tab图标配置接口
-@app.get("/api/v1/tab-icons/config")
-async def get_tab_icons_config():
-    """获取Tab图标配置信息"""
-    try:
-        return {
-            "success": True,
-            "data": {
-                "version": "1.0.0",
-                "last_updated": datetime.now().isoformat(),
-                "available_icons": ["bazi", "naming", "festival", "zodiac", "profile"],
-                "themes": ["default", "dark", "spring", "autumn"],
-                "styles": ["normal", "selected"],
-                "cache_duration": 86400  # 24小时缓存
-            },
-            "timestamp": datetime.now().isoformat()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取图标配置失败: {str(e)}")
+# 注：Tab图标接口已移除 - Tab图标现在使用app.json中的静态配置
 
-# Tab图标获取接口
-@app.get("/api/v1/tab-icons/{icon_type}")
-async def get_tab_icon(icon_type: str, style: str = "normal", theme_color: str = "#666666"):
-    """获取具体的Tab图标"""
-    try:
-        # 验证参数
-        valid_icons = ["bazi", "naming", "festival", "zodiac", "profile"]
-        valid_styles = ["normal", "selected"]
-        
-        if icon_type not in valid_icons:
-            raise HTTPException(status_code=400, detail=f"不支持的图标类型: {icon_type}")
-        
-        if style not in valid_styles:
-            raise HTTPException(status_code=400, detail=f"不支持的样式: {style}")
-        
-        if ALGORITHMS_AVAILABLE and icon_generator:
-            # 使用真实图标生成器
-            icon_data = icon_generator.create_base64_icon(icon_type, style)
-            return {
-                "success": True,
-                "data": {
-                    "icon_type": icon_type,
-                    "style": style,
-                    "theme_color": theme_color,
-                    "format": "base64_png",
-                    "icon_data": icon_data
-                },
-                "timestamp": datetime.now().isoformat()
-            }
-        else:
-            # 降级方案：返回默认图标路径
-            icon_map = {
-                "bazi": {"normal": "/images/tab-icons/bazi_normal.png", "selected": "/images/tab-icons/bazi_selected.png"},
-                "naming": {"normal": "/images/tab-icons/bazi_normal.png", "selected": "/images/tab-icons/bazi_selected.png"},
-                "festival": {"normal": "/images/tab-icons/festival_normal.png", "selected": "/images/tab-icons/festival_selected.png"},
-                "zodiac": {"normal": "/images/tab-icons/zodiac_normal.png", "selected": "/images/tab-icons/zodiac_selected.png"},
-                "profile": {"normal": "/images/tab-icons/profile_normal.png", "selected": "/images/tab-icons/profile_selected.png"}
-            }
-            
-            return {
-                "success": True,
-                "data": {
-                    "icon_type": icon_type,
-                    "style": style,
-                    "fallback": True,
-                    "local_path": icon_map.get(icon_type, {}).get(style, ""),
-                    "message": "使用本地默认图标"
-                },
-                "timestamp": datetime.now().isoformat()
-            }
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"获取Tab图标失败: {str(e)}")
-
-# 图标生成接口 (保留原有功能)
-@app.get("/api/v1/icons/{icon_type}")
-async def get_icon(icon_type: str, style: str = "normal"):
-    """获取生成的图标"""
-    try:
-        if ALGORITHMS_AVAILABLE and icon_generator:
-            icon_data = icon_generator.create_base64_icon(icon_type, style)
-            return {
-                "success": True,
-                "data": {
-                    "icon_type": icon_type,
-                    "style": style,
-                    "format": "base64_png",
-                    "icon_data": icon_data
-                },
-                "timestamp": datetime.now().isoformat()
-            }
-        else:
-            return {
-                "success": False,
-                "error": "图标生成功能不可用",
-                "timestamp": datetime.now().isoformat()
-            }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"图标生成失败: {str(e)}")
+# 注：图标生成接口已移除 - 所有图标现在使用静态配置
 
 # 农历转公历接口
 @app.post("/api/v1/lunar-to-solar")
