@@ -1,12 +1,12 @@
 #!/bin/bash
 # ===============================================
-# 八字运势小程序 - 阿里云服务器自动部署配置
+# 八字运势小程序 - 腾讯云服务器自动部署配置
 # ===============================================
 # 
 # 使用说明：
 # 1. 根据你的实际情况修改下面的配置
 # 2. 运行: bash auto_deploy.sh
-# 3. 等待部署完成（约10-15分钟）
+# 3. 等待部署完成（约15-25分钟）
 #
 # ===============================================
 
@@ -16,7 +16,7 @@ export SERVER_IP="119.91.146.128"                    # 腾讯云轻量服务器�
 export DOMAIN_NAME="bazi365.top"                      # 八字运势域名
 export API_SUBDOMAIN="api.bazi365.top"                # API子域名
 
-# 🔐 【必填】SSH连接信息
+# 🔐 【可选】SSH连接信息（直接在服务器终端执行时不需要）
 # ===============================================
 export SSH_USER="root"                                # SSH用户名（根据您的实际情况调整）
 export SSH_PORT="22"                                  # SSH端口（默认22）
@@ -133,10 +133,11 @@ validate_config() {
         echo "❌ 发现 $errors 个配置错误，请修正后重试"
         echo ""
         echo "📖 配置帮助:"
-        echo "   1. SERVER_IP: 在阿里云控制台查看ECS实例的公网IP"
+        echo "   1. SERVER_IP: 在腾讯云控制台查看轻量服务器的公网IP"
         echo "   2. DOMAIN_NAME: 你购买的域名，如 example.com"
         echo "   3. API_SUBDOMAIN: API服务的子域名，如 api.example.com"
         echo "   4. SSL_EMAIL: 用于接收SSL证书相关邮件的邮箱"
+        echo "   5. 注意: 确保腾讯云安全组已开放端口 80, 443, 8001"
         echo ""
         return 1
     fi
@@ -187,21 +188,22 @@ test_connectivity() {
 # ===============================================
 show_summary() {
     echo ""
-    echo "🎯 部署准备就绪！"
+    echo "🎯 腾讯云服务器部署准备就绪！"
     echo ""
     echo "📋 即将执行的操作:"
-    echo "   1. 连接服务器: $SSH_USER@$SERVER_IP:$SSH_PORT"
+    echo "   1. 检测和配置系统环境"
     echo "   2. 更新系统并安装依赖"
     echo "   3. 克隆项目代码: $GITHUB_REPO"
     echo "   4. 配置Python环境和依赖"
     echo "   5. 创建系统服务: $SERVICE_NAME"
-    echo "   6. 配置Nginx反向代理"
-    echo "   7. 申请SSL证书: $API_SUBDOMAIN"
-    echo "   8. 启动服务并验证功能"
+    echo "   6. 智能SSL证书申请和配置"
+    echo "   7. 配置Nginx反向代理和HTTPS"
+    echo "   8. 启动服务并全面验证功能"
     echo ""
-    echo "⏱️  预计部署时间: 10-15分钟"
+    echo "⏱️  预计部署时间: 15-25分钟"
+    echo "🔧  特性: 智能SSL修复 | 腾讯云优化 | 自动错误修复"
     echo ""
-    echo "▶️  运行 'bash auto_deploy.sh' 开始部署"
+    echo "▶️  运行 'sudo bash auto_deploy.sh' 开始部署"
     echo ""
 }
 
