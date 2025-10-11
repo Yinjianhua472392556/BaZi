@@ -743,8 +743,8 @@ Page({
                                  this.data.eraIndex !== 0 ||
                                  this.data.rarityIndex !== 1;
 
-    // 根据是否有个性化偏好选择API端点
-    const apiUrl = hasCustomPreferences ? '/api/v1/naming/personalized-generate' : '/api/v1/naming/generate';
+    // 始终使用个性化API接口，让后端决定如何处理偏好
+    const apiUrl = '/api/v1/naming/personalized-generate';
     
     console.log('🔧 前端个性化判断修复:');
     console.log('- 文化层次索引:', this.data.culturalLevelIndex, '!=', 0);

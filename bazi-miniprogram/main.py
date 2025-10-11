@@ -146,6 +146,13 @@ class PersonalizedNamingRequest(BaseModel):
     name_length: int = 2
     count: Optional[int] = None
     session_seed: Optional[str] = None
+    # 个性化偏好参数
+    cultural_level: Optional[str] = None
+    popularity: Optional[str] = None
+    era_style: Optional[str] = None
+    rarity: Optional[str] = None
+    selected_chars: Optional[List[str]] = None
+    meaning_keywords: Optional[List[str]] = None
     preferences: Optional[Dict] = None
 
 class CharacterSearchRequest(BaseModel):
@@ -819,10 +826,38 @@ async def generate_personalized_names(naming_data: PersonalizedNamingRequest):
                     'calendar_type': naming_data.calendar_type
                 }
                 
+                # 构建偏好设置对象，合并所有偏好参数
+                preferences = {}
+                
+                # 从直接参数添加，注意参数映射
+                if naming_data.cultural_level:
+                    preferences['cultural_level'] = naming_data.cultural_level
+                if naming_data.popularity:
+                    preferences['popularity'] = naming_data.popularity
+                if naming_data.era_style:
+                    # 修复参数映射：era_style -> era
+                    preferences['era'] = naming_data.era_style
+                if naming_data.rarity:
+                    preferences['rarity'] = naming_data.rarity
+                if naming_data.selected_chars:
+                    preferences['selected_chars'] = naming_data.selected_chars
+                if naming_data.meaning_keywords:
+                    preferences['meaning_keywords'] = naming_data.meaning_keywords
+                
+                # 从preferences字典添加（如果存在）
+                if naming_data.preferences:
+                    # 确保preferences字典中的era_style也被正确映射为era
+                    prefs_copy = naming_data.preferences.copy()
+                    if 'era_style' in prefs_copy and 'era' not in prefs_copy:
+                        prefs_copy['era'] = prefs_copy.pop('era_style')
+                    preferences.update(prefs_copy)
+                
+                print(f"🎯 个性化起名接口: 解析到偏好设置 {preferences}")
+                
                 result = naming_calculator.analyze_and_generate_personalized_names(
                     naming_data.surname, naming_data.gender, birth_info,
                     naming_data.name_length, naming_data.count, 
-                    naming_data.preferences, naming_data.session_seed
+                    preferences if preferences else None, naming_data.session_seed
                 )
                 
                 return {
@@ -834,6 +869,8 @@ async def generate_personalized_names(naming_data: PersonalizedNamingRequest):
                 
             except Exception as algo_error:
                 print(f"个性化起名算法出错，使用标准方案: {str(algo_error)}")
+                import traceback
+                traceback.print_exc()
                 # 降级到标准起名算法
                 return await generate_names(naming_data)
         else:
@@ -841,6 +878,8 @@ async def generate_personalized_names(naming_data: PersonalizedNamingRequest):
         
     except Exception as e:
         print(f"个性化起名生成出错: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"个性化起名生成失败: {str(e)}")
 
 # 字义搜索接口 - 新增功能
