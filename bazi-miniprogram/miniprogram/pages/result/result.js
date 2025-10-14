@@ -13,7 +13,8 @@ Page({
     baziString: '',
     wuxingString: '',
     wuxingLack: '',
-    shengxiao: ''
+    shengxiao: '',
+    bookRecommendationContext: null
   },
 
   /**
@@ -431,9 +432,74 @@ Page({
       console.warn('横幅广告展示出错，继续执行:', error)
     }
     
+    // 准备书籍推荐上下文
+    this.prepareBookRecommendationContext();
+    
     this.setData({
       showAnalysisModal: true
     });
+  },
+
+  /**
+   * 准备书籍推荐上下文
+   */
+  prepareBookRecommendationContext() {
+    const { resultData, wuxingLack } = this.data;
+    
+    if (!resultData) return;
+
+    // 基于八字分析结果生成推荐上下文
+    const recommendationContext = {
+      function_type: 'bazi_calculation',
+      wuxing_lack: wuxingLack ? wuxingLack.split('、') : [],
+      user_info: {
+        gender: resultData.user_info?.gender || 'unknown',
+        birth_year: resultData.user_info?.birth_date ? 
+          parseInt(resultData.user_info.birth_date.split('-')[0]) : null
+      },
+      analysis_keywords: this.extractAnalysisKeywords(resultData)
+    };
+
+    console.log('书籍推荐上下文:', recommendationContext);
+
+    this.setData({
+      bookRecommendationContext: recommendationContext
+    });
+  },
+
+  /**
+   * 从分析结果中提取关键词
+   */
+  extractAnalysisKeywords(resultData) {
+    const keywords = [];
+    
+    if (resultData.analysis) {
+      // 从性格分析中提取关键词
+      if (resultData.analysis.personality) {
+        if (resultData.analysis.personality.includes('事业')) {
+          keywords.push('事业运势');
+        }
+        if (resultData.analysis.personality.includes('财运')) {
+          keywords.push('财运');
+        }
+        if (resultData.analysis.personality.includes('感情')) {
+          keywords.push('感情');
+        }
+      }
+      
+      // 从五行分析中提取关键词
+      if (resultData.analysis.wuxing_analysis) {
+        keywords.push('五行');
+        keywords.push('风水');
+      }
+    }
+
+    // 基于生肖添加关键词
+    if (this.data.shengxiao) {
+      keywords.push('生肖运势');
+    }
+
+    return keywords.length > 0 ? keywords : ['命理', '运势'];
   },
 
   /**
@@ -585,6 +651,48 @@ Page({
       path: '/pages/index/index',
       imageUrl: '/images/share-bg.png'
     };
+  },
+
+  /**
+   * 处理书籍点击事件
+   */
+  onBookClick(event) {
+    const { book } = event.detail;
+    console.log('书籍点击:', book.title);
+    
+    // 可以在这里添加统计或其他逻辑
+    wx.reportAnalytics('book_click', {
+      book_id: book.id,
+      book_title: book.title,
+      source: 'result_page'
+    });
+  },
+
+  /**
+   * 处理书籍收藏事件
+   */
+  onBookCollect(event) {
+    const { book } = event.detail;
+    console.log('书籍收藏:', book.title);
+    
+    wx.showToast({
+      title: '收藏成功',
+      icon: 'success'
+    });
+  },
+
+  /**
+   * 处理书籍分享事件
+   */
+  onBookShare(event) {
+    const { book } = event.detail;
+    console.log('书籍分享:', book.title);
+    
+    // 触发分享功能
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    });
   },
 
   /**

@@ -90,17 +90,31 @@
               <view wx:if="{{birthDate && correspondingLunarDate}}" class="corresponding-date">
                 对应农历：{{correspondingLunarDate}}
               </view>
-            </view>
-          </view>
-          
-          <!-- 农历日期选择器 -->
-          <view wx:if="{{calendarType === 'lunar'}}" class="lunar-picker-container">
-            <view class="lunar-pickers">
-              <!-- 农历年选择器 -->
-              <picker class="lunar-year-picker" value="{{lunarYearIndex}}" range="{{lunarYears}}" bindchange="onLunarYearChange">
-                <view class="picker">
-                  {{lunarYear ? lunarYear + '年' : '年'}}
-                </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 书籍推荐区域 -->
+    <view class="book-recommendation-section" wx:if="{{bookRecommendationContext}}">
+      <book-recommendation 
+        context="{{bookRecommendationContext}}"
+        count="{{3}}"
+        layout="minimal"
+        title="相关书籍推荐"
+        show-title="{{true}}"
+        bind:bookclick="onBookClick"
+        bind:bookcollect="onBookCollect"
+        bind:bookshare="onBookShare">
+      </book-recommendation>
+    </view>
+    
+    <!-- 重新起名按钮 -->
+    <view class="restart-section">
+      <button class="restart-btn" bindtap="restartNaming">
+        <text class="restart-icon">🔄</text>
+        重新起名
+      </button>
+    </view>
               </picker>
               
               <!-- 农历月选择器 -->

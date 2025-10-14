@@ -116,7 +116,10 @@ Page({
     showNameDetail: false,
     showShareModal: false,
     shareNameIndex: null,
-    canNaming: false
+    canNaming: false,
+    
+    // 书籍推荐
+    bookRecommendationContext: null
   },
 
   /**
@@ -415,6 +418,7 @@ Page({
         day: parseInt(dateArr[2])
       },
       success: (result) => {
+        console.log('公历转农历API响应:', result)
         if (result.success) {
           const lunarDate = result.data.lunar_date
           const lunarDateStr = `${lunarDate.year}年${this.data.lunarMonths[lunarDate.month - 1]}${this.data.lunarDays[lunarDate.day - 1]}`
@@ -425,80 +429,61 @@ Page({
         }
       },
       fail: (error) => {
-        console.error('公历转农历失败:', error)
+        console.error('公历转农历API请求失败:', error)
       }
     })
   },
 
-  // 检查是否可以起名 - 与八字测算页面的checkCanCalculate逻辑一致
+  // 检查是否可以开始起名
   checkCanNaming() {
-    const { surname, birthDate, birthTime, calendarType, lunarYearIndex, lunarMonthIndex, lunarDayIndex } = this.data
+    const hasBasicInfo = this.data.surname.trim() && this.data.gender
+    let hasValidDate = false
     
-    // 检查姓氏
-    if (!surname || surname.trim() === '') {
-      this.setData({ canNaming: false })
-      return
-    }
-    
-    // 检查日期完整性
-    let dateComplete = false
-    if (calendarType === 'lunar') {
-      // 农历模式：检查三个选择器都已选择
-      dateComplete = lunarYearIndex >= 0 && lunarMonthIndex >= 0 && lunarDayIndex >= 0
+    if (this.data.calendarType === 'lunar') {
+      hasValidDate = this.data.lunarYearIndex >= 0 && 
+                     this.data.lunarMonthIndex >= 0 && 
+                     this.data.lunarDayIndex >= 0
     } else {
-      // 公历模式：检查日期字符串
-      dateComplete = birthDate && birthDate.length > 0
+      hasValidDate = !!this.data.birthDate
     }
     
-    // 检查时间
-    const timeComplete = birthTime && birthTime.length > 0
+    const hasTime = !!this.data.birthTime
     
     this.setData({
-      canNaming: dateComplete && timeComplete
+      canNaming: hasBasicInfo && hasValidDate && hasTime
     })
   },
 
-  /**
-   * 个性化偏好设置相关方法
-   */
-  
-  // 切换偏好设置显示/隐藏
+  // 个性化偏好设置
+  onCulturalLevelChange(e) {
+    this.setData({
+      culturalLevelIndex: parseInt(e.detail.value)
+    })
+  },
+
+  onPopularityChange(e) {
+    this.setData({
+      popularityIndex: parseInt(e.detail.value)
+    })
+  },
+
+  onEraChange(e) {
+    this.setData({
+      eraIndex: parseInt(e.detail.value)
+    })
+  },
+
+  onRarityChange(e) {
+    this.setData({
+      rarityIndex: parseInt(e.detail.value)
+    })
+  },
+
+  // 切换偏好设置显示
   togglePreferences() {
     this.setData({
       showPreferences: !this.data.showPreferences
-    });
-  },
-
-  // 文化层次偏好选择
-  onCulturalLevelChange(e) {
-    const index = parseInt(e.detail.value);
-    this.setData({
-      culturalLevelIndex: index
-    });
-  },
-
-  // 流行度偏好选择
-  onPopularityChange(e) {
-    const index = parseInt(e.detail.value);
-    this.setData({
-      popularityIndex: index
-    });
-  },
-
-  // 时代特征偏好选择
-  onEraChange(e) {
-    const index = parseInt(e.detail.value);
-    this.setData({
-      eraIndex: index
-    });
-  },
-
-  // 稀有度偏好选择
-  onRarityChange(e) {
-    const index = parseInt(e.detail.value);
-    this.setData({
-      rarityIndex: index
-    });
+    })
   },
 
   // 字义关键词输入
@@ -795,6 +780,9 @@ Page({
             showResults: true
           })
 
+          // 准备书籍推荐上下文
+          this.prepareBookRecommendationContext();
+
           wx.showToast({
             title: '起名完成',
             icon: 'success'
@@ -1068,5 +1056,125 @@ Page({
 
   onNativeAdError(e) {
     console.log('起名页面原生广告加载失败:', e.detail)
+  },
+
+  /**
+   * 准备书籍推荐上下文
+   */
+  prepareBookRecommendationContext() {
+    const { surname, gender, baziAnalysis, analysisSummary } = this.data;
+    
+    if (!baziAnalysis && !analysisSummary) return;
+
+    // 基于起名分析结果生成推荐上下文
+    const recommendationContext = {
+      function_type: 'naming',
+      user_info: {
+        surname: surname,
+        gender: gender,
+        birth_year: this.data.calendarType === 'lunar' ? 
+          parseInt(this.data.lunarYears[this.data.lunarYearIndex]) : 
+          (this.data.birthDate ? parseInt(this.data.birthDate.split('-')[0]) : null)
+      },
+      analysis_keywords: this.extractNamingKeywords()
+    };
+
+    console.log('起名书籍推荐上下文:', recommendationContext);
+
+    this.setData({
+      bookRecommendationContext: recommendationContext
+    });
+  },
+
+  /**
+   * 从起名分析中提取关键词
+   */
+  extractNamingKeywords() {
+    const keywords = [];
+    const { analysisSummary, namingSuggestions, baziAnalysis } = this.data;
+    
+    // 从分析摘要中提取关键词
+    if (analysisSummary) {
+      if (analysisSummary.includes('五行')) {
+        keywords.push('五行');
+      }
+      if (analysisSummary.includes('文化')) {
+        keywords.push('传统文化');
+      }
+      if (analysisSummary.includes('古典')) {
+        keywords.push('古典文学');
+      }
+    }
+
+    // 从起名建议中提取关键词
+    if (namingSuggestions) {
+      if (namingSuggestions.includes('诗经')) {
+        keywords.push('诗经楚辞');
+      }
+      if (namingSuggestions.includes('易经')) {
+        keywords.push('易经');
+      }
+      if (namingSuggestions.includes('国学')) {
+        keywords.push('国学经典');
+      }
+    }
+
+    // 从八字分析中提取关键词
+    if (baziAnalysis) {
+      keywords.push('命理');
+      keywords.push('起名');
+    }
+
+    // 根据偏好设置添加关键词
+    const preferences = this.getCurrentPreferences();
+    if (preferences.cultural_level === 'traditional') {
+      keywords.push('传统文化');
+    } else if (preferences.cultural_level === 'classic') {
+      keywords.push('古典文学');
+    }
+
+    return keywords.length > 0 ? keywords : ['起名', '姓名学'];
+  },
+
+  /**
+   * 处理书籍点击事件
+   */
+  onBookClick(event) {
+    const { book } = event.detail;
+    console.log('书籍点击:', book.title);
+    
+    // 可以在这里添加统计或其他逻辑
+    wx.reportAnalytics('book_click', {
+      book_id: book.id,
+      book_title: book.title,
+      source: 'naming_page'
+    });
+  },
+
+  /**
+   * 处理书籍收藏事件
+   */
+  onBookCollect(event) {
+    const { book } = event.detail;
+    console.log('书籍收藏:', book.title);
+    
+    wx.showToast({
+      title: '收藏成功',
+      icon: 'success'
+    });
+  },
+
+  /**
+   * 处理书籍分享事件
+   */
+  onBookShare(event) {
+    const { book } = event.detail;
+    console.log('书籍分享:', book.title);
+    
+    // 触发分享功能
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline']
+    });
   }
 });

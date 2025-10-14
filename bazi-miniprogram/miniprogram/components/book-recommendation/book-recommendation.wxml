@@ -1,0 +1,124 @@
+<!-- book-recommendation.wxml - 书籍推荐组件模板 -->
+<view class="book-recommendation {{layout}}">
+  <!-- 标题区域 -->
+  <view wx:if="{{showTitle}}" class="recommendation-header">
+    <view class="recommendation-title">{{title}}</view>
+    <view class="refresh-btn" bindtap="onRefresh" wx:if="{{!loading}}">
+      <text class="refresh-icon">🔄</text>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-state">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在加载推荐...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view wx:elif="{{error}}" class="error-state">
+    <text class="error-icon">⚠️</text>
+    <text class="error-text">{{error}}</text>
+    <button class="retry-btn" bindtap="onRefresh">重试</button>
+  </view>
+
+  <!-- 无推荐状态 -->
+  <view wx:elif="{{recommendations.length === 0}}" class="empty-state">
+    <text class="empty-icon">📚</text>
+    <text class="empty-text">暂无相关书籍推荐</text>
+  </view>
+
+  <!-- 推荐列表 -->
+  <view wx:else class="recommendations-list {{layout}}-layout">
+    <view 
+      class="book-item {{layout}}-item"
+      wx:for="{{recommendations}}"
+      wx:key="id"
+      bindtap="onBookTap"
+      data-book="{{item}}"
+    >
+      <!-- 书籍封面 -->
+      <view class="book-cover">
+        <image 
+          class="cover-image" 
+          src="{{item.cover_url || '/images/book-placeholder.png'}}"
+          mode="aspectFit"
+          lazy-load="{{true}}"
+        />
+        <!-- 价格标签 -->
+        <view class="price-tag" wx:if="{{item.price}}">
+          ¥{{item.price}}
+        </view>
+      </view>
+
+      <!-- 书籍信息 -->
+      <view class="book-info">
+        <view class="book-title">{{item.title}}</view>
+        <view class="book-author" wx:if="{{item.author}}">{{item.author}}</view>
+        <view class="book-description" wx:if="{{item.description}}">{{item.description}}</view>
+        
+        <!-- 推荐理由 -->
+        <view class="recommendation-reason" wx:if="{{item.reason}}">
+          <text class="reason-label">推荐理由：</text>
+          <text class="reason-text">{{item.reason}}</text>
+        </view>
+
+        <!-- 评分和销量 -->
+        <view class="book-stats" wx:if="{{item.rating || item.sales}}">
+          <view class="rating" wx:if="{{item.rating}}">
+            <text class="rating-stars">⭐</text>
+            <text class="rating-score">{{item.rating}}</text>
+          </view>
+          <view class="sales" wx:if="{{item.sales}}">
+            <text class="sales-text">销量 {{item.sales}}</text>
+          </view>
+        </view>
+
+        <!-- 标签 -->
+        <view class="book-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+          <text 
+            class="tag-item"
+            wx:for="{{item.tags}}"
+            wx:key="*this"
+            wx:for-item="tag"
+          >{{tag}}</text>
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="book-actions">
+        <!-- 主要购买按钮 -->
+        <button class="action-btn primary-btn" bindtap="onBookTap" data-book="{{item}}">
+          立即购买
+        </button>
+        
+        <!-- 次要操作按钮 -->
+        <view class="secondary-actions">
+          <button 
+            class="action-btn secondary-btn" 
+            catchtap="onCollect" 
+            data-book="{{item}}"
+          >
+            <text class="btn-icon">💝</text>
+            收藏
+          </button>
+          <button 
+            class="action-btn secondary-btn" 
+            catchtap="onShare" 
+            data-book="{{item}}"
+          >
+            <text class="btn-icon">📤</text>
+            分享
+          </button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 更多推荐按钮 -->
+  <view class="more-recommendations" wx:if="{{recommendations.length > 0}}">
+    <button class="more-btn" bindtap="onRefresh">
+      <text class="more-icon">🔍</text>
+      查看更多推荐
+    </button>
+  </view>
+</view>

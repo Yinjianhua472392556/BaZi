@@ -176,6 +176,20 @@
           <view class="fortune-desc">{{resultData.today_fortune.description || '今日运势不错...'}}</view>
         </view>
       </view>
+
+      <!-- 书籍推荐区域 -->
+      <view class="book-recommendation-section" wx:if="{{bookRecommendationContext}}">
+        <book-recommendation 
+          context="{{bookRecommendationContext}}"
+          count="{{3}}"
+          layout="list"
+          title="相关书籍推荐"
+          show-title="{{true}}"
+          bind:bookclick="onBookClick"
+          bind:bookcollect="onBookCollect"
+          bind:bookshare="onBookShare">
+        </book-recommendation>
+      </view>
     </scroll-view>
     
     <view class="modal-footer">

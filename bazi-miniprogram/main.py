@@ -53,6 +53,15 @@ try:
 except ImportError as e:
     print(f"❌ 生肖配对导入失败: {e}")
 
+# 尝试导入书籍联盟营销服务
+book_affiliate_service = None
+try:
+    from book_affiliate import BookAffiliateService
+    book_affiliate_service = BookAffiliateService()
+    print("✅ 书籍联盟营销服务导入成功")
+except ImportError as e:
+    print(f"ℹ️ 书籍联盟营销功能未安装: {e}")
+
 # 检查核心算法是否可用
 ALGORITHMS_AVAILABLE = bool(bazi_calculator and naming_calculator)
 print(f"🧮 算法状态: {'核心算法已启用' if ALGORITHMS_AVAILABLE else '降级到模拟数据'}")
@@ -1063,6 +1072,39 @@ async def get_character_combinations_fallback(combination_data: CharacterCombina
         "timestamp": datetime.now().isoformat(),
         "algorithm_version": "简化组合算法"
     }
+
+# 书籍联盟营销接口 - 新增功能
+@app.post("/api/v1/books/recommendations")
+async def get_book_recommendations(request_data: dict):
+    """获取书籍推荐"""
+    if book_affiliate_service:
+        return await book_affiliate_service.get_recommendations(request_data)
+    return {"success": False, "message": "联盟营销服务不可用", "data": {"recommendations": []}}
+
+@app.post("/api/v1/books/affiliate-link")
+async def generate_affiliate_link(request_data: dict):
+    """生成联盟推广链接"""
+    if book_affiliate_service:
+        return await book_affiliate_service.generate_affiliate_link(
+            request_data.get('book_id'),
+            request_data.get('platform'),
+            request_data.get('user_id')
+        )
+    return {"success": False, "message": "联盟营销服务不可用"}
+
+@app.post("/api/v1/books/search")
+async def search_books(request_data: dict):
+    """搜索书籍"""
+    if book_affiliate_service:
+        return await book_affiliate_service.search_books(
+            request_data.get('query', ''),
+            request_data.get('limit', 10)
+        )
+    return {"success": False, "message": "联盟营销服务不可用", "data": {"books": []}}
+
+# 注：移除了平台状态和统计信息接口，因为：
+# 1. 平台状态主要用于内部监控，用户不需要
+# 2. 统计信息由联盟平台后台提供，无需API接口
 
 # 字库统计接口 - 新增功能
 @app.get("/api/v1/naming/database-stats")

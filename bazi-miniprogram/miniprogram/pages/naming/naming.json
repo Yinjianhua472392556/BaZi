@@ -1,3 +1,6 @@
 {
-  "usingComponents": {}
+  "usingComponents": {
+    "ad-native": "../../components/ad-native/ad-native",
+    "book-recommendation": "../../components/book-recommendation/book-recommendation"
+  }
 }
