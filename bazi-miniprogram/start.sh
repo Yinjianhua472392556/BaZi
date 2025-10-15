@@ -65,7 +65,8 @@ check_venv() {
 check_dependencies() {
     source "$VENV_PATH/bin/activate"
     
-    local deps=("fastapi" "uvicorn" "sxtwl" "zhdate" "pillow")
+    # 核心依赖包列表（包含书籍联盟营销所需的aiohttp）
+    local deps=("fastapi" "uvicorn" "sxtwl" "zhdate" "aiohttp")
     local missing_deps=()
     
     for dep in "${deps[@]}"; do
@@ -78,8 +79,17 @@ check_dependencies() {
         print_message $GREEN "✅ 所有依赖包已安装"
         return 0
     else
-        print_message $RED "❌ 缺少依赖包: ${missing_deps[*]}"
-        return 1
+        print_message $YELLOW "❌ 缺少依赖包: ${missing_deps[*]}"
+        print_message $YELLOW "🔄 正在自动安装缺失依赖..."
+        
+        # 自动安装缺失的依赖
+        if pip install -r "$PROJECT_DIR/requirements.txt"; then
+            print_message $GREEN "✅ 依赖包安装完成"
+            return 0
+        else
+            print_message $RED "❌ 依赖包安装失败"
+            return 1
+        fi
     fi
 }
 

@@ -144,7 +144,7 @@ Component({
           const recommendations = response.data.data.recommendations || [];
           
           // 保存新推荐的书籍ID到历史记录
-          const newBookIds = recommendations.map(book => book.id);
+          const newBookIds = recommendations.map(book => book.book_id);
           this.saveDuplicateBooks(newBookIds);
           
           this.setData({
@@ -154,7 +154,7 @@ Component({
 
           console.log('书籍推荐成功:', recommendations);
         } else {
-          throw new Error(response.data.message || '获取推荐失败');
+          throw new Error(response.data.error || '获取推荐失败');
         }
 
       } catch (error) {
@@ -195,13 +195,13 @@ Component({
         const linkResponse = await this.generateAffiliateLink(book);
         
         if (linkResponse.success) {
-          const link = linkResponse.data.link;
-          const platform = linkResponse.data.platform;
+          const link = linkResponse.affiliate_link;
+          const platform = book.platform;
           
           // 尝试跳转到对应的小程序或复制链接
           await this.jumpToShopping(link, platform, book);
         } else {
-          throw new Error('生成购买链接失败');
+          throw new Error(linkResponse.error || '生成购买链接失败');
         }
 
       } catch (error) {
@@ -239,8 +239,8 @@ Component({
             'Content-Type': 'application/json'
           },
           data: {
-            book_id: book.id,
-            platform: book.preferred_platform || 'taobao',
+            book_id: book.book_id,
+            platform: book.platform || 'taobao',
             user_id: userId
           }
         });
@@ -264,19 +264,53 @@ Component({
      * 跳转到购物平台
      */
     async jumpToShopping(link, platform, book) {
-      // 优先尝试跳转到对应的小程序
-      if (platform === 'taobao') {
+      // 根据平台选择对应的小程序AppID
+      const platformConfig = {
+        'taobao': {
+          appId: 'wxbda7bbe1bc4a0ad7', // 手机淘宝官方小程序
+          path: `pages/detail/detail?url=${encodeURIComponent(link)}`,
+          name: '淘宝'
+        },
+        'jd': {
+          appId: 'wx91d27dbf599dff74', // 京东购物官方小程序
+          path: `pages/detail/detail?url=${encodeURIComponent(link)}`,
+          name: '京东'
+        },
+        'pdd': {
+          appId: 'wx32540bd863b27570', // 拼多多官方小程序
+          path: `pages/detail/detail?url=${encodeURIComponent(link)}`,
+          name: '拼多多'
+        }
+      };
+
+      const config = platformConfig[platform];
+      
+      if (config) {
+        // 优先尝试跳转到对应的小程序
         try {
           await wx.navigateToMiniProgram({
-            appId: 'wxbda7bbe1bc4a0ad7', // 淘宝小程序
-            path: `pages/detail/detail?url=${encodeURIComponent(link)}`,
+            appId: config.appId,
+            path: config.path,
             extraData: {
-              source: 'bazi_recommendation'
+              source: 'bazi_recommendation',
+              book_id: book.book_id,
+              tracking: Date.now()
             }
           });
+          
+          // 记录成功跳转
+          console.log(`✅ 成功跳转到${config.name}小程序`);
           return;
+          
         } catch (error) {
-          console.warn('跳转淘宝小程序失败，使用备用方案:', error);
+          console.warn(`⚠️ 跳转${config.name}小程序失败，使用备用方案:`, error);
+          
+          // 显示跳转失败提示
+          wx.showToast({
+            title: `无法打开${config.name}`,
+            icon: 'none',
+            duration: 1500
+          });
         }
       }
 
@@ -286,16 +320,21 @@ Component({
           data: link
         });
         
+        const platformName = config ? config.name : platform;
         wx.showModal({
           title: '购买链接已复制',
-          content: `《${book.title}》的购买链接已复制到剪贴板，请在浏览器中打开购买。`,
+          content: `《${book.title}》的${platformName}购买链接已复制到剪贴板，请在浏览器或相应APP中打开购买。`,
           showCancel: false,
           confirmText: '知道了'
         });
+        
+        // 记录备用方案使用
+        console.log(`📋 已复制${platformName}购买链接到剪贴板`);
+        
       } catch (error) {
-        console.error('复制链接失败:', error);
+        console.error('❌ 复制链接失败:', error);
         wx.showToast({
-          title: '操作失败',
+          title: '操作失败，请重试',
           icon: 'none'
         });
       }

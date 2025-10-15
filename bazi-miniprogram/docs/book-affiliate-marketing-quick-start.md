@@ -90,8 +90,7 @@ async onBookClick(e) {
       method: 'POST',
       data: {
         book_id: bookId,
-        platform: platform,
-        user_id: app.globalData.userId || 'anonymous'
+        platform: platform
       }
     });
     

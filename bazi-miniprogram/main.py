@@ -61,6 +61,9 @@ try:
     print("✅ 书籍联盟营销服务导入成功")
 except ImportError as e:
     print(f"ℹ️ 书籍联盟营销功能未安装: {e}")
+except Exception as e:
+    print(f"❌ 书籍联盟营销服务初始化失败: {e}")
+    book_affiliate_service = None
 
 # 检查核心算法是否可用
 ALGORITHMS_AVAILABLE = bool(bazi_calculator and naming_calculator)
