@@ -80,28 +80,7 @@
       </button>
     </view>
     
-    <!-- 广告位 - 使用新的广告组件 -->
-    <view class="ad-section">
-      <!-- Banner广告 -->
-      <ad-banner 
-        page-name="result"
-        custom-class="result-banner-ad"
-        bindadload="onAdLoad"
-        bindaderror="onAdError"
-        bindadclick="onAdClick">
-      </ad-banner>
-      
-      <!-- 激励视频广告 -->
-      <ad-reward-video 
-        page-name="result"
-        button-text="观看视频解锁高级运势"
-        button-class="primary"
-        reward-desc="观看完整视频即可获得详细运势分析"
-        show-reward-desc="{{true}}"
-        bindreward="onVideoReward"
-        binderror="onVideoError">
-      </ad-reward-video>
-    </view>
+    <!-- 广告位 - 已隐藏（微信广告系统自己集成） -->
   </view>
 </view>
 

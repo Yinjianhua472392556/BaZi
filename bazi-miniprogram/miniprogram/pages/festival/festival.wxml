@@ -164,17 +164,7 @@
           </view>
         </view>
 
-        <!-- 5. 节日列表中的原生广告 - 每3个节日后插入一个广告 -->
-        <ad-native 
-          wx:if="{{(index + 1) % 3 === 0 && index < festivals.length - 1}}"
-          ad-type="native"
-          page-name="festival"
-          show-close-button="{{true}}"
-          bind:adload="onNativeAdLoad"
-          bind:adclick="onNativeAdClick"
-          bind:adclose="onNativeAdClose"
-          bind:aderror="onNativeAdError">
-        </ad-native>
+        <!-- 原生广告 - 已隐藏（微信广告系统自己集成） -->
       </block>
     </view>
 

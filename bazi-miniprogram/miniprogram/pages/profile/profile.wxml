@@ -58,16 +58,7 @@
       </view>
       
       <view class="modal-body">
-        <!-- 7. 收藏列表中的横幅广告 -->
-        <ad-banner 
-          wx:if="{{collectedNames.length > 0}}"
-          ad-type="banner"
-          page-name="profile-collection"
-          bind:adload="onBannerAdLoad"
-          bind:adclick="onBannerAdClick"
-          bind:adclose="onBannerAdClose"
-          bind:aderror="onBannerAdError">
-        </ad-banner>
+        <!-- 横幅广告 - 已隐藏（微信广告系统自己集成） -->
 
         <view wx:if="{{collectedNames.length === 0}}" class="empty-state">
           <view class="empty-icon">📝</view>

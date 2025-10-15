@@ -107,19 +107,7 @@
       </radio-group>
     </view>
 
-    <!-- 激励视频广告 - 开始测算前 -->
-    <view class="ad-section">
-      <ad-reward-video 
-        id="indexRewardVideo"
-        page-name="index" 
-        button-text="观看视频获得免费测算机会"
-        button-class="secondary"
-        reward-desc="观看完整视频即可获得额外测算次数"
-        show-reward-desc="{{true}}"
-        bindreward="onVideoReward"
-        binderror="onVideoError">
-      </ad-reward-video>
-    </view>
+    <!-- 激励视频广告 - 已隐藏（微信广告系统自己集成） -->
 
     <!-- 测算按钮 -->
     <button class="btn-primary" 

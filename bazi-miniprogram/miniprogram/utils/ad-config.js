@@ -7,14 +7,14 @@ const AD_CONFIG = {
   // 核心开关：true=模拟广告，false=真实广告
   simulationMode: true,
   
-  // 全局广告开关 - 临时关闭所有广告
+  // 全局广告开关 - 永久关闭所有广告（微信广告系统自己集成）
   globalEnabled: false,
   
   // 统一广告单元配置
   adUnits: {
     // 横幅广告
     banner: {
-      enabled: true,
+      enabled: false,  // 已禁用 - 微信广告系统自己集成
       // 模拟配置
       mockConfig: {
         title: "精准八字测算",
@@ -32,7 +32,7 @@ const AD_CONFIG = {
     
     // 激励视频广告
     rewardVideo: {
-      enabled: true,
+      enabled: false,  // 已禁用 - 微信广告系统自己集成
       // 模拟配置
       mockConfig: {
         duration: 15000,  // 模拟15秒视频
@@ -49,7 +49,7 @@ const AD_CONFIG = {
     
     // 插屏广告
     interstitial: {
-      enabled: true,
+      enabled: false,  // 已禁用 - 微信广告系统自己集成
       // 模拟配置
       mockConfig: {
         title: "专业起名服务",
@@ -67,7 +67,7 @@ const AD_CONFIG = {
     
     // 原生广告（用于列表插入）
     native: {
-      enabled: true,
+      enabled: false,  // 已禁用 - 微信广告系统自己集成
       // 模拟配置
       mockConfig: {
         title: "AI智能起名",

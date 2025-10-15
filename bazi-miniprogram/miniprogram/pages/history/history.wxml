@@ -5,16 +5,7 @@
     
     <!-- 历史记录列表 -->
     <view wx:if="{{historyList.length > 0}}">
-      <!-- Banner广告 - 有历史记录时显示 -->
-      <view class="ad-section">
-        <ad-banner 
-          page-name="history"
-          custom-class="history-banner-ad"
-          bindadload="onAdLoad"
-          bindaderror="onAdError"
-          bindadclick="onAdClick">
-        </ad-banner>
-      </view>
+      <!-- Banner广告 - 已隐藏（微信广告系统自己集成） -->
 
       <view class="card history-item" wx:for="{{historyList}}" wx:key="id" bindtap="viewResult" data-item="{{item}}">
         <!-- 头部信息 -->
