@@ -110,7 +110,7 @@ class BookAffiliateService:
             "timestamp": time.time()
         }
     
-    async def generate_affiliate_link(self, book_id: str, platform: str, user_id: str) -> dict:
+    async def generate_affiliate_link(self, book_id: str, platform: str) -> dict:
         """生成联盟推广链接"""
         if platform not in self.config['platforms']:
             return {"success": False, "error": "不支持的平台"}
@@ -119,16 +119,13 @@ class BookAffiliateService:
         if not config['enabled']:
             return {"success": False, "error": "平台暂不可用"}
         
-        # 生成追踪ID
-        tracking_id = self._generate_tracking_id(user_id, book_id)
-        
         try:
             if platform == 'taobao':
-                link = await self._generate_taobao_link(book_id, tracking_id)
+                link = await self._generate_taobao_link(book_id)
             elif platform == 'jd':
-                link = await self._generate_jd_link(book_id, tracking_id)
+                link = await self._generate_jd_link(book_id)
             elif platform == 'pdd':
-                link = await self._generate_pdd_link(book_id, tracking_id)
+                link = await self._generate_pdd_link(book_id)
             else:
                 return {"success": False, "error": "平台暂未实现"}
             
@@ -139,7 +136,10 @@ class BookAffiliateService:
                     "appId": config["miniprogram_appid"],
                     "path": f"pages/detail/detail?id={book_id}"
                 },
-                "tracking_id": tracking_id
+                "book_info": {
+                    "book_id": book_id,
+                    "platform": platform
+                }
             }
         except Exception as e:
             return {"success": False, "error": f"链接生成失败: {str(e)}"}
@@ -203,8 +203,7 @@ async def generate_affiliate_link(request_data: dict):
     if book_affiliate_service:
         return await book_affiliate_service.generate_affiliate_link(
             request_data.get('book_id'),
-            request_data.get('platform'),
-            request_data.get('user_id')
+            request_data.get('platform')
         )
     return {"success": False, "message": "联盟营销服务不可用"}
 ```
@@ -259,8 +258,7 @@ async onBookClick(e) {
       method: 'POST',
       data: {
         book_id: bookId,
-        platform: platform,
-        user_id: app.globalData.userId || 'anonymous'
+        platform: platform
       }
     });
     
