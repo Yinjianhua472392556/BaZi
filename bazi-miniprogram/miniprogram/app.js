@@ -41,7 +41,8 @@ App({
   
   globalData: {
     userInfo: null,
-    apiBaseUrl: 'http://119.91.146.128:8001',  // 临时使用IP地址（备案期间）
+    apiBaseUrl: 'http://10.60.20.222:8001',  // 本地调试服务器
+    // apiBaseUrl: 'http://119.91.146.128:8001',  // 临时使用IP地址（备案期间）
     // 正式域名：'https://api.bazi365.top' （备案完成后恢复）
     baziHistory: [],  // 八字测算历史记录
     baziResult: null,  // 当前八字测算结果
