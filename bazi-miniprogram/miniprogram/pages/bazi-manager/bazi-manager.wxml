@@ -1,0 +1,154 @@
+<!--bazi-manager.wxml-->
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <view class="page-title">八字管理</view>
+    <view class="page-subtitle">管理您的八字记录和自定义备注</view>
+  </view>
+
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    
+    <!-- 八字列表 -->
+    <view class="bazi-list" wx:if="{{baziList.length > 0}}">
+      <view class="bazi-item" wx:for="{{baziList}}" wx:key="fingerprint">
+        <!-- 八字信息头部 -->
+        <view class="bazi-header">
+          <view class="bazi-info">
+            <view class="bazi-display-name">
+              {{item.display_name}}
+              <text class="primary-badge" wx:if="{{item.is_primary}}">主要</text>
+            </view>
+            <view class="bazi-pillars">
+              {{item.bazi_result.year_pillar}} {{item.bazi_result.month_pillar}} 
+              {{item.bazi_result.day_pillar}} {{item.bazi_result.hour_pillar}}
+            </view>
+            <view class="bazi-birth-info">
+              {{item.birthInfo.date}} {{item.birthInfo.time}} 
+              ({{item.birthInfo.gender === 'male' ? '男' : '女'}})
+            </view>
+          </view>
+          <view class="bazi-actions">
+            <button class="action-btn primary-btn" 
+                    wx:if="{{!item.is_primary}}" 
+                    bindtap="setPrimary" 
+                    data-fingerprint="{{item.fingerprint}}">
+              设为主要
+            </button>
+            <button class="action-btn edit-btn" 
+                    bindtap="editNote" 
+                    data-fingerprint="{{item.fingerprint}}"
+                    data-current-note="{{item.has_custom_note ? item.display_name : ''}}">
+              {{item.has_custom_note ? '编辑备注' : '添加备注'}}
+            </button>
+          </view>
+        </view>
+
+        <!-- 运势预览 -->
+        <view class="fortune-preview" wx:if="{{item.daily_fortune}}">
+          <view class="fortune-score-row">
+            <view class="score-item">
+              <text class="score-label">综合</text>
+              <view class="stars">
+                <text class="star {{index < item.daily_fortune.overall_score ? 'filled' : ''}}" 
+                      wx:for="{{[1,2,3,4,5]}}" wx:key="index">★</text>
+              </view>
+            </view>
+            <view class="score-item">
+              <text class="score-label">财运</text>
+              <text class="score-value">{{item.daily_fortune.detailed_scores.wealth}}分</text>
+            </view>
+            <view class="score-item">
+              <text class="score-label">事业</text>
+              <text class="score-value">{{item.daily_fortune.detailed_scores.career}}分</text>
+            </view>
+            <view class="score-item">
+              <text class="score-label">健康</text>
+              <text class="score-value">{{item.daily_fortune.detailed_scores.health}}分</text>
+            </view>
+          </view>
+          
+          <!-- 幸运元素 -->
+          <view class="lucky-elements">
+            <text class="lucky-item">幸运色: {{item.daily_fortune.lucky_elements.lucky_color}}</text>
+            <text class="lucky-item">幸运数字: {{item.daily_fortune.lucky_elements.lucky_number}}</text>
+            <text class="lucky-item">幸运方位: {{item.daily_fortune.lucky_elements.lucky_direction}}</text>
+          </view>
+        </view>
+
+        <!-- 操作按钮 -->
+        <view class="item-actions">
+          <button class="action-btn detail-btn" 
+                  bindtap="viewDetail" 
+                  data-fingerprint="{{item.fingerprint}}">
+            查看详情
+          </button>
+          <button class="action-btn delete-btn" 
+                  bindtap="deleteNote" 
+                  data-fingerprint="{{item.fingerprint}}"
+                  wx:if="{{item.has_custom_note}}">
+            删除备注
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{baziList.length === 0}}">
+      <view class="empty-icon">📊</view>
+      <view class="empty-title">暂无八字记录</view>
+      <view class="empty-desc">请先在首页测算八字</view>
+      <button class="btn-primary" bindtap="goToHome">去测算八字</button>
+    </view>
+
+    <!-- 统计信息 -->
+    <view class="stats-section" wx:if="{{baziList.length > 0}}">
+      <view class="stats-title">统计信息</view>
+      <view class="stats-grid">
+        <view class="stats-item">
+          <view class="stats-number">{{baziList.length}}</view>
+          <view class="stats-label">八字记录</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-number">{{customNotesCount}}</view>
+          <view class="stats-label">自定义备注</view>
+        </view>
+        <view class="stats-item">
+          <view class="stats-number">{{todayDate}}</view>
+          <view class="stats-label">今日日期</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 管理操作 -->
+    <view class="management-actions" wx:if="{{baziList.length > 0}}">
+      <button class="btn-secondary" bindtap="refreshAllFortunes">刷新所有运势</button>
+      <button class="btn-secondary" bindtap="exportData">导出数据</button>
+    </view>
+  </view>
+</view>
+
+<!-- 编辑备注弹窗 -->
+<view class="modal-overlay" wx:if="{{showEditModal}}" bindtap="closeEditModal">
+  <view class="modal-content" catchtap="">
+    <view class="modal-header">
+      <view class="modal-title">编辑备注</view>
+      <button class="close-btn" bindtap="closeEditModal">×</button>
+    </view>
+    <view class="modal-body">
+      <view class="input-group">
+        <label class="input-label">自定义备注</label>
+        <input class="input-field" 
+               placeholder="请输入自定义备注（如：爸爸、妈妈、自己等）"
+               value="{{currentNote}}"
+               bindinput="onNoteInput"
+               maxlength="20"/>
+        <view class="input-hint">最多20个字符，用于区分不同的八字记录</view>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn-secondary" bindtap="closeEditModal">取消</button>
+      <button class="btn-primary" bindtap="saveNote">保存</button>
+    </view>
+  </view>
+</view>

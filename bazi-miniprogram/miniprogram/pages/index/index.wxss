@@ -415,3 +415,661 @@
     padding: 6rpx 10rpx;
   }
 }
+
+/* 每日运势卡片样式 */
+.daily-fortune-card {
+  background: linear-gradient(135deg, #FFF8DC 0%, #F0F8FF 100%);
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 6rpx 20rpx rgba(200, 134, 13, 0.15);
+  border: 2rpx solid #E6E6FA;
+  position: relative;
+  overflow: hidden;
+}
+
+.daily-fortune-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4rpx;
+  background: linear-gradient(90deg, #C8860D 0%, #DAA520 50%, #FF6B6B 100%);
+}
+
+/* 运势卡片头部 */
+.fortune-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 1rpx solid #E0E0E0;
+}
+
+.fortune-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+}
+
+.fortune-date {
+  font-size: 24rpx;
+  color: #666;
+  background: #FFF;
+  padding: 8rpx 15rpx;
+  border-radius: 15rpx;
+  border: 1rpx solid #E0E0E0;
+}
+
+/* 通用运势样式 */
+.universal-fortune {
+  margin-bottom: 25rpx;
+}
+
+.fortune-section {
+  background: #FFF;
+  border-radius: 15rpx;
+  padding: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.fortune-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15rpx;
+}
+
+.score-label {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.stars {
+  display: flex;
+  gap: 4rpx;
+}
+
+.star {
+  font-size: 24rpx;
+  color: #DDD;
+  transition: color 0.3s ease;
+}
+
+.star.filled {
+  color: #FFD700;
+  text-shadow: 0 0 4rpx rgba(255, 215, 0, 0.6);
+}
+
+.fortune-details {
+  display: flex;
+  gap: 20rpx;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  font-size: 24rpx;
+  color: #666;
+  background: #F8F9FA;
+  padding: 8rpx 12rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #E9ECEF;
+}
+
+/* 个人专属运势样式 */
+.personal-fortunes {
+  margin-bottom: 25rpx;
+}
+
+.fortune-section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+  margin-bottom: 15rpx;
+  padding-left: 10rpx;
+  border-left: 4rpx solid #C8860D;
+}
+
+.personal-fortune-item {
+  background: #FFF;
+  border-radius: 15rpx;
+  padding: 20rpx;
+  margin-bottom: 15rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  border: 1rpx solid #F0F0F0;
+}
+
+.personal-fortune-item:last-child {
+  margin-bottom: 0;
+}
+
+.personal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15rpx;
+  padding-bottom: 10rpx;
+  border-bottom: 1rpx solid #F0F0F0;
+}
+
+.person-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  max-width: 200rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-score {
+  display: flex;
+  gap: 3rpx;
+}
+
+.personal-details {
+  margin-top: 15rpx;
+}
+
+.score-row {
+  display: flex;
+  gap: 15rpx;
+  margin-bottom: 12rpx;
+  flex-wrap: wrap;
+}
+
+.score-item {
+  font-size: 22rpx;
+  color: #666;
+  background: #F8F9FA;
+  padding: 6rpx 10rpx;
+  border-radius: 10rpx;
+  border: 1rpx solid #E9ECEF;
+  flex: 1;
+  text-align: center;
+  min-width: 80rpx;
+}
+
+.suggestions {
+  margin-bottom: 10rpx;
+}
+
+.suggestion-item {
+  display: inline-block;
+  font-size: 22rpx;
+  color: #28A745;
+  background: #F8FFF9;
+  padding: 6rpx 10rpx;
+  border-radius: 10rpx;
+  margin-right: 8rpx;
+  margin-bottom: 6rpx;
+  border: 1rpx solid #E8F5E8;
+}
+
+.warnings {
+  margin-bottom: 10rpx;
+}
+
+.warning-item {
+  display: inline-block;
+  font-size: 22rpx;
+  color: #DC3545;
+  background: #FFF5F5;
+  padding: 6rpx 10rpx;
+  border-radius: 10rpx;
+  margin-right: 8rpx;
+  margin-bottom: 6rpx;
+  border: 1rpx solid #F5E6E8;
+}
+
+/* 提示信息样式 */
+.fortune-hint {
+  text-align: center;
+  padding: 30rpx 20rpx;
+  background: #F8F9FA;
+  border-radius: 15rpx;
+  border: 2rpx dashed #DDD;
+  margin-bottom: 25rpx;
+}
+
+.hint-text {
+  font-size: 26rpx;
+  color: #666;
+  font-style: italic;
+}
+
+/* 运势操作按钮样式 */
+.fortune-actions {
+  display: flex;
+  gap: 15rpx;
+  justify-content: center;
+  margin-top: 20rpx;
+}
+
+.action-btn {
+  background: linear-gradient(135deg, #C8860D 0%, #DAA520 100%) !important;
+  color: white !important;
+  font-size: 24rpx;
+  font-weight: 600;
+  padding: 16rpx 30rpx !important;
+  border-radius: 25rpx;
+  border: none;
+  box-shadow: 0 4rpx 12rpx rgba(200, 134, 13, 0.3);
+  min-width: 120rpx;
+  line-height: 1.2;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.action-btn:active {
+  background: linear-gradient(135deg, #B8760C 0%, #CA9510 100%) !important;
+  transform: scale(0.96);
+  box-shadow: 0 2rpx 8rpx rgba(200, 134, 13, 0.5);
+}
+
+/* 响应式适配 */
+@media (max-width: 375px) {
+  .daily-fortune-card {
+    padding: 20rpx;
+    margin-bottom: 20rpx;
+  }
+  
+  .fortune-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10rpx;
+  }
+  
+  .fortune-title {
+    font-size: 28rpx;
+  }
+  
+  .personal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8rpx;
+  }
+  
+  .score-row {
+    gap: 8rpx;
+  }
+  
+  .score-item {
+    font-size: 20rpx;
+    padding: 4rpx 8rpx;
+    min-width: 70rpx;
+  }
+  
+  .fortune-actions {
+    flex-direction: column;
+    gap: 10rpx;
+  }
+  
+  .action-btn {
+    width: 100%;
+  }
+}
+
+/* 动画效果 */
+.daily-fortune-card {
+  animation: fadeInSlide 0.6s ease-out;
+}
+
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.personal-fortune-item {
+  animation: itemSlideIn 0.4s ease-out;
+}
+
+@keyframes itemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-15rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 星星闪烁动画 */
+.star.filled {
+  animation: starTwinkle 2s ease-in-out infinite;
+}
+
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* 新增：家庭运势概览样式 */
+.family-overview {
+  background: linear-gradient(135deg, #FFF8DC 0%, #F0F8FF 100%);
+  border-radius: 20rpx;
+  padding: 25rpx;
+  margin-bottom: 25rpx;
+  border: 2rpx solid #E6E6FA;
+  box-shadow: 0 4rpx 15rpx rgba(0, 0, 0, 0.08);
+}
+
+.family-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding-bottom: 15rpx;
+  border-bottom: 1rpx solid #E0E0E0;
+}
+
+.family-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+}
+
+.family-stats {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 22rpx;
+  color: #666;
+}
+
+.stat-item {
+  background: #FFF;
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #E0E0E0;
+}
+
+.stat-separator {
+  color: #CCC;
+}
+
+.family-score-display {
+  display: flex;
+  align-items: center;
+  gap: 25rpx;
+  margin-bottom: 20rpx;
+}
+
+.score-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 120rpx;
+  height: 120rpx;
+  background: linear-gradient(135deg, #C8860D 0%, #DAA520 100%);
+  border-radius: 50%;
+  color: white;
+  box-shadow: 0 6rpx 20rpx rgba(200, 134, 13, 0.3);
+}
+
+.score-number {
+  font-size: 36rpx;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 20rpx;
+  opacity: 0.9;
+  margin-top: 4rpx;
+}
+
+.family-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.family-lucky, .active-members {
+  font-size: 24rpx;
+  color: #666;
+  padding: 8rpx 15rpx;
+  background: #FFF;
+  border-radius: 12rpx;
+  border: 1rpx solid #E9ECEF;
+}
+
+.family-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.family-suggestions .suggestion-item {
+  display: block;
+  font-size: 22rpx;
+  color: #28A745;
+  background: #F8FFF9;
+  padding: 8rpx 12rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #E8F5E8;
+  line-height: 1.4;
+}
+
+/* 新增：加载状态样式 */
+.fortune-loading {
+  text-align: center;
+  padding: 40rpx 20rpx;
+  color: #666;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #C8860D;
+  font-weight: 500;
+}
+
+/* 新增：更新时间样式 */
+.fortune-update {
+  margin-top: 8rpx;
+}
+
+.update-time {
+  font-size: 20rpx;
+  color: #999;
+  background: #F8F9FA;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+}
+
+/* 新增：增强的个人运势列表样式 */
+.fortune-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #2F4F4F;
+  margin-bottom: 15rpx;
+  padding-left: 10rpx;
+  border-left: 4rpx solid #C8860D;
+}
+
+.section-title {
+  flex: 1;
+}
+
+.members-count {
+  font-size: 22rpx;
+  color: #666;
+  font-weight: normal;
+  background: #FFF;
+  padding: 4rpx 10rpx;
+  border-radius: 10rpx;
+  border: 1rpx solid #E0E0E0;
+}
+
+/* 新增：评分文本样式 */
+.score-text {
+  font-size: 20rpx;
+  color: #666;
+  margin-left: 8rpx;
+  font-weight: 500;
+}
+
+/* 新增：幸运元素样式 */
+.lucky-elements {
+  display: flex;
+  gap: 10rpx;
+  margin-bottom: 10rpx;
+  flex-wrap: wrap;
+}
+
+.lucky-item {
+  font-size: 22rpx;
+  color: #C8860D;
+  background: #FFF8DC;
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #F0E68C;
+  font-weight: 500;
+}
+
+/* 新增：运势错误状态样式 */
+.fortune-error {
+  text-align: center;
+  padding: 15rpx;
+  background: #FFF5F5;
+  border-radius: 10rpx;
+  border: 1rpx solid #F5E6E8;
+}
+
+.error-text {
+  font-size: 22rpx;
+  color: #DC3545;
+}
+
+/* 新增：错误提示样式 */
+.fortune-error-display {
+  text-align: center;
+  padding: 25rpx;
+  background: #FFF5F5;
+  border-radius: 15rpx;
+  border: 2rpx solid #F5E6E8;
+  margin-bottom: 20rpx;
+}
+
+.error-message {
+  font-size: 24rpx;
+  color: #DC3545;
+  margin-bottom: 15rpx;
+  display: block;
+}
+
+.retry-btn {
+  background: #DC3545 !important;
+  color: white !important;
+  font-size: 22rpx;
+  padding: 12rpx 24rpx !important;
+  border-radius: 20rpx;
+  border: none;
+  box-shadow: 0 2rpx 8rpx rgba(220, 53, 69, 0.3);
+}
+
+.retry-btn::after {
+  border: none;
+}
+
+/* 新增：增强的提示信息样式 */
+.hint-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  align-items: center;
+}
+
+.hint-desc {
+  font-size: 22rpx;
+  color: #999;
+  font-style: normal;
+}
+
+/* 新增：按钮状态样式 */
+.action-btn.primary {
+  background: linear-gradient(135deg, #C8860D 0%, #DAA520 100%) !important;
+}
+
+.action-btn.secondary {
+  background: white !important;
+  color: #C8860D !important;
+  border: 2rpx solid #C8860D;
+}
+
+.action-btn.secondary:active {
+  background: #FFF8DC !important;
+}
+
+.action-btn[disabled] {
+  background: #DDD !important;
+  color: #999 !important;
+  box-shadow: none !important;
+  border-color: #DDD !important;
+}
+
+.action-btn[disabled]:active {
+  transform: none !important;
+}
+
+
+/* 响应式适配 - 家庭运势 */
+@media (max-width: 375px) {
+  .family-score-display {
+    flex-direction: column;
+    align-items: center;
+    gap: 15rpx;
+    text-align: center;
+  }
+  
+  .score-circle {
+    width: 100rpx;
+    height: 100rpx;
+  }
+  
+  .score-number {
+    font-size: 30rpx;
+  }
+  
+  .family-details {
+    width: 100%;
+  }
+  
+  .family-stats {
+    flex-direction: column;
+    gap: 6rpx;
+  }
+  
+  .fortune-section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6rpx;
+  }
+  
+  .lucky-elements {
+    justify-content: center;
+  }
+}

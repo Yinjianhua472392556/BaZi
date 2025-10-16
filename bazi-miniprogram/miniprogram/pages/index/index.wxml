@@ -11,6 +11,133 @@
 
   <!-- 主要内容区域 -->
   <view class="main-content">
+    <!-- 每日运势卡片 -->
+    <view class="daily-fortune-card" wx:if="{{showDailyFortune}}">
+      <view class="fortune-header">
+        <view class="fortune-title">🌟 今日运势</view>
+        <view class="fortune-date">{{todayDate}}</view>
+        <view class="fortune-update" wx:if="{{lastFortuneUpdate}}">
+          <text class="update-time">更新时间: {{lastFortuneUpdate}}</text>
+        </view>
+      </view>
+      
+      <!-- 加载状态 -->
+      <view class="fortune-loading" wx:if="{{fortuneLoading}}">
+        <text class="loading-text">🔄 正在计算运势...</text>
+      </view>
+      
+      <!-- 家庭运势概览 -->
+      <view class="family-overview" wx:if="{{familyOverview && familyOverview.totalMembers > 0 && !fortuneLoading}}">
+        <view class="family-header">
+          <text class="family-title">👨‍👩‍👧‍👦 家庭运势概览</text>
+          <view class="family-stats">
+            <text class="stat-item">{{familyOverview.totalMembers}}人</text>
+            <text class="stat-separator">|</text>
+            <text class="stat-item">平均{{familyOverview.averageScore}}分</text>
+          </view>
+        </view>
+        
+        <view class="family-score-display">
+          <view class="score-circle">
+            <text class="score-number">{{familyOverview.averageScore}}</text>
+            <text class="score-label">家庭运势</text>
+          </view>
+          <view class="family-details">
+            <text class="family-lucky">🍀 家庭幸运色: {{familyOverview.familyLuckyColor}}</text>
+            <text class="active-members">📈 活跃成员: {{familyOverview.activeMembers}}人</text>
+          </view>
+        </view>
+        
+        <view class="family-suggestions" wx:if="{{familyOverview.suggestions.length > 0}}">
+          <text class="suggestion-item" wx:for="{{familyOverview.suggestions}}" wx:key="index">
+            💡 {{item}}
+          </text>
+        </view>
+      </view>
+      
+      <!-- 通用运势（无家庭成员时显示） -->
+      <view class="universal-fortune" wx:if="{{universalFortune && familyOverview.totalMembers === 0 && !fortuneLoading}}">
+        <view class="fortune-section">
+          <view class="fortune-score">
+            <text class="score-label">通用运势</text>
+            <view class="stars">
+              <text class="star {{index < universalFortune.overall_score ? 'filled' : ''}}" 
+                    wx:for="{{[1,2,3,4,5]}}" wx:key="index">★</text>
+            </view>
+          </view>
+          <view class="fortune-details">
+            <text class="detail-item">🍀 幸运色：{{universalFortune.lucky_color}}</text>
+            <text class="detail-item">🔢 幸运数字：{{universalFortune.lucky_numbers[0] || 8}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 个人专属运势列表 -->
+      <view class="personal-fortunes" wx:if="{{membersWithFortune.length > 0 && !fortuneLoading}}">
+        <view class="fortune-section-title">
+          <text class="section-title">👤 家庭成员运势</text>
+          <text class="members-count">({{membersWithFortune.length}}人)</text>
+        </view>
+        
+        <view class="personal-fortune-item" wx:for="{{membersWithFortune}}" wx:key="id">
+          <view class="personal-header">
+            <text class="person-name">{{item.name}}</text>
+            <view class="person-score">
+              <text class="star {{idx < (item.daily_fortune.overall_score || 0) ? 'filled' : ''}}" 
+                    wx:for="{{[1,2,3,4,5]}}" wx:key="*this" wx:for-index="idx">★</text>
+              <text class="score-text">{{item.daily_fortune.overall_score || 0}}/5</text>
+            </view>
+          </view>
+          
+          <view class="personal-details" wx:if="{{item.hasValidFortune}}">
+            <view class="score-row">
+              <text class="score-item">💰 财运: {{item.daily_fortune.detailed_scores.wealth || 0}}分</text>
+              <text class="score-item">💼 事业: {{item.daily_fortune.detailed_scores.career || 0}}分</text>
+              <text class="score-item">💪 健康: {{item.daily_fortune.detailed_scores.health || 0}}分</text>
+            </view>
+            
+            <view class="lucky-elements" wx:if="{{item.daily_fortune.lucky_elements}}">
+              <text class="lucky-item">🍀 {{item.daily_fortune.lucky_elements.lucky_color}}</text>
+              <text class="lucky-item">🔢 {{item.daily_fortune.lucky_elements.lucky_numbers[0] || 8}}</text>
+            </view>
+            
+            <view class="suggestions" wx:if="{{item.daily_fortune.suggestions && item.daily_fortune.suggestions.length > 0}}">
+              <text class="suggestion-item" wx:for="{{item.daily_fortune.suggestions}}" wx:key="*this" wx:for-item="suggestion">
+                ✅ {{suggestion}}
+              </text>
+            </view>
+          </view>
+          
+          <view class="fortune-error" wx:if="{{!item.hasValidFortune}}">
+            <text class="error-text">⚠️ 运势计算失败</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 提示信息 -->
+      <view class="fortune-hint" wx:if="{{familyOverview.totalMembers === 0 && !fortuneLoading}}">
+        <view class="hint-content">
+          <text class="hint-text">💡 测算八字后获取专属运势</text>
+          <text class="hint-desc">加入家庭成员，获得完整的家庭运势分析</text>
+        </view>
+      </view>
+      
+      <!-- 错误提示 -->
+      <view class="fortune-error-display" wx:if="{{fortuneError}}">
+        <text class="error-message">⚠️ {{fortuneError}}</text>
+        <button class="retry-btn" bindtap="refreshFortune">重试</button>
+      </view>
+      
+      <!-- 管理按钮 -->
+      <view class="fortune-actions">
+        <button class="action-btn primary" bindtap="refreshFortune" disabled="{{fortuneLoading}}">
+          {{fortuneLoading ? '计算中...' : '刷新运势'}}
+        </button>
+        <button class="action-btn secondary" bindtap="manageBazi">管理家庭</button>
+      </view>
+      
+    </view>
+
     <view class="card">
     <view class="subtitle">请输入您的出生信息</view>
     

@@ -1,6 +1,10 @@
 // index.js
 const app = getApp()
 const AdManager = require('../../utils/ad-manager')
+const BaziDisplayManager = require('../../utils/bazi-display-manager')
+const FamilyBaziManager = require('../../utils/family-bazi-manager')
+const BaziDataAdapter = require('../../utils/bazi-data-adapter')
+const EnhancedFortuneCalculator = require('../../utils/enhanced-fortune-calculator')
 
 Page({
   data: {
@@ -25,7 +29,13 @@ Page({
     
     // 对应日期显示
     correspondingLunarDate: '',
-    correspondingSolarDate: ''
+    correspondingSolarDate: '',
+    
+    // 每日运势相关
+    showDailyFortune: true,
+    todayDate: '',
+    universalFortune: null,
+    personalFortunes: []
   },
 
   onLoad() {
@@ -63,6 +73,250 @@ Page({
     })
     
     console.log('初始化完成，农历年份数组长度:', lunarYears.length) // 调试日志
+    
+    // 初始化每日运势
+    this.initDailyFortune()
+  },
+
+  // 初始化每日运势
+  initDailyFortune() {
+    const today = new Date()
+    const todayStr = `${today.getMonth() + 1}月${today.getDate()}日`
+    
+    this.setData({
+      todayDate: todayStr
+    })
+    
+    // 加载运势数据
+    this.loadDailyFortune()
+  },
+
+  // 加载每日运势 - 使用增强运势计算器
+  async loadDailyFortune() {
+    console.log('🔄 开始加载增强运势系统...')
+    
+    try {
+      // 初始化增强运势计算器
+      if (!this.fortuneCalculator) {
+        this.fortuneCalculator = new EnhancedFortuneCalculator()
+      }
+      
+      // 获取所有家庭成员
+      const allMembers = FamilyBaziManager.getAllMembers()
+      console.log('👨‍👩‍👧‍👦 家庭成员总数:', allMembers.length)
+      
+      if (allMembers.length === 0) {
+        // 没有家庭成员，显示通用运势和提示
+        const universalFortune = BaziDisplayManager.getUniversalDailyFortune()
+        
+        this.setData({
+          showDailyFortune: true,
+          familyOverview: {
+            totalMembers: 0,
+            averageScore: 0,
+            suggestions: ['测算八字后获得专属运势', '添加家庭成员获得家庭运势分析'],
+            familyLuckyColor: '绿色',
+            activeMembers: 0
+          },
+          membersWithFortune: [],
+          universalFortune: universalFortune,
+          personalFortunes: [],
+          fortuneLoading: false
+        })
+        return
+      }
+      
+      // 设置加载状态
+      this.setData({ fortuneLoading: true })
+      
+      // 准备批量运势计算数据
+      const membersData = allMembers.map(member => ({
+        id: member.id,
+        name: member.name,
+        bazi_data: BaziDataAdapter.extractFortuneCalculatorData(member.baziData)
+      }))
+      
+      console.log('🧮 准备批量计算运势:', membersData.length, '个成员')
+      
+      // 使用增强运势计算器进行批量计算
+      const batchResult = await this.fortuneCalculator.calculateBatchFortune(membersData)
+      
+      if (batchResult.success) {
+        console.log('✅ 批量运势计算成功，数据来源:', batchResult.source)
+        
+        const familyData = batchResult.data
+        const membersWithFortune = familyData.members_fortune || []
+        const familyOverview = familyData.family_overview || {}
+        
+        // 增强显示数据
+        const enhancedMembers = membersWithFortune.map(memberFortune => {
+          const memberInfo = allMembers.find(m => m.id === memberFortune.member_id)
+          return {
+            ...memberInfo,
+            daily_fortune: memberFortune.fortune,
+            hasValidFortune: memberFortune.has_valid_fortune,
+            fortuneSource: batchResult.source
+          }
+        })
+        
+        // 获取通用运势作为补充
+        const universalFortune = BaziDisplayManager.getUniversalDailyFortune()
+        
+        this.setData({
+          showDailyFortune: true,
+          familyOverview: {
+            ...familyOverview,
+            lastUpdated: batchResult.timestamp,
+            dataSource: batchResult.source
+          },
+          membersWithFortune: enhancedMembers,
+          universalFortune: universalFortune,
+          personalFortunes: enhancedMembers, // 保持兼容性
+          fortuneLoading: false,
+          lastFortuneUpdate: this.formatUpdateTime()
+        })
+        
+        console.log('✅ 增强运势系统加载完成:', {
+          totalMembers: familyOverview.total_members,
+          averageScore: familyOverview.average_score,
+          activeMembers: familyOverview.active_members,
+          dataSource: batchResult.source
+        })
+        
+      } else {
+        // API失败，显示错误状态
+        console.log('⚠️ 运势API服务不可用:', batchResult.error)
+        
+        const universalFortune = BaziDisplayManager.getUniversalDailyFortune()
+        
+        this.setData({
+          showDailyFortune: true,
+          familyOverview: {
+            totalMembers: allMembers.length,
+            averageScore: 0,
+            suggestions: ['运势服务暂时不可用，请稍后重试', '或检查网络连接状态'],
+            familyLuckyColor: '绿色',
+            activeMembers: 0,
+            serviceError: true
+          },
+          membersWithFortune: [],
+          universalFortune: universalFortune,
+          personalFortunes: [],
+          fortuneLoading: false,
+          fortuneError: batchResult.error || '运势服务暂时不可用'
+        })
+        
+        // 显示错误提示
+        wx.showToast({
+          title: '运势服务暂时不可用',
+          icon: 'none',
+          duration: 3000
+        })
+      }
+      
+    } catch (error) {
+      console.error('❌ 增强运势系统加载失败:', error)
+      
+      // 降级到原有的家庭管理器
+      console.log('🔄 降级到原有运势系统...')
+      try {
+        const familyOverview = FamilyBaziManager.getFamilyFortuneOverview()
+        const membersWithFortune = FamilyBaziManager.getAllMembersFortuneToday()
+        const universalFortune = BaziDisplayManager.getUniversalDailyFortune()
+        
+        this.setData({
+          showDailyFortune: true,
+          familyOverview: familyOverview,
+          membersWithFortune: membersWithFortune,
+          universalFortune: universalFortune,
+          personalFortunes: membersWithFortune,
+          fortuneLoading: false,
+          fortuneError: error.message
+        })
+        
+        console.log('✅ 降级运势系统加载完成')
+        
+      } catch (fallbackError) {
+        console.error('❌ 降级运势系统也失败:', fallbackError)
+        
+        // 最终降级：显示基础数据
+        this.setData({
+          showDailyFortune: true,
+          familyOverview: {
+            totalMembers: 0,
+            averageScore: 0,
+            suggestions: ['运势系统暂时不可用，请稍后重试'],
+            familyLuckyColor: '绿色',
+            activeMembers: 0
+          },
+          membersWithFortune: [],
+          universalFortune: {
+            overall_score: 3,
+            lucky_color: '蓝色',
+            lucky_numbers: [8]
+          },
+          personalFortunes: [],
+          fortuneLoading: false,
+          fortuneError: '运势计算服务暂时不可用'
+        })
+      }
+    }
+  },
+
+  // 刷新运势 - 使用增强运势计算器
+  async refreshFortune() {
+    wx.showLoading({
+      title: '刷新运势中...'
+    })
+    
+    try {
+      // 清除所有运势缓存
+      if (this.fortuneCalculator) {
+        this.fortuneCalculator.clearAllCache()
+      }
+      wx.removeStorageSync('dailyFortuneCache')
+      wx.removeStorageSync('universalFortuneCache')
+      
+      console.log('🧹 运势缓存已清除')
+      
+      // 重新加载运势
+      await this.loadDailyFortune()
+      
+      wx.hideLoading()
+      wx.showToast({
+        title: '运势已刷新',
+        icon: 'success'
+      })
+      
+      console.log('✅ 运势刷新完成')
+      
+    } catch (error) {
+      console.error('❌ 运势刷新失败:', error)
+      wx.hideLoading()
+      wx.showToast({
+        title: '刷新失败，请稍后重试',
+        icon: 'none'
+      })
+    }
+  },
+
+  // 管理八字
+  manageBazi() {
+    wx.navigateTo({
+      url: '/pages/bazi-manager/bazi-manager'
+    })
+  },
+
+  // 页面显示时刷新运势（如果是新的一天）
+  onShow() {
+    console.log('首页onShow被调用')
+    
+    // 总是重新加载运势，确保数据同步
+    this.loadDailyFortune()
+    
+    // 记录更新时间
+    const today = new Date().toDateString()
+    wx.setStorageSync('lastFortuneUpdateDate', today)
   },
 
   // 日期选择
@@ -436,17 +690,61 @@ Page({
         })
 
         if (result.success) {
-          // 保存测算结果
+          // 构造完整的数据结构，确保包含BaziDisplayManager需要的所有字段
           const resultData = {
-            ...result.data,
+            ...result.data,  // 包含所有后端返回的数据
+            bazi_result: result.data.bazi_result,
+            birth_info: result.data.birth_info,
+            fortune_analysis: result.data.fortune_analysis,
+            name_suggestions: result.data.name_suggestions,
+            
+            // 确保有birthInfo字段（BaziDisplayManager需要）
             birthInfo: {
               date: this.data.birthDate,
               time: this.data.birthTime,
               gender: this.data.gender,
-              name: '匿名用户'
-            }
+              name: '匿名用户',
+              calendarType: this.data.calendarType
+            },
+            
+            // 确保有基础字段（用于指纹生成）
+            year: birthData.year,
+            month: birthData.month,
+            day: birthData.day,
+            hour: birthData.hour,
+            gender: birthData.gender,
+            calendarType: birthData.calendarType
           }
-          app.saveBaziResult(resultData)
+          
+          console.log('🔍 准备保存的完整数据结构:', {
+            hasBaziResult: !!resultData.bazi_result,
+            hasBirthInfo: !!resultData.birthInfo,
+            hasBasicFields: !!(resultData.year && resultData.month && resultData.day),
+            structure: Object.keys(resultData)
+          })
+          
+          try {
+            // 使用新的家庭管理器保存成员数据
+            const memberData = FamilyBaziManager.saveFamilyMember(birthData, result, '匿名用户')
+            console.log('👨‍👩‍👧‍👦 家庭成员保存成功:', memberData.name)
+            
+            // 保存到临时缓存（供结果页使用）
+            app.saveBaziResult(resultData)
+            
+            // 为了兼容性，也保存到历史记录
+            const saveToHistorySuccess = app.saveToHistory(resultData)
+            console.log('🔍 保存到历史记录结果:', saveToHistorySuccess)
+            
+          } catch (saveError) {
+            console.error('❌ 保存数据失败:', saveError)
+            // 即使保存失败，也继续显示结果
+          }
+          
+          // 立即刷新首页运势数据
+          setTimeout(() => {
+            console.log('🔍 开始刷新首页运势数据...')
+            this.loadDailyFortune()
+          }, 500)  // 延迟500ms确保数据已保存
 
           // 跳转到结果页面
           wx.navigateTo({
@@ -474,6 +772,14 @@ Page({
         })
       }
     })
+  },
+
+  // 格式化更新时间
+  formatUpdateTime() {
+    const now = new Date()
+    const hour = now.getHours()
+    const minute = now.getMinutes()
+    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
   },
 
   onShareAppMessage() {

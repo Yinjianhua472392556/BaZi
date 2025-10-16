@@ -10,7 +10,10 @@
       <view class="card history-item" wx:for="{{historyList}}" wx:key="id" bindtap="viewResult" data-item="{{item}}">
         <!-- 头部信息 -->
         <view class="history-header">
-          <view class="history-name">{{item.user_info.name || item.birthInfo.name || '匿名用户'}}</view>
+          <view class="history-name">
+            {{item.display_name || item.user_info.name || item.birthInfo.name || '匿名用户'}}
+            <text class="custom-note-badge" wx:if="{{item.has_custom_note}}">自定义</text>
+          </view>
           <view class="history-date">{{item.formattedDate}}</view>
         </view>
         

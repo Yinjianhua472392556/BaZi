@@ -597,48 +597,18 @@ Page({
   },
 
   /**
-   * 保存到历史记录
+   * 保存到历史记录（已移除：防止重复保存）
+   * 现在数据在首页测算时自动保存，无需手动保存
    */
   saveToHistory() {
-    const { resultData } = this.data;
-    if (!resultData) {
-      wx.showToast({
-        title: '没有可保存的数据',
-        icon: 'none'
-      });
-      return;
-    }
-
-    // 准备保存的数据，包含显示信息
-    const saveData = {
-      ...resultData,
-      displayInfo: {
-        lunarDate: this.data.lunarDate,
-        baziString: this.data.baziString,
-        wuxingString: this.data.wuxingString,
-        wuxingLack: this.data.wuxingLack,
-        shengxiao: this.data.shengxiao
-      }
-    };
-
-    // 调用全局的保存方法
-    const app = getApp();
-    const success = app.saveToHistory(saveData);
+    // 显示提示：数据已自动保存
+    wx.showToast({
+      title: '数据已自动保存',
+      icon: 'success'
+    });
     
-    if (success) {
-      wx.showToast({
-        title: '保存成功',
-        icon: 'success'
-      });
-      
-      // 关闭弹窗
-      this.hideAnalysis();
-    } else {
-      wx.showToast({
-        title: '保存失败',
-        icon: 'none'
-      });
-    }
+    // 关闭弹窗
+    this.hideAnalysis();
   },
 
   /**

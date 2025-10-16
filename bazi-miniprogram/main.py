@@ -65,6 +65,18 @@ except Exception as e:
     print(f"❌ 书籍联盟营销服务初始化失败: {e}")
     book_affiliate_service = None
 
+# 尝试导入运势计算器
+fortune_calculator = None
+try:
+    from fortune_calculator import FortuneCalculator
+    fortune_calculator = FortuneCalculator()
+    print("✅ 运势计算器导入成功")
+except ImportError as e:
+    print(f"❌ 运势计算器导入失败: {e}")
+except Exception as e:
+    print(f"❌ 运势计算器初始化失败: {e}")
+    fortune_calculator = None
+
 # 检查核心算法是否可用
 ALGORITHMS_AVAILABLE = bool(bazi_calculator and naming_calculator)
 print(f"🧮 算法状态: {'核心算法已启用' if ALGORITHMS_AVAILABLE else '降级到模拟数据'}")
@@ -1074,6 +1086,175 @@ async def get_character_combinations_fallback(combination_data: CharacterCombina
         },
         "timestamp": datetime.now().isoformat(),
         "algorithm_version": "简化组合算法"
+    }
+
+# 运势计算接口 - 新增功能
+class FortuneRequest(BaseModel):
+    bazi_data: Dict
+    target_date: str
+
+class BatchFortuneRequest(BaseModel):
+    members_data: List[Dict]
+    target_date: str
+
+@app.post("/api/v1/calculate-fortune")
+async def calculate_daily_fortune(request_data: FortuneRequest):
+    """单人每日运势计算接口"""
+    try:
+        if fortune_calculator:
+            result = fortune_calculator.calculate_daily_fortune(
+                request_data.bazi_data, 
+                request_data.target_date
+            )
+            
+            return {
+                "success": result["success"],
+                "data": result.get("data"),
+                "error": result.get("error"),
+                "timestamp": datetime.now().isoformat(),
+                "algorithm_version": "后端运势计算v2.0"
+            }
+        else:
+            return await calculate_fortune_fallback(request_data)
+        
+    except Exception as e:
+        print(f"运势计算出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"运势计算失败: {str(e)}")
+
+@app.post("/api/v1/batch-fortune")
+async def calculate_batch_fortune(request_data: BatchFortuneRequest):
+    """批量家庭运势计算接口"""
+    try:
+        if fortune_calculator:
+            result = fortune_calculator.calculate_batch_fortune(
+                request_data.members_data,
+                request_data.target_date
+            )
+            
+            return {
+                "success": result["success"],
+                "data": result.get("data"),
+                "error": result.get("error"),
+                "timestamp": datetime.now().isoformat(),
+                "algorithm_version": "后端批量运势计算v2.0"
+            }
+        else:
+            return await calculate_batch_fortune_fallback(request_data)
+        
+    except Exception as e:
+        print(f"批量运势计算出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"批量运势计算失败: {str(e)}")
+
+@app.post("/api/v1/calculate-bazi-with-fortune")
+async def calculate_bazi_with_fortune(birth_data: BirthData, target_date: Optional[str] = None):
+    """增强的八字计算接口 - 同时返回八字和运势"""
+    try:
+        # 如果没有指定日期，使用今天
+        if not target_date:
+            target_date = datetime.now().strftime("%Y-%m-%d")
+        
+        # 先计算八字
+        bazi_result = await calculate_bazi(birth_data)
+        
+        if not bazi_result["success"] or not fortune_calculator:
+            return bazi_result
+        
+        # 再计算运势
+        fortune_result = fortune_calculator.calculate_daily_fortune(
+            bazi_result["data"], target_date
+        )
+        
+        # 合并结果
+        if fortune_result["success"]:
+            combined_data = bazi_result["data"].copy()
+            combined_data["daily_fortune"] = fortune_result["data"]
+            
+            return {
+                "success": True,
+                "data": combined_data,
+                "timestamp": datetime.now().isoformat(),
+                "algorithm_version": "八字+运势一体化计算v2.0"
+            }
+        else:
+            return bazi_result
+        
+    except Exception as e:
+        print(f"八字+运势计算出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"八字+运势计算失败: {str(e)}")
+
+async def calculate_fortune_fallback(request_data: FortuneRequest):
+    """运势计算降级方案"""
+    mock_fortune = {
+        "date": request_data.target_date,
+        "overall_score": 4.2,
+        "detailed_scores": {
+            "wealth": 4.0,
+            "career": 4.5,
+            "health": 3.8,
+            "love": 4.3,
+            "study": 4.1
+        },
+        "lucky_elements": {
+            "lucky_color": "红色",
+            "lucky_colors": ["红色", "紫色"],
+            "lucky_number": 3,
+            "lucky_numbers": [3, 8],
+            "lucky_direction": "南方",
+            "beneficial_wuxing": "火"
+        },
+        "suggestions": ["宜投资", "宜开拓", "宜主动出击"],
+        "warnings": ["注意身体健康", "宜多休息"],
+        "detailed_analysis": "今日运势良好，适合积极行动"
+    }
+    
+    return {
+        "success": True,
+        "data": mock_fortune,
+        "timestamp": datetime.now().isoformat(),
+        "algorithm_version": "运势降级模拟数据"
+    }
+
+async def calculate_batch_fortune_fallback(request_data: BatchFortuneRequest):
+    """批量运势计算降级方案"""
+    mock_results = []
+    
+    for i, member in enumerate(request_data.members_data):
+        mock_results.append({
+            "member_id": member.get("id", f"member_{i}"),
+            "member_name": member.get("name", f"成员{i+1}"),
+            "fortune": {
+                "date": request_data.target_date,
+                "overall_score": 3.5 + (i * 0.3),
+                "detailed_scores": {
+                    "wealth": 3.0 + (i * 0.2),
+                    "career": 4.0 + (i * 0.1),
+                    "health": 3.5 + (i * 0.15),
+                    "love": 4.0 + (i * 0.25),
+                    "study": 3.8 + (i * 0.1)
+                }
+            },
+            "has_valid_fortune": True
+        })
+    
+    family_overview = {
+        "total_members": len(mock_results),
+        "average_score": 4.0,
+        "best_member": mock_results[0] if mock_results else None,
+        "family_lucky_color": "绿色",
+        "suggestions": ["全家人今天适合一起活动"],
+        "active_members": len(mock_results)
+    }
+    
+    return {
+        "success": True,
+        "data": {
+            "date": request_data.target_date,
+            "members_fortune": mock_results,
+            "family_overview": family_overview,
+            "total_members": len(mock_results)
+        },
+        "timestamp": datetime.now().isoformat(),
+        "algorithm_version": "批量运势降级模拟数据"
     }
 
 # 书籍联盟营销接口 - 新增功能
