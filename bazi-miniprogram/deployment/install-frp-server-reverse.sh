@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # =============================================================================
-# 腾讯云服务器 FRP 反向代理一键安装脚本
+# 腾讯云服务器 FRP 反向代理一键安装脚本（修复版本）
 # 功能: 让外网电脑通过腾讯云服务器连接到本地Mac的代理服务
 # 架构: 外网电脑 → 腾讯云(119.91.146.128) → 本地Mac代理
 # =============================================================================
 
 set -e
 
-echo "🚀 腾讯云FRP反向代理服务器安装脚本"
+echo "🚀 腾讯云FRP反向代理服务器安装脚本（双栈版本）"
 echo "============================================"
 echo "功能: 外网访问本地Mac代理服务"
 echo "服务器IP: 119.91.146.128"
@@ -196,11 +196,6 @@ log.to = "/var/log/frps-reverse.log"
 log.level = "info"
 log.maxDays = 7
 
-# Web管理界面（可选，也支持双栈）
-webServer.addr = "::"
-webServer.port = 7500
-webServer.user = "admin"
-webServer.password = "admin123"
 
 # 允许的端口范围
 allowPorts = [
@@ -243,29 +238,15 @@ allowPorts = [
 transport.maxPoolCount = 10
 EOF
 
-服务器IP: 119.91.146.128
-FRP控制端口: $FRP_BIND_PORT
-外网访问端口: $PUBLIC_PROXY_PORT
-认证Token: $TOKEN
-
-架构说明:
-外网电脑 → 119.91.146.128:$PUBLIC_PROXY_PORT → 本地Mac代理
-
-生成时间: $(date)
-EOF
-
-    log_info "配置文件已创建"
-    log_info "认证Token: $TOKEN"
-}
     # 保存配置信息
     cat > /opt/frp-reverse/server-info.txt << EOF
 FRP反向代理服务器配置信息（双栈版本）
+===========================================
 服务器IP: 119.91.146.128
 网络支持: IPv4 + IPv6 双栈
 FRP控制端口: $FRP_BIND_PORT
 外网访问端口: $PUBLIC_PROXY_PORT
 认证Token: $TOKEN
-Web管理: https://119.91.146.128:7500 (admin/admin123)
 
 架构说明:
 外网电脑 → 119.91.146.128:$PUBLIC_PROXY_PORT → 本地Mac代理
@@ -285,27 +266,12 @@ cp /opt/frp-reverse/frps-ipv4.toml /opt/frp-reverse/frps.toml
 systemctl start frps-reverse
 
 生成时间: $(date)
+===========================================
 EOF
 
     log_info "双栈配置文件已创建"
     log_info "认证Token: $TOKEN"
     log_info "支持协议: IPv4 + IPv6"
-}
-================================
-服务器IP: 119.91.146.128
-FRP控制端口: $FRP_BIND_PORT
-外网访问端口: $PUBLIC_PROXY_PORT
-认证Token: $TOKEN
-
-架构说明:
-外网电脑 → 119.91.146.128:$PUBLIC_PROXY_PORT → 本地Mac代理
-
-生成时间: $(date)
-================================
-EOF
-
-    log_info "配置文件已创建"
-    log_info "认证Token: $TOKEN"
 }
 
 # 配置防火墙
@@ -343,7 +309,7 @@ create_system_service() {
     
     cat > /etc/systemd/system/frps-reverse.service << EOF
 [Unit]
-Description=FRP Reverse Proxy Server
+Description=FRP Reverse Proxy Server (Dual Stack)
 After=network.target
 Wants=network.target
 
@@ -451,7 +417,6 @@ PUBLIC_PROXY_PORT=$PUBLIC_PROXY_PORT
 AUTH_TOKEN=$TOKEN
 DUAL_STACK=true
 IPV4_FALLBACK_CONFIG=/opt/frp-reverse/frps-ipv4.toml
-WEB_ADMIN=https://119.91.146.128:7500
 EOF
     
     log_info "Mac配置文件已生成: /tmp/mac-reverse-config.env"
@@ -463,7 +428,7 @@ EOF
     echo "• 此服务器现在同时支持IPv4和IPv6客户端"
     echo "• 如果遇到连接问题，可切换到IPv4专用模式"
     echo "• Mac端将自动适配最佳网络协议连接"
-    echo "• Web管理界面: https://119.91.146.128:7500"
+    echo "• 简化配置，无Web管理界面，更安全高效"
 }
 
 # 主函数
