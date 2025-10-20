@@ -42,6 +42,63 @@ check_root() {
     fi
 }
 
+# 检测并清理现有服务
+cleanup_existing_service() {
+    log_info "检测现有FRP服务..."
+    
+    # 检查是否存在现有服务
+    if systemctl is-active --quiet frps-reverse 2>/dev/null; then
+        log_warn "检测到现有的frps-reverse服务正在运行"
+        echo "当前服务状态:"
+        systemctl status frps-reverse --no-pager -l | head -10
+        echo ""
+        
+        read -p "是否停止并重新配置现有服务? (y/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log_info "停止现有服务..."
+            systemctl stop frps-reverse
+            systemctl disable frps-reverse 2>/dev/null || true
+            
+            # 备份现有配置
+            if [ -d "/opt/frp-reverse" ]; then
+                BACKUP_DIR="/opt/frp-reverse-backup-$(date +%s)"
+                log_info "备份现有配置到: $BACKUP_DIR"
+                cp -r /opt/frp-reverse $BACKUP_DIR
+            fi
+            
+            log_info "清理完成"
+        else
+            log_error "已取消安装，现有服务保持不变"
+            exit 0
+        fi
+    elif systemctl list-unit-files | grep -q frps-reverse; then
+        log_warn "检测到frps-reverse服务配置文件，但服务未运行"
+        systemctl disable frps-reverse 2>/dev/null || true
+        log_info "已清理服务配置"
+    fi
+    
+    # 检查其他FRP进程
+    if pgrep -f "frps" > /dev/null; then
+        log_warn "检测到其他FRP服务器进程："
+        ps aux | grep frps | grep -v grep
+        echo ""
+        read -p "是否强制终止所有FRP服务器进程? (y/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            pkill -f "frps" || true
+            log_info "FRP进程已清理"
+        fi
+    fi
+    
+    # 检查端口占用
+    if ss -tuln | grep -q ":7000 "; then
+        log_warn "端口7000被占用："
+        ss -tuln | grep ":7000 "
+        log_warn "如果是其他FRP服务，建议先停止"
+    fi
+}
+
 # 检测端口是否被占用
 check_port() {
     local port=$1
@@ -113,19 +170,24 @@ install_frp() {
     log_info "FRP安装完成"
 }
 
-# 创建FRP服务器配置
+# 创建FRP服务器配置（双栈支持）
 create_frp_config() {
-    log_info "创建FRP反向代理配置..."
+    log_info "创建FRP反向代理配置（支持IPv4+IPv6双栈）..."
     
     # 使用固定token
     TOKEN="mac-proxy-secure-token-2024"
     
     cat > /opt/frp-reverse/frps.toml << EOF
-# FRP反向代理服务器配置 - 腾讯云专用
+# FRP反向代理服务器配置 - 腾讯云专用（双栈版本）
 # 架构: 外网电脑 → 腾讯云 → 本地Mac代理
+# 网络: 同时支持IPv4和IPv6连接
 # 生成时间: $(date)
 
+# 双栈绑定 - 同时监听IPv4和IPv6
+bindAddr = "::"
 bindPort = $FRP_BIND_PORT
+
+# 身份验证
 auth.method = "token"
 auth.token = "$TOKEN"
 
@@ -134,19 +196,101 @@ log.to = "/var/log/frps-reverse.log"
 log.level = "info"
 log.maxDays = 7
 
+# Web管理界面（可选，也支持双栈）
+webServer.addr = "::"
+webServer.port = 7500
+webServer.user = "admin"
+webServer.password = "admin123"
+
 # 允许的端口范围
 allowPorts = [
   { start = 8300, end = 8500 },
   { start = 9000, end = 9200 }
 ]
 
-# 限制配置 (保护服务器资源)
+# 传输配置
+transport.maxPoolCount = 10
+transport.heartbeatInterval = 30
+transport.heartbeatTimeout = 90
+
+# 双栈优化配置
+transport.tcpMux = true
+EOF
+
+    # 创建备用IPv4专用配置
+    cat > /opt/frp-reverse/frps-ipv4.toml << EOF
+# FRP反向代理服务器配置 - IPv4专用备用版本
+# 如果双栈配置有问题，可切换使用此配置
+
+bindAddr = "0.0.0.0"
+bindPort = $FRP_BIND_PORT
+
+auth.method = "token"
+auth.token = "$TOKEN"
+
+log.to = "/var/log/frps-reverse.log"
+log.level = "info"
+log.maxDays = 7
+
+# 强制IPv4
+transport.tcpMux = false
+
+allowPorts = [
+  { start = 8300, end = 8500 },
+  { start = 9000, end = 9200 }
+]
+
 transport.maxPoolCount = 10
 EOF
 
+服务器IP: 119.91.146.128
+FRP控制端口: $FRP_BIND_PORT
+外网访问端口: $PUBLIC_PROXY_PORT
+认证Token: $TOKEN
+
+架构说明:
+外网电脑 → 119.91.146.128:$PUBLIC_PROXY_PORT → 本地Mac代理
+
+生成时间: $(date)
+EOF
+
+    log_info "配置文件已创建"
+    log_info "认证Token: $TOKEN"
+}
     # 保存配置信息
     cat > /opt/frp-reverse/server-info.txt << EOF
-FRP反向代理服务器配置信息
+FRP反向代理服务器配置信息（双栈版本）
+服务器IP: 119.91.146.128
+网络支持: IPv4 + IPv6 双栈
+FRP控制端口: $FRP_BIND_PORT
+外网访问端口: $PUBLIC_PROXY_PORT
+认证Token: $TOKEN
+Web管理: https://119.91.146.128:7500 (admin/admin123)
+
+架构说明:
+外网电脑 → 119.91.146.128:$PUBLIC_PROXY_PORT → 本地Mac代理
+
+网络特性:
+• 同时支持IPv4和IPv6客户端连接
+• 自动适配客户端网络协议
+• 提供IPv4专用备用配置
+
+配置文件:
+• 主配置: /opt/frp-reverse/frps.toml (双栈)
+• 备用配置: /opt/frp-reverse/frps-ipv4.toml (IPv4专用)
+
+切换到IPv4专用配置方法:
+systemctl stop frps-reverse
+cp /opt/frp-reverse/frps-ipv4.toml /opt/frp-reverse/frps.toml
+systemctl start frps-reverse
+
+生成时间: $(date)
+EOF
+
+    log_info "双栈配置文件已创建"
+    log_info "认证Token: $TOKEN"
+    log_info "支持协议: IPv4 + IPv6"
+}
 ================================
 服务器IP: 119.91.146.128
 FRP控制端口: $FRP_BIND_PORT
@@ -244,17 +388,46 @@ start_service() {
     fi
 }
 
-# 显示配置信息
+# 显示配置信息和验证
 show_result() {
     echo ""
     echo "🎉 FRP反向代理服务器安装完成！"
     echo "=================================================="
     cat /opt/frp-reverse/server-info.txt
     echo ""
+    
+    # 验证双栈绑定
+    echo "🔍 验证双栈绑定状态："
+    echo "--------------------------------"
+    
+    # 检查端口绑定
+    log_info "检查端口绑定情况："
+    if netstat -tuln | grep -q ":$FRP_BIND_PORT "; then
+        echo "✅ FRP服务端口 $FRP_BIND_PORT 已绑定"
+        
+        # 检查IPv4绑定
+        if netstat -4tuln | grep -q ":$FRP_BIND_PORT "; then
+            echo "✅ IPv4 支持正常"
+        else
+            echo "⚠️  IPv4 绑定检测未通过"
+        fi
+        
+        # 检查IPv6绑定
+        if netstat -6tuln | grep -q ":$FRP_BIND_PORT "; then
+            echo "✅ IPv6 支持正常"
+        else
+            echo "⚠️  IPv6 绑定检测未通过"
+        fi
+    else
+        echo "❌ FRP服务端口绑定失败"
+    fi
+    
+    echo ""
     echo "📱 使用说明："
     echo "1. 在您的Mac上运行代理服务 (Shadowsocks等)"
     echo "2. 在Mac上配置FRP客户端连接到此服务器"
     echo "3. 外网电脑连接 119.91.146.128:$PUBLIC_PROXY_PORT 即可使用代理"
+    echo "4. 支持IPv4和IPv6客户端自动连接"
     echo ""
     echo "🔧 管理命令："
     echo "启动服务: systemctl start frps-reverse"
@@ -263,18 +436,34 @@ show_result() {
     echo "查看状态: systemctl status frps-reverse"
     echo "查看日志: tail -f /var/log/frps-reverse.log"
     echo ""
+    echo "🌐 双栈管理："
+    echo "检查绑定: netstat -tuln | grep $FRP_BIND_PORT"
+    echo "切换IPv4: cp /opt/frp-reverse/frps-ipv4.toml /opt/frp-reverse/frps.toml && systemctl restart frps-reverse"
+    echo "还原双栈: 重新运行此安装脚本"
+    echo ""
     
     # 将配置信息保存到Mac配置文件
     cat > /tmp/mac-reverse-config.env << EOF
-# Mac端反向代理配置信息
+# Mac端反向代理配置信息（双栈版本）
 SERVER_IP=119.91.146.128
 FRP_PORT=$FRP_BIND_PORT
 PUBLIC_PROXY_PORT=$PUBLIC_PROXY_PORT
 AUTH_TOKEN=$TOKEN
+DUAL_STACK=true
+IPV4_FALLBACK_CONFIG=/opt/frp-reverse/frps-ipv4.toml
+WEB_ADMIN=https://119.91.146.128:7500
 EOF
     
     log_info "Mac配置文件已生成: /tmp/mac-reverse-config.env"
     log_info "请将此文件内容复制到Mac电脑使用"
+    
+    # 最终提示
+    echo ""
+    echo "🎯 重要提示："
+    echo "• 此服务器现在同时支持IPv4和IPv6客户端"
+    echo "• 如果遇到连接问题，可切换到IPv4专用模式"
+    echo "• Mac端将自动适配最佳网络协议连接"
+    echo "• Web管理界面: https://119.91.146.128:7500"
 }
 
 # 主函数
@@ -291,6 +480,7 @@ main() {
     fi
     
     check_root
+    cleanup_existing_service
     select_available_ports
     update_system
     install_frp
