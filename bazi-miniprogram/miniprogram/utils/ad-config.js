@@ -122,10 +122,6 @@ const AD_CONFIG = {
       banner: true        // 有记录时页面顶部
     },
     
-    // 历史记录页面
-    history: {
-      banner: true        // 有记录时页面顶部
-    }
   },
   
   // 防骚扰配置 - 调试模式优化

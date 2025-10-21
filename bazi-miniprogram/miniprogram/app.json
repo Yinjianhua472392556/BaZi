@@ -5,9 +5,7 @@
     "pages/result/result",
     "pages/naming/naming",
     "pages/zodiac-matching/zodiac-matching",
-    "pages/profile/profile",
-    "pages/history/history",
-    "pages/bazi-manager/bazi-manager"
+    "pages/profile/profile"
   ],
   "window": {
     "backgroundTextStyle": "light",

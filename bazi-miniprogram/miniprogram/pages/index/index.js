@@ -265,6 +265,28 @@ Page({
 
   // 刷新运势 - 使用增强运势计算器
   async refreshFortune() {
+    // 检查网络状态
+    wx.getNetworkType({
+      success: (res) => {
+        if (res.networkType === 'none') {
+          wx.showToast({
+            title: '网络连接不可用',
+            icon: 'none',
+            duration: 3000
+          })
+          return
+        }
+        this.performFortuneRefresh()
+      },
+      fail: () => {
+        // 网络检查失败，仍然尝试刷新
+        this.performFortuneRefresh()
+      }
+    })
+  },
+
+  // 执行运势刷新
+  async performFortuneRefresh() {
     wx.showLoading({
       title: '刷新运势中...'
     })
@@ -293,17 +315,324 @@ Page({
     } catch (error) {
       console.error('❌ 运势刷新失败:', error)
       wx.hideLoading()
+      
+      // 区分错误类型，提供不同的处理方式
+      if (error.message && error.message.includes('ERR_CONNECTION_REFUSED')) {
+        // 连接被拒绝，可能是后端服务未启动
+        wx.showModal({
+          title: '服务连接失败',
+          content: '后端服务暂时不可用，是否使用离线模式？',
+          confirmText: '离线模式',
+          cancelText: '稍后重试',
+          success: (res) => {
+            if (res.confirm) {
+              this.loadOfflineFortune()
+            }
+          }
+        })
+      } else if (error.message && (error.message.includes('timeout') || error.message.includes('网络'))) {
+        // 网络超时或网络问题
+        wx.showModal({
+          title: '网络超时',
+          content: '网络连接超时，请检查网络后重试',
+          showCancel: false,
+          confirmText: '确定'
+        })
+      } else {
+        // 其他未知错误
+        wx.showToast({
+          title: '刷新失败，请稍后重试',
+          icon: 'none',
+          duration: 3000
+        })
+      }
+    }
+  },
+
+  // 加载离线运势（降级方案）
+  loadOfflineFortune() {
+    try {
+      const allMembers = FamilyBaziManager.getAllMembers()
+      
+      if (allMembers.length === 0) {
+        // 没有成员，显示通用运势
+        const universalFortune = BaziDisplayManager.getUniversalDailyFortune()
+        
+        this.setData({
+          showDailyFortune: true,
+          familyOverview: {
+            totalMembers: 0,
+            averageScore: 0,
+            suggestions: ['离线模式：使用本地运势数据', '连接网络后可获取最新运势'],
+            familyLuckyColor: '绿色',
+            activeMembers: 0,
+            isOfflineMode: true
+          },
+          membersWithFortune: [],
+          universalFortune: universalFortune,
+          fortuneLoading: false,
+          fortuneError: null
+        })
+      } else {
+        // 使用本地家庭管理器的离线运势
+        const familyOverview = FamilyBaziManager.getFamilyFortuneOverview()
+        const membersWithFortune = FamilyBaziManager.getAllMembersFortuneToday()
+        
+        this.setData({
+          showDailyFortune: true,
+          familyOverview: {
+            ...familyOverview,
+            suggestions: [...(familyOverview.suggestions || []), '离线模式：使用本地运势数据'],
+            isOfflineMode: true
+          },
+          membersWithFortune: membersWithFortune,
+          universalFortune: BaziDisplayManager.getUniversalDailyFortune(),
+          fortuneLoading: false,
+          fortuneError: null
+        })
+      }
+      
       wx.showToast({
-        title: '刷新失败，请稍后重试',
-        icon: 'none'
+        title: '已切换到离线模式',
+        icon: 'success'
+      })
+      
+      console.log('✅ 离线运势加载完成')
+      
+    } catch (error) {
+      console.error('❌ 离线运势加载失败:', error)
+      wx.showToast({
+        title: '离线模式加载失败',
+        icon: 'error'
       })
     }
   },
 
-  // 管理八字
-  manageBazi() {
-    wx.navigateTo({
-      url: '/pages/bazi-manager/bazi-manager'
+  // 显示成员操作菜单
+  showMemberActions(e) {
+    const memberData = e.currentTarget.dataset.memberData
+    const memberId = e.currentTarget.dataset.memberId
+    const memberName = e.currentTarget.dataset.memberName
+    
+    if (!memberData || !memberId) {
+      wx.showToast({
+        title: '参数错误',
+        icon: 'error'
+      })
+      return
+    }
+    
+    // 构建操作菜单
+    const actions = ['查看详情', '编辑备注']
+    
+    // 如果不是主要八字，可以删除
+    const primaryBazi = wx.getStorageSync('primaryBazi') || null
+    if (memberId !== primaryBazi) {
+      actions.push('删除成员')
+    }
+    
+    wx.showActionSheet({
+      itemList: actions,
+      success: (res) => {
+        switch (actions[res.tapIndex]) {
+          case '查看详情':
+            this.viewMemberDetail(memberData)
+            break
+          case '编辑备注':
+            this.editMemberNote(memberId, memberName)
+            break
+          case '删除成员':
+            this.deleteMember(memberId, memberName)
+            break
+        }
+      }
+    })
+  },
+
+  // 查看成员详情
+  viewMemberDetail(memberData) {
+    try {
+      console.log('🔍 查看成员详情，原始数据:', memberData)
+      
+      // 验证数据完整性
+      if (!memberData || !memberData.baziData) {
+        console.error('❌ 成员数据不完整:', memberData)
+        wx.showToast({
+          title: '数据不完整，无法查看详情',
+          icon: 'error'
+        })
+        return
+      }
+
+      // 构造与历史记录页面一致的结果数据格式
+      const resultData = {
+        // 基础八字数据
+        bazi_result: memberData.baziData.bazi_result || {},
+        wuxing_analysis: memberData.baziData.wuxing_analysis || {},
+        comprehensive_analysis: memberData.baziData.comprehensive_analysis || {},
+        
+        // 确保有完整的出生信息
+        birth_info: memberData.baziData.birth_info || {},
+        birthInfo: memberData.birthInfo || {},
+        
+        // 运势分析数据
+        fortune_analysis: memberData.baziData.fortune_analysis || {},
+        name_suggestions: memberData.baziData.name_suggestions || {},
+        
+        // 用户信息（保持与历史记录一致）
+        user_info: memberData.userInfo || {},
+        
+        // 时间戳和ID
+        timestamp: memberData.timestamp || Date.now(),
+        id: memberData.id,
+        
+        // 标识来源
+        from: 'index_management',
+        
+        // 显示信息
+        display_name: memberData.name || '匿名用户',
+        
+        // 确保有必要的基础字段
+        year: memberData.baziData.year || memberData.birthInfo?.year,
+        month: memberData.baziData.month || memberData.birthInfo?.month,
+        day: memberData.baziData.day || memberData.birthInfo?.day,
+        hour: memberData.baziData.hour || memberData.birthInfo?.hour,
+        gender: memberData.baziData.gender || memberData.birthInfo?.gender
+      }
+
+      // 数据完整性验证
+      const hasRequiredData = resultData.bazi_result && 
+                             (resultData.birth_info || resultData.birthInfo) &&
+                             (resultData.year && resultData.month && resultData.day !== undefined)
+
+      if (!hasRequiredData) {
+        console.error('❌ 构造的数据缺少必要字段:', {
+          hasBaziResult: !!resultData.bazi_result,
+          hasBirthInfo: !!(resultData.birth_info || resultData.birthInfo),
+          hasBasicFields: !!(resultData.year && resultData.month && resultData.day !== undefined),
+          resultData: resultData
+        })
+        
+        wx.showModal({
+          title: '数据错误',
+          content: '八字数据不完整，无法查看详情。请重新测算。',
+          showCancel: false
+        })
+        return
+      }
+
+      console.log('✅ 构造完整的结果数据:', {
+        hasBaziResult: !!resultData.bazi_result,
+        hasBirthInfo: !!(resultData.birth_info || resultData.birthInfo),
+        hasBasicFields: !!(resultData.year && resultData.month && resultData.day !== undefined),
+        dataStructure: Object.keys(resultData)
+      })
+
+      wx.navigateTo({
+        url: `/pages/result/result?data=${encodeURIComponent(JSON.stringify(resultData))}`
+      })
+    } catch (error) {
+      console.error('❌ 查看详情失败:', error)
+      wx.showModal({
+        title: '查看详情失败',
+        content: `错误信息：${error.message || '未知错误'}`,
+        showCancel: false
+      })
+    }
+  },
+
+  // 编辑成员备注
+  editMemberNote(memberId, currentName) {
+    wx.showModal({
+      title: '编辑成员备注',
+      editable: true,
+      placeholderText: '请输入备注名称（如：爸爸、妈妈等）',
+      content: currentName || '',
+      success: (res) => {
+        if (res.confirm) {
+          const newName = (res.content || '').trim()
+          if (newName) {
+            this.updateMemberName(memberId, newName)
+          } else {
+            wx.showToast({
+              title: '备注不能为空',
+              icon: 'none'
+            })
+          }
+        }
+      }
+    })
+  },
+
+  // 更新成员名称
+  updateMemberName(memberId, newName) {
+    try {
+      const success = FamilyBaziManager.updateMemberName(memberId, newName)
+      
+      if (success) {
+        wx.showToast({
+          title: '备注已更新',
+          icon: 'success'
+        })
+        
+        // 刷新运势数据
+        setTimeout(() => {
+          this.loadDailyFortune()
+        }, 500)
+      } else {
+        wx.showToast({
+          title: '更新失败',
+          icon: 'error'
+        })
+      }
+    } catch (error) {
+      console.error('更新成员名称失败:', error)
+      wx.showToast({
+        title: '更新失败',
+        icon: 'error'
+      })
+    }
+  },
+
+  // 删除成员（增强版：同步删除对应的历史记录）
+  deleteMember(memberId, memberName) {
+    wx.showModal({
+      title: '确认删除',
+      content: `确定要删除成员"${memberName}"吗？此操作不可恢复。`,
+      success: (res) => {
+        if (res.confirm) {
+          try {
+            
+            // 删除家庭成员
+            const success = FamilyBaziManager.deleteMember(memberId)
+            
+            if (success) {
+              console.log('✅ 家庭成员删除成功，同步操作完成')
+              
+              wx.showToast({
+                title: '成员已删除',
+                icon: 'success'
+              })
+              
+              // 刷新运势数据
+              setTimeout(() => {
+                this.loadDailyFortune()
+              }, 500)
+            } else {
+              wx.showToast({
+                title: '删除失败',
+                icon: 'error'
+              })
+            }
+          } catch (error) {
+            console.error('❌ 删除成员失败:', error)
+            wx.showToast({
+              title: '删除失败',
+              icon: 'error'
+            })
+          }
+        }
+      }
     })
   },
 
@@ -622,7 +951,7 @@ Page({
         day: day,
         hour: hour,
         gender: this.data.gender,
-        name: '匿名用户',
+        name: '测算用户', // 后端API要求非null字符串
         calendarType: 'lunar'
       }
       
@@ -655,7 +984,7 @@ Page({
         day: parseInt(dateArr[2]),
         hour: hour,
         gender: this.data.gender,
-        name: '匿名用户',
+        name: '测算用户', // 后端API要求非null字符串
         calendarType: 'solar'
       }
       
@@ -724,16 +1053,13 @@ Page({
           })
           
           try {
-            // 使用新的家庭管理器保存成员数据
-            const memberData = FamilyBaziManager.saveFamilyMember(birthData, result, '匿名用户')
+            // 使用新的家庭管理器保存成员数据，不传递customName让系统自动生成智能备注名
+            const memberData = FamilyBaziManager.saveFamilyMember(birthData, result, null)
             console.log('👨‍👩‍👧‍👦 家庭成员保存成功:', memberData.name)
             
             // 保存到临时缓存（供结果页使用）
             app.saveBaziResult(resultData)
             
-            // 为了兼容性，也保存到历史记录
-            const saveToHistorySuccess = app.saveToHistory(resultData)
-            console.log('🔍 保存到历史记录结果:', saveToHistorySuccess)
             
           } catch (saveError) {
             console.error('❌ 保存数据失败:', saveError)

@@ -148,116 +148,174 @@ Page({
    * 从结果数据中提取正确的出生日期信息
    */
   extractBirthDate(resultData) {
-    console.log('提取出生日期，原始数据:', resultData); // 调试日志
+    console.log('🔍 开始提取出生日期，原始数据结构:', {
+      hasYear: !!resultData.year,
+      hasMonth: !!resultData.month,
+      hasDay: !!resultData.day,
+      hasBirthInfo: !!resultData.birthInfo,
+      hasUserInfo: !!resultData.user_info,
+      hasSolarInfo: !!resultData.solar_info,
+      hasLunarInfo: !!resultData.lunar_info,
+      dataKeys: Object.keys(resultData || {})
+    });
     
     // 尝试从多个可能的字段中提取日期信息
     let inputYear = resultData.year;
     let inputMonth = resultData.month;
     let inputDay = resultData.day;
     
+    console.log('🔍 主字段提取结果:', { inputYear, inputMonth, inputDay });
+    
     // 如果主字段无效，尝试从其他字段获取
-    if (!inputYear || !inputMonth || !inputDay) {
+    if (!inputYear || !inputMonth || inputDay === undefined) {
+      console.log('🔍 主字段无效，尝试从其他字段获取...');
+      
       // 尝试从 birthInfo 字段获取
-      if (resultData.birthInfo && resultData.birthInfo.date) {
-        const dateArr = resultData.birthInfo.date.split('-');
-        if (dateArr.length === 3) {
-          inputYear = parseInt(dateArr[0]);
-          inputMonth = parseInt(dateArr[1]);
-          inputDay = parseInt(dateArr[2]);
+      if (resultData.birthInfo) {
+        console.log('🔍 尝试从 birthInfo 获取:', resultData.birthInfo);
+        if (resultData.birthInfo.date) {
+          const dateArr = resultData.birthInfo.date.split('-');
+          if (dateArr.length === 3) {
+            inputYear = parseInt(dateArr[0]);
+            inputMonth = parseInt(dateArr[1]);
+            inputDay = parseInt(dateArr[2]);
+            console.log('✅ 从 birthInfo.date 获取成功:', { inputYear, inputMonth, inputDay });
+          }
+        }
+        // 尝试从 birthInfo 的单独字段获取
+        if ((!inputYear || !inputMonth || inputDay === undefined) && resultData.birthInfo.year) {
+          inputYear = resultData.birthInfo.year;
+          inputMonth = resultData.birthInfo.month;
+          inputDay = resultData.birthInfo.day;
+          console.log('✅ 从 birthInfo 单独字段获取成功:', { inputYear, inputMonth, inputDay });
         }
       }
       
       // 尝试从 user_info 字段获取
-      if ((!inputYear || !inputMonth || !inputDay) && resultData.user_info && resultData.user_info.birth_date) {
-        const dateArr = resultData.user_info.birth_date.split('-');
-        if (dateArr.length === 3) {
-          inputYear = parseInt(dateArr[0]);
-          inputMonth = parseInt(dateArr[1]);
-          inputDay = parseInt(dateArr[2]);
+      if ((!inputYear || !inputMonth || inputDay === undefined) && resultData.user_info) {
+        console.log('🔍 尝试从 user_info 获取:', resultData.user_info);
+        if (resultData.user_info.birth_date) {
+          const dateArr = resultData.user_info.birth_date.split('-');
+          if (dateArr.length === 3) {
+            inputYear = parseInt(dateArr[0]);
+            inputMonth = parseInt(dateArr[1]);
+            inputDay = parseInt(dateArr[2]);
+            console.log('✅ 从 user_info.birth_date 获取成功:', { inputYear, inputMonth, inputDay });
+          }
         }
       }
       
       // 尝试从 solar_info 字段获取
-      if ((!inputYear || !inputMonth || !inputDay) && resultData.solar_info) {
+      if ((!inputYear || !inputMonth || inputDay === undefined) && resultData.solar_info) {
+        console.log('🔍 尝试从 solar_info 获取:', resultData.solar_info);
         inputYear = resultData.solar_info.year;
         inputMonth = resultData.solar_info.month;
         inputDay = resultData.solar_info.day;
+        console.log('✅ 从 solar_info 获取成功:', { inputYear, inputMonth, inputDay });
+      }
+      
+      // 尝试从 birth_info 字段获取（后端返回格式）
+      if ((!inputYear || !inputMonth || inputDay === undefined) && resultData.birth_info) {
+        console.log('🔍 尝试从 birth_info 获取:', resultData.birth_info);
+        inputYear = resultData.birth_info.year;
+        inputMonth = resultData.birth_info.month;
+        inputDay = resultData.birth_info.day;
+        console.log('✅ 从 birth_info 获取成功:', { inputYear, inputMonth, inputDay });
       }
     }
     
     // 兼容不同的字段名称格式
     const calendarType = resultData.calendar_type || resultData.calendarType || 'solar';
     
-    console.log('提取的日期信息:', {
+    console.log('🔍 最终提取的日期信息:', {
       inputYear, inputMonth, inputDay, calendarType
-    }); // 调试日志
+    });
 
-    // 最终验证基础数据是否有效
-    if (!inputYear || !inputMonth || !inputDay || 
-        inputYear < 1900 || inputYear > 2100 ||
-        inputMonth < 1 || inputMonth > 12 ||
-        inputDay < 1 || inputDay > 31) {
-      console.error('🚨 无法获取有效的日期数据:', { 
+    // 增强的数据验证 - 更宽松的验证条件
+    const isValidYear = inputYear && inputYear >= 1900 && inputYear <= 2100;
+    const isValidMonth = inputMonth && inputMonth >= 1 && inputMonth <= 12;
+    const isValidDay = inputDay !== undefined && inputDay >= 1 && inputDay <= 31;
+    
+    if (!isValidYear || !isValidMonth || !isValidDay) {
+      console.error('🚨 数据验证失败:', { 
         inputYear, inputMonth, inputDay,
-        resultData: resultData 
+        isValidYear, isValidMonth, isValidDay,
+        availableFields: Object.keys(resultData || {})
       });
       
-      // 抛出错误而不是使用默认值
-      wx.showModal({
-        title: '数据错误',
-        content: '无法解析出生日期数据，请重新输入',
-        showCancel: false,
-        success: () => {
-          wx.switchTab({
-            url: '/pages/index/index'
-          });
-        }
-      });
-      
-      // 返回错误标识
-      return {
-        solar: 'ERROR',
-        lunar: 'ERROR'
+      // 尝试使用默认值而不是直接报错
+      const currentYear = new Date().getFullYear();
+      const fallbackData = {
+        year: inputYear || currentYear,
+        month: inputMonth || 1,
+        day: inputDay || 1
       };
+      
+      console.log('⚠️ 使用降级数据:', fallbackData);
+      
+      wx.showToast({
+        title: '部分数据缺失，使用默认值',
+        icon: 'none',
+        duration: 3000
+      });
+      
+      // 使用降级数据继续处理
+      inputYear = fallbackData.year;
+      inputMonth = fallbackData.month;
+      inputDay = fallbackData.day;
     }
 
     let solarDate = '';
     let lunarDate = '';
 
-    if (calendarType === 'lunar') {
-      // 如果输入的是农历，那么输入的就是农历日期
-      lunarDate = this.formatLunarDate(inputYear, inputMonth, inputDay);
-      
-      // 尝试获取对应的公历日期 - 多重来源
-      if (resultData.solar_info) {
-        solarDate = this.formatSolarDate(resultData.solar_info.year, resultData.solar_info.month, resultData.solar_info.day);
-      } else if (resultData.user_info && resultData.user_info.birth_date) {
-        solarDate = resultData.user_info.birth_date;
+    try {
+      if (calendarType === 'lunar') {
+        // 如果输入的是农历，那么输入的就是农历日期
+        lunarDate = this.formatLunarDate(inputYear, inputMonth, inputDay);
+        
+        // 尝试获取对应的公历日期 - 多重来源
+        if (resultData.solar_info) {
+          solarDate = this.formatSolarDate(resultData.solar_info.year, resultData.solar_info.month, resultData.solar_info.day);
+        } else if (resultData.user_info && resultData.user_info.birth_date) {
+          solarDate = resultData.user_info.birth_date;
+        } else {
+          // 使用农历转公历的近似算法
+          const approximateSolar = this.approximateLunarToSolar(inputYear, inputMonth, inputDay);
+          solarDate = this.formatSolarDate(approximateSolar.year, approximateSolar.month, approximateSolar.day);
+        }
       } else {
-        // 使用农历转公历的近似算法
-        const approximateSolar = this.approximateLunarToSolar(inputYear, inputMonth, inputDay);
-        solarDate = this.formatSolarDate(approximateSolar.year, approximateSolar.month, approximateSolar.day);
+        // 如果输入的是公历，那么输入的就是公历日期
+        solarDate = this.formatSolarDate(inputYear, inputMonth, inputDay);
+        
+        // 尝试获取对应的农历日期 - 多重来源
+        if (resultData.lunar_info) {
+          lunarDate = this.generateLunarDate(resultData.lunar_info);
+        } else {
+          // 使用公历转农历的近似算法
+          const approximateLunar = this.approximateSolarToLunar(inputYear, inputMonth, inputDay);
+          lunarDate = this.generateLunarDate(approximateLunar);
+        }
       }
-    } else {
-      // 如果输入的是公历，那么输入的就是公历日期
-      solarDate = this.formatSolarDate(inputYear, inputMonth, inputDay);
+
+      console.log('✅ 最终提取结果:', { solar: solarDate, lunar: lunarDate });
+
+      return {
+        solar: solarDate,
+        lunar: lunarDate
+      };
       
-      // 尝试获取对应的农历日期 - 多重来源
-      if (resultData.lunar_info) {
-        lunarDate = this.generateLunarDate(resultData.lunar_info);
-      } else {
-        // 使用公历转农历的近似算法
-        const approximateLunar = this.approximateSolarToLunar(inputYear, inputMonth, inputDay);
-        lunarDate = this.generateLunarDate(approximateLunar);
-      }
+    } catch (error) {
+      console.error('❌ 日期处理过程中出错:', error);
+      
+      // 返回基础格式化的日期
+      const safeSolarDate = this.formatSolarDate(inputYear, inputMonth, inputDay);
+      const safeLunarDate = this.formatLunarDate(inputYear, inputMonth, inputDay);
+      
+      return {
+        solar: safeSolarDate,
+        lunar: safeLunarDate
+      };
     }
-
-    console.log('最终提取结果:', { solar: solarDate, lunar: lunarDate }); // 调试日志
-
-    return {
-      solar: solarDate,
-      lunar: lunarDate
-    };
   },
 
   /**
@@ -596,19 +654,134 @@ Page({
     }
   },
 
+
   /**
-   * 保存到历史记录（已移除：防止重复保存）
-   * 现在数据在首页测算时自动保存，无需手动保存
+   * 保存到历史记录 - 使用智能备注名
    */
   saveToHistory() {
-    // 显示提示：数据已自动保存
-    wx.showToast({
-      title: '数据已自动保存',
-      icon: 'success'
-    });
+    const { resultData } = this.data;
+    if (!resultData) {
+      wx.showToast({
+        title: '没有数据可保存',
+        icon: 'none'
+      });
+      return;
+    }
+
+    try {
+      // 引入 BaziDataAdapter 来生成智能备注名
+      const BaziDataAdapter = require('../../utils/bazi-data-adapter');
+      
+      // 构建出生信息对象
+      const birthInfo = this.extractBirthInfoFromResultData(resultData);
+      
+      // 生成智能备注名
+      const intelligentDisplayName = BaziDataAdapter.generateDisplayName(birthInfo);
+      
+      console.log('生成的智能备注名:', intelligentDisplayName);
+      
+      // 保存到app的历史记录
+      const app = getApp();
+      if (app.saveToHistory) {
+        // 添加智能备注名到结果数据中
+        const enhancedResultData = {
+          ...resultData,
+          intelligentDisplayName: intelligentDisplayName,
+          customName: intelligentDisplayName // 同时设置customName以保持兼容性
+        };
+        app.saveToHistory(enhancedResultData);
+        wx.showToast({
+          title: '保存成功',
+          icon: 'success'
+        });
+      } else {
+        // 直接保存到本地存储
+        const history = wx.getStorageSync('baziHistory') || [];
+        const newRecord = {
+          ...resultData,
+          saveTime: Date.now(),
+          id: Date.now().toString(),
+          intelligentDisplayName: intelligentDisplayName,
+          customName: intelligentDisplayName
+        };
+        history.unshift(newRecord);
+        
+        // 限制历史记录数量
+        if (history.length > 50) {
+          history.splice(50);
+        }
+        
+        wx.setStorageSync('baziHistory', history);
+        wx.showToast({
+          title: '保存成功',
+          icon: 'success'
+        });
+      }
+    } catch (error) {
+      console.error('保存历史记录失败:', error);
+      wx.showToast({
+        title: '保存失败',
+        icon: 'none'
+      });
+    }
     
     // 关闭弹窗
     this.hideAnalysis();
+  },
+
+  /**
+   * 从结果数据中提取出生信息
+   */
+  extractBirthInfoFromResultData(resultData) {
+    // 从多个可能的字段中提取出生信息
+    let year, month, day, hour, gender;
+    
+    // 尝试从主字段获取
+    if (resultData.year && resultData.month && resultData.day) {
+      year = resultData.year;
+      month = resultData.month;
+      day = resultData.day;
+      hour = resultData.hour || 0;
+      gender = resultData.gender || 'male';
+    }
+    // 尝试从 user_info 获取
+    else if (resultData.user_info) {
+      if (resultData.user_info.birth_date) {
+        const dateArr = resultData.user_info.birth_date.split('-');
+        year = parseInt(dateArr[0]);
+        month = parseInt(dateArr[1]);
+        day = parseInt(dateArr[2]);
+      }
+      hour = resultData.user_info.hour || resultData.hour || 0;
+      gender = resultData.user_info.gender || resultData.gender || 'male';
+    }
+    // 尝试从 solar_info 获取
+    else if (resultData.solar_info) {
+      year = resultData.solar_info.year;
+      month = resultData.solar_info.month;
+      day = resultData.solar_info.day;
+      hour = resultData.hour || 0;
+      gender = resultData.gender || 'male';
+    }
+    
+    // 如果还是没有获取到，使用默认值
+    if (!year || !month || !day) {
+      console.warn('无法从resultData中提取完整的出生信息，使用默认值');
+      year = 1990;
+      month = 1;
+      day = 1;
+      hour = 0;
+      gender = 'male';
+    }
+    
+    return {
+      year: year,
+      month: month,
+      day: day,
+      hour: hour,
+      gender: gender,
+      calendarType: resultData.calendar_type || 'solar'
+    };
   },
 
   /**

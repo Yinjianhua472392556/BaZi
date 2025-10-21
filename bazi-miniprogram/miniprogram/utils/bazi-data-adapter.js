@@ -65,31 +65,88 @@ class BaziDataAdapter {
   }
   
   /**
-   * 生成显示用的名称
+   * 生成显示用的名称 - 综合智能标识方案
    * @param {Object} birthInfo - 出生信息  
    * @param {String} customName - 自定义名称
    * @returns {String} 显示名称
    */
   static generateDisplayName(birthInfo, customName = null) {
+    // 1. 优先使用自定义名称
     if (customName) {
       return customName;
     }
     
-    const { year, gender, hour } = birthInfo;
+    const { year, month, day, hour, gender } = birthInfo;
     const genderText = gender === 'male' ? '男' : '女';
     
-    // 时辰映射
-    const hourMapping = {
-      23: "子时", 0: "子时", 1: "丑时", 2: "丑时",
-      3: "寅时", 4: "寅时", 5: "卯时", 6: "卯时", 
-      7: "辰时", 8: "辰时", 9: "巳时", 10: "巳时",
-      11: "午时", 12: "午时", 13: "未时", 14: "未时",
-      15: "申时", 16: "申时", 17: "酉时", 18: "酉时",
-      19: "戌时", 20: "戌时", 21: "亥时", 22: "亥时"
+    // 2. 判断是否需要显示完整日期
+    if (this.shouldShowFullDate(birthInfo)) {
+      return `${year}年${month}月${day}日${genderText}`;
+    }
+    
+    // 3. 使用生肖+时辰的简洁标识
+    const shengxiao = this.getShengxiao(year);
+    const timeText = this.getTimeText(hour);
+    return `${shengxiao}${genderText}·${timeText}`;
+  }
+  
+  /**
+   * 判断是否需要显示完整日期
+   * @param {Object} birthInfo - 出生信息
+   * @returns {Boolean} 是否显示完整日期
+   */
+  static shouldShowFullDate(birthInfo) {
+    const { month, day } = birthInfo;
+    
+    // 特殊日期：重要节日或纪念日
+    const specialDates = [
+      '1-1',   // 元旦
+      '2-14',  // 情人节
+      '3-8',   // 妇女节
+      '5-1',   // 劳动节
+      '6-1',   // 儿童节
+      '8-15',  // 中秋节(农历，这里用公历近似)
+      '10-1',  // 国庆节
+      '12-25'  // 圣诞节
+    ];
+    
+    const dateKey = `${month}-${day}`;
+    return specialDates.includes(dateKey);
+  }
+  
+  /**
+   * 获取生肖
+   * @param {Number} year - 年份
+   * @returns {String} 生肖
+   */
+  static getShengxiao(year) {
+    const shengxiaoList = [
+      '鼠', '牛', '虎', '兔', '龙', '蛇', 
+      '马', '羊', '猴', '鸡', '狗', '猪'
+    ];
+    
+    // 计算生肖索引 (1900年为鼠年)
+    const baseYear = 1900;
+    const index = (year - baseYear) % 12;
+    return shengxiaoList[index] || '鼠';
+  }
+  
+  /**
+   * 获取优雅的时辰表示
+   * @param {Number} hour - 小时 (0-23)
+   * @returns {String} 时辰
+   */
+  static getTimeText(hour) {
+    const timeMapping = {
+      23: "子", 0: "子", 1: "丑", 2: "丑",
+      3: "寅", 4: "寅", 5: "卯", 6: "卯", 
+      7: "辰", 8: "辰", 9: "巳", 10: "巳",
+      11: "午", 12: "午", 13: "未", 14: "未",
+      15: "申", 16: "申", 17: "酉", 18: "酉",
+      19: "戌", 20: "戌", 21: "亥", 22: "亥"
     };
     
-    const timeText = hourMapping[hour] || '未知时';
-    return `${year}年${genderText}(${timeText})`;
+    return timeMapping[hour] || '子';
   }
   
   /**

@@ -19,6 +19,9 @@
         <view class="fortune-update" wx:if="{{lastFortuneUpdate}}">
           <text class="update-time">更新时间: {{lastFortuneUpdate}}</text>
         </view>
+        <view class="offline-indicator" wx:if="{{familyOverview.isOfflineMode}}">
+          <text class="offline-text">📱 离线模式</text>
+        </view>
       </view>
       
       <!-- 加载状态 -->
@@ -82,10 +85,17 @@
         <view class="personal-fortune-item" wx:for="{{membersWithFortune}}" wx:key="id">
           <view class="personal-header">
             <text class="person-name">{{item.name}}</text>
-            <view class="person-score">
-              <text class="star {{idx < (item.daily_fortune.overall_score || 0) ? 'filled' : ''}}" 
-                    wx:for="{{[1,2,3,4,5]}}" wx:key="*this" wx:for-index="idx">★</text>
-              <text class="score-text">{{item.daily_fortune.overall_score || 0}}/5</text>
+            <view class="person-actions">
+              <view class="person-score">
+                <text class="star {{idx < (item.daily_fortune.overall_score || 0) ? 'filled' : ''}}" 
+                      wx:for="{{[1,2,3,4,5]}}" wx:key="*this" wx:for-index="idx">★</text>
+                <text class="score-text">{{item.daily_fortune.overall_score || 0}}/5</text>
+              </view>
+              <button class="member-menu-btn" 
+                      bindtap="showMemberActions" 
+                      data-member-id="{{item.id}}"
+                      data-member-name="{{item.name}}"
+                      data-member-data="{{item}}">⋯</button>
             </view>
           </view>
           
@@ -133,7 +143,6 @@
         <button class="action-btn primary" bindtap="refreshFortune" disabled="{{fortuneLoading}}">
           {{fortuneLoading ? '计算中...' : '刷新运势'}}
         </button>
-        <button class="action-btn secondary" bindtap="manageBazi">管理家庭</button>
       </view>
       
     </view>

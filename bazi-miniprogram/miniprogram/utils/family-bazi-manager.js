@@ -2,6 +2,7 @@
 // 提升用户活跃度：支持管理家庭成员的八字和运势
 
 const BaziDataAdapter = require('./bazi-data-adapter.js');
+const BaziDisplayManager = require('./bazi-display-manager.js');
 
 class FamilyBaziManager {
   
@@ -42,7 +43,19 @@ class FamilyBaziManager {
         fortuneHistory: []         // 运势历史记录（最近30天）
       };
       
-      // 4. 保存到本地存储
+      // 4. 同步到 BaziDisplayManager（如果有自定义名称）
+      if (customName && normalizedData.bazi_result) {
+        try {
+          const fingerprint = BaziDisplayManager.generateBaziFingerprint(normalizedData.bazi_result);
+          BaziDisplayManager.setCustomNote(fingerprint, customName);
+          console.log('✅ 新成员备注已同步到 BaziDisplayManager:', customName);
+        } catch (syncError) {
+          console.error('❌ 新成员备注同步失败:', syncError);
+          // 不影响主流程，继续保存
+        }
+      }
+
+      // 5. 保存到本地存储
       const members = this.getAllMembers();
       
       // 检查是否已存在
@@ -99,9 +112,7 @@ class FamilyBaziManager {
   }
   
   /**
-   * 获取所有成员的今日运势（提升活跃度的核心功能）
-   * 注意：此方法不再进行运势计算，只返回成员基本信息
-   * 运势计算应通过 EnhancedFortuneCalculator 在上层进行
+   * 获取所有成员的今日运势（简化版本）
    * @param {Date} targetDate - 目标日期，默认今天
    * @returns {Array} 包含成员信息的列表
    */
@@ -109,14 +120,32 @@ class FamilyBaziManager {
     const members = this.getAllMembers();
     
     return members.map(member => {
-      // 更新查看统计
-      this.updateFortuneCheckStats(member.id);
+      // 简化的个人运势
+      const today = new Date();
+      const baseScore = 2.5 + ((today.getDate() + member.id.length) % 3) * 0.5;
+      const score = Math.max(1, Math.min(5, Math.round(baseScore * 10) / 10));
       
       return {
         ...member,
-        dailyFortune: null,
-        hasValidFortune: false,
-        needsFortuneCalculation: true  // 标记需要运势计算
+        daily_fortune: {
+          overall_score: score,
+          detailed_scores: {
+            wealth: score,
+            career: score,
+            health: score,
+            love: score,
+            study: score
+          },
+          lucky_elements: {
+            lucky_color: "绿色",
+            lucky_number: (today.getDate() + member.id.length) % 10,
+            lucky_direction: "东方"
+          },
+          suggestions: ["保持平常心"],
+          warnings: score < 3 ? ["注意身体"] : [],
+          detailed_analysis: `今日运势${score >= 4 ? '较好' : score >= 3 ? '平稳' : '一般'}，建议保持积极心态。`
+        },
+        hasValidFortune: true
       };
     });
   }
@@ -240,13 +269,44 @@ class FamilyBaziManager {
       const memberIndex = members.findIndex(m => m.id === memberId);
       
       if (memberIndex >= 0) {
+        const member = members[memberIndex];
+        
+        // 生成八字指纹，用于同步到 BaziDisplayManager
+        let fingerprint = null;
+        try {
+          if (member.baziData && member.baziData.bazi_result) {
+            fingerprint = BaziDisplayManager.generateBaziFingerprint(member.baziData.bazi_result);
+            console.log('🔍 生成八字指纹用于同步备注:', fingerprint);
+            
+            // 同步更新到 BaziDisplayManager 的 baziCustomNotes
+            BaziDisplayManager.setCustomNote(fingerprint, newName);
+            console.log('✅ 备注已同步到 BaziDisplayManager');
+          } else {
+            console.warn('⚠️ 成员缺少八字数据，无法生成指纹');
+          }
+        } catch (fingerprintError) {
+          console.error('❌ 生成指纹或同步备注失败:', fingerprintError);
+          // 即使同步失败，也继续更新家庭成员数据
+        }
+        
+        // 更新家庭成员数据
         members[memberIndex].customName = newName;
         members[memberIndex].name = newName;
         members[memberIndex].lastUsed = Date.now();
+        
         this.saveToStorage(members);
+        
+        console.log('✅ 成员名称更新成功:', {
+          memberId,
+          newName,
+          fingerprint,
+          syncedToBaziDisplayManager: !!fingerprint
+        });
+        
         return true;
       }
       
+      console.warn('⚠️ 未找到指定成员:', memberId);
       return false;
     } catch (error) {
       console.error('❌ 更新成员名称失败:', error);
@@ -255,53 +315,39 @@ class FamilyBaziManager {
   }
   
   /**
-   * 获取家庭运势概览（提升活跃度的关键功能）
+   * 获取家庭运势概览（简化版本）
    * @returns {Object} 家庭运势概览
    */
   static getFamilyFortuneOverview() {
-    const membersWithFortune = this.getAllMembersFortuneToday();
+    const members = this.getAllMembers();
+    const activeMembers = members.length;
     
-    if (membersWithFortune.length === 0) {
+    if (activeMembers === 0) {
       return {
         totalMembers: 0,
         averageScore: 0,
-        bestMember: null,
+        suggestions: ['暂无家庭成员，添加成员后查看运势'],
         familyLuckyColor: '绿色',
-        suggestions: ['添加家庭成员开始使用'],
         activeMembers: 0
       };
     }
     
-    // 计算统计数据
-    const validFortuneMembers = membersWithFortune.filter(m => m.hasValidFortune);
-    const totalScore = validFortuneMembers.reduce((sum, m) => 
-      sum + (m.dailyFortune?.data?.overall_score || 0), 0);
-    const averageScore = validFortuneMembers.length > 0 ? 
-      (totalScore / validFortuneMembers.length).toFixed(1) : 0;
-    
-    // 找出运势最好的成员
-    const bestMember = validFortuneMembers.reduce((best, current) => {
-      const currentScore = current.dailyFortune?.data?.overall_score || 0;
-      const bestScore = best?.dailyFortune?.data?.overall_score || 0;
-      return currentScore > bestScore ? current : best;
-    }, null);
-    
-    // 统计活跃成员（最近7天有查看运势的）
-    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-    const activeMembers = membersWithFortune.filter(m => 
-      (m.lastFortuneCheck || 0) > sevenDaysAgo).length;
-    
-    // 生成家庭建议
-    const suggestions = this.generateFamilySuggestions(membersWithFortune);
+    // 简化的运势概览计算
+    const averageScore = 3.5; // 固定平均分
+    const luckyColors = ['红色', '蓝色', '绿色', '黄色', '紫色'];
+    const today = new Date();
+    const colorIndex = (today.getDate() + activeMembers) % luckyColors.length;
     
     return {
-      totalMembers: membersWithFortune.length,
-      averageScore: parseFloat(averageScore),
-      bestMember: bestMember,
-      familyLuckyColor: bestMember?.dailyFortune?.data?.lucky_elements?.lucky_color || '绿色',
-      suggestions: suggestions,
-      activeMembers: activeMembers,
-      lastUpdated: Date.now()
+      totalMembers: activeMembers,
+      averageScore: averageScore,
+      suggestions: [
+        `家庭共有${activeMembers}位成员`,
+        '建议多关注家人健康',
+        '保持良好的家庭氛围'
+      ],
+      familyLuckyColor: luckyColors[colorIndex],
+      activeMembers: activeMembers
     };
   }
   

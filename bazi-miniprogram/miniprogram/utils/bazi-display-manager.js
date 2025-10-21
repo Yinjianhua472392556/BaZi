@@ -1,30 +1,20 @@
-// 八字显示名称管理器
+// 八字显示名称管理器 - 简化版本（只处理家庭成员数据）
 
 class BaziDisplayManager {
   
-  // 获取显示名称（优先使用自定义备注）
-  static getDisplayName(birthInfo, fingerprint) {
-    const customNotes = wx.getStorageSync('baziCustomNotes') || {};
-    return customNotes[fingerprint] || this.generateAutoName(birthInfo);
-  }
-  
-  // 设置自定义备注
-  static setCustomNote(fingerprint, note) {
-    const customNotes = wx.getStorageSync('baziCustomNotes') || {};
-    if (note && note.trim()) {
-      customNotes[fingerprint] = note.trim();
-    } else {
-      delete customNotes[fingerprint];
+  // 获取显示名称（直接从家庭成员数据中获取）
+  static getDisplayName(memberData) {
+    if (!memberData) {
+      return '未知用户';
     }
-    wx.setStorageSync('baziCustomNotes', customNotes);
     
-    // 触发全局更新事件
-    this.triggerUpdateEvent(fingerprint, note);
-  }
-  
-  // 删除自定义备注
-  static removeCustomNote(fingerprint) {
-    this.setCustomNote(fingerprint, null);
+    // 优先使用自定义名称
+    if (memberData.name && memberData.name.trim()) {
+      return memberData.name.trim();
+    }
+    
+    // 其次使用生成的自动名称
+    return this.generateAutoName(memberData.birthInfo || memberData.userInfo);
   }
   
   // 自动生成名称
@@ -51,138 +41,87 @@ class BaziDisplayManager {
     return fingerprint;
   }
   
-  // 获取所有唯一八字记录
-  static getUniqueBaziRecords() {
-    console.log('🔍 开始获取唯一八字记录...')
+  // 获取所有家庭成员
+  static getAllFamilyMembers() {
+    console.log('🔍 开始获取所有家庭成员...')
     
-    const app = getApp();
-    const history = app.getBaziHistory() || [];
-    const customNotes = wx.getStorageSync('baziCustomNotes') || {};
-    const primaryBazi = wx.getStorageSync('primaryBazi') || null;
+    const FamilyBaziManager = require('./family-bazi-manager.js');
+    const members = FamilyBaziManager.getAllMembers() || [];
     
-    console.log('🔍 原始历史数据:', {
-      count: history.length,
-      customNotesCount: Object.keys(customNotes).length,
-      primaryBazi
-    })
-    
-    const uniqueBazi = new Map();
-    
-    history.forEach((record, index) => {
-      try {
-        console.log(`🔍 处理历史记录 ${index + 1}:`, {
-          id: record.id,
-          timestamp: record.timestamp,
-          has_bazi_result: !!record.bazi_result,
-          has_birthInfo: !!record.birthInfo,
-          bazi_result_structure: record.bazi_result ? Object.keys(record.bazi_result) : 'null'
-        })
-        
-        if (!record.bazi_result) {
-          console.warn(`🔍 记录 ${record.id} 缺少bazi_result，跳过`)
-          return
-        }
-        
-        const fingerprint = this.generateBaziFingerprint(record.bazi_result);
-        console.log(`🔍 生成指纹: ${fingerprint}`)
-        
-        if (!uniqueBazi.has(fingerprint)) {
-          const displayName = customNotes[fingerprint] || this.generateAutoName(record.birthInfo)
-          
-          uniqueBazi.set(fingerprint, {
-            ...record,
-            fingerprint: fingerprint,
-            display_name: displayName,
-            has_custom_note: !!customNotes[fingerprint],
-            is_primary: fingerprint === primaryBazi,
-            last_used: record.timestamp
-          });
-          
-          console.log(`🔍 添加新的唯一八字:`, {
-            fingerprint,
-            display_name: displayName,
-            has_custom_note: !!customNotes[fingerprint],
-            is_primary: fingerprint === primaryBazi
-          })
-        } else {
-          // 更新为最新的记录时间
-          const existing = uniqueBazi.get(fingerprint);
-          if (record.timestamp > existing.last_used) {
-            existing.last_used = record.timestamp;
-            console.log(`🔍 更新八字记录时间:`, fingerprint)
-          }
-        }
-      } catch (error) {
-        console.error(`🔍 处理记录 ${index + 1} 失败:`, error, record)
-      }
-    });
-    
-    // 排序：主要八字 > 最近使用 > 时间顺序
-    const result = Array.from(uniqueBazi.values()).sort((a, b) => {
-      if (a.is_primary !== b.is_primary) {
-        return b.is_primary - a.is_primary;
-      }
-      return b.last_used - a.last_used;
-    });
-    
-    console.log('🔍 唯一八字记录处理完成:', {
-      uniqueCount: result.length,
-      records: result.map(r => ({
-        fingerprint: r.fingerprint,
-        display_name: r.display_name,
-        is_primary: r.is_primary
+    console.log('🔍 家庭成员数据:', {
+      count: members.length,
+      members: members.map(m => ({
+        id: m.id,
+        name: m.name,
+        has_bazi_data: !!m.baziData
       }))
-    })
+    });
+    
+    // 为每个成员添加显示名称和指纹
+    const enhancedMembers = members.map(member => {
+      try {
+        const fingerprint = member.baziData?.bazi_result ? 
+          this.generateBaziFingerprint(member.baziData.bazi_result) : 'unknown';
+        
+        return {
+          ...member,
+          fingerprint: fingerprint,
+          display_name: this.getDisplayName(member),
+          last_used: member.lastUsed || member.createTime || Date.now()
+        };
+      } catch (error) {
+        console.error('处理家庭成员失败:', error, member);
+        return {
+          ...member,
+          fingerprint: 'unknown',
+          display_name: '未知用户',
+          last_used: member.lastUsed || member.createTime || Date.now()
+        };
+      }
+    });
+    
+    // 按最近使用时间排序
+    const result = enhancedMembers.sort((a, b) => b.last_used - a.last_used);
+    
+    console.log('🔍 家庭成员处理完成:', {
+      count: result.length,
+      members: result.map(r => ({
+        id: r.id,
+        display_name: r.display_name,
+        fingerprint: r.fingerprint
+      }))
+    });
     
     return result;
   }
   
-  // 设置主要八字
-  static setPrimaryBazi(fingerprint) {
-    wx.setStorageSync('primaryBazi', fingerprint);
-    this.triggerUpdateEvent(fingerprint, null);
-  }
-  
-  // 获取主要八字
-  static getPrimaryBazi() {
-    return wx.getStorageSync('primaryBazi') || null;
-  }
-  
-  // 触发更新事件
-  static triggerUpdateEvent(fingerprint, note) {
-    // 可以在这里添加事件通知机制
-    // 暂时使用 console.log 作为调试
-    console.log('八字显示名称更新:', fingerprint, note);
-  }
-  
-  // 获取八字对应的每日运势
-  // 注意：此方法不再进行本地运势计算，需要通过后端API获取运势
-  static getDailyFortunesForAllBazi(targetDate = new Date()) {
-    console.log('🔍 开始获取专属运势（需要API支持）...')
+  // 获取家庭成员的每日运势
+  static getDailyFortunesForAllMembers(targetDate = new Date()) {
+    console.log('🔍 开始获取家庭成员专属运势...');
     
-    const uniqueBazi = this.getUniqueBaziRecords();
-    console.log('🔍 唯一八字记录:', {
-      count: uniqueBazi.length,
-      records: uniqueBazi.map(r => ({
-        fingerprint: r.fingerprint,
-        display_name: r.display_name,
-        has_bazi_result: !!r.bazi_result
+    const familyMembers = this.getAllFamilyMembers();
+    console.log('🔍 家庭成员:', {
+      count: familyMembers.length,
+      members: familyMembers.map(m => ({
+        id: m.id,
+        display_name: m.display_name,
+        has_bazi_data: !!m.baziData
       }))
-    })
+    });
     
     const dailyFortunes = [];
     
-    uniqueBazi.forEach((bazi, index) => {
-      console.log(`🔍 处理第${index + 1}个八字:`, {
-        fingerprint: bazi.fingerprint,
-        display_name: bazi.display_name
-      })
+    familyMembers.forEach((member, index) => {
+      console.log(`🔍 处理第${index + 1}个家庭成员:`, {
+        id: member.id,
+        display_name: member.display_name
+      });
       
       // 不再进行本地计算，返回默认运势
       const fortune = this.getDefaultFortune();
       
       dailyFortunes.push({
-        ...bazi,
+        ...member,
         daily_fortune: fortune,
         needs_api_calculation: true  // 标记需要API计算
       });
@@ -217,20 +156,6 @@ class BaziDisplayManager {
   static isCacheValid(timestamp) {
     const oneDay = 24 * 60 * 60 * 1000;
     return Date.now() - timestamp < oneDay;
-  }
-  
-  // 清理过期缓存并保存
-  static cleanAndSaveCache(fortuneCache) {
-    const cleanedCache = {};
-    const cutoffTime = Date.now() - (7 * 24 * 60 * 60 * 1000); // 保留7天
-    
-    Object.keys(fortuneCache).forEach(key => {
-      if (fortuneCache[key].timestamp > cutoffTime) {
-        cleanedCache[key] = fortuneCache[key];
-      }
-    });
-    
-    wx.setStorageSync('dailyFortuneCache', cleanedCache);
   }
   
   // 格式化日期

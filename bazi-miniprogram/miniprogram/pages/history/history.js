@@ -2,6 +2,7 @@
 const app = getApp()
 const AdManager = require('../../utils/ad-manager')
 const BaziDisplayManager = require('../../utils/bazi-display-manager')
+const FamilyBaziManager = require('../../utils/family-bazi-manager')
 
 Page({
   data: {
@@ -29,6 +30,8 @@ Page({
   },
 
   onShow() {
+    // 每次显示页面都重新加载历史记录，确保备注更新能及时反映
+    console.log('🔄 历史记录页面onShow，重新加载数据...')
     this.loadHistory()
   },
 
@@ -152,15 +155,70 @@ Page({
     })
   },
 
-  // 从存储中移除历史记录项
+  // 从存储中移除历史记录项（增强版：同步删除对应的家庭成员）
   removeHistoryItem(itemId) {
-    const history = app.getBaziHistory()
-    const filteredHistory = history.filter(item => item.id !== itemId)
-    
-    wx.setStorageSync('baziHistory', filteredHistory)
-    app.globalData.baziHistory = filteredHistory
-    
-    this.loadHistory()
+    try {
+      const history = app.getBaziHistory()
+      const itemToDelete = history.find(item => item.id === itemId)
+      
+      if (itemToDelete && itemToDelete.bazi_result) {
+        console.log('🔍 准备删除历史记录并同步删除家庭成员:', itemId)
+        
+        try {
+          // 生成八字指纹，查找对应的家庭成员
+          const fingerprint = BaziDisplayManager.generateBaziFingerprint(itemToDelete.bazi_result)
+          console.log('🔍 生成八字指纹:', fingerprint)
+          
+          // 查找所有家庭成员中具有相同八字指纹的成员
+          const allMembers = FamilyBaziManager.getAllMembers()
+          const correspondingMembers = allMembers.filter(member => {
+            try {
+              if (member.baziData && member.baziData.bazi_result) {
+                const memberFingerprint = BaziDisplayManager.generateBaziFingerprint(member.baziData.bazi_result)
+                return memberFingerprint === fingerprint
+              }
+              return false
+            } catch (error) {
+              console.error('生成家庭成员指纹失败:', error)
+              return false
+            }
+          })
+          
+          console.log('🔍 找到对应的家庭成员:', correspondingMembers.length, '个')
+          
+          // 删除对应的家庭成员
+          correspondingMembers.forEach(member => {
+            const deleteSuccess = FamilyBaziManager.deleteMember(member.id)
+            console.log(`${deleteSuccess ? '✅' : '❌'} 删除家庭成员 ${member.name}:`, deleteSuccess)
+          })
+          
+          // 同时清理对应的自定义备注
+          BaziDisplayManager.removeCustomNote(fingerprint)
+          console.log('✅ 已清理自定义备注')
+          
+        } catch (syncError) {
+          console.error('❌ 同步删除家庭成员失败:', syncError)
+          // 即使同步失败，也要继续删除历史记录
+        }
+      }
+      
+      // 删除历史记录
+      const filteredHistory = history.filter(item => item.id !== itemId)
+      wx.setStorageSync('baziHistory', filteredHistory)
+      app.globalData.baziHistory = filteredHistory
+      
+      console.log('✅ 历史记录删除成功，同步操作完成')
+      
+      // 重新加载页面数据
+      this.loadHistory()
+      
+    } catch (error) {
+      console.error('❌ 删除历史记录失败:', error)
+      wx.showToast({
+        title: '删除失败',
+        icon: 'error'
+      })
+    }
   },
 
   // 清空全部历史记录

@@ -6,17 +6,6 @@
     <view class="card">
       <view class="subtitle">功能菜单</view>
       <view class="menu-list">
-        <navigator url="/pages/history/history" class="menu-item">
-          <view class="menu-icon-wrapper">
-            <view class="menu-icon">📊</view>
-          </view>
-          <view class="menu-content">
-            <view class="menu-text">历史记录</view>
-            <view class="menu-desc">查看我的测算记录</view>
-          </view>
-          <view class="menu-arrow">></view>
-        </navigator>
-        
         <view class="menu-item" bindtap="viewCollectedNames">
           <view class="menu-icon-wrapper">
             <view class="menu-icon">⭐</view>

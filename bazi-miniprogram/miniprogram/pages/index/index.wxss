@@ -551,18 +551,48 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15rpx;
-  padding-bottom: 10rpx;
-  border-bottom: 1rpx solid #F0F0F0;
 }
 
 .person-name {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #333;
-  max-width: 200rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.person-actions {
+  display: flex;
+  align-items: center;
+  gap: 15rpx;
+}
+
+.person-score {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.member-menu-btn {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #666;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+.member-menu-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.member-menu-btn::after {
+  border: none;
 }
 
 .person-score {
@@ -895,6 +925,20 @@
   background: #F8F9FA;
   padding: 4rpx 8rpx;
   border-radius: 8rpx;
+}
+
+/* 离线模式指示器样式 */
+.offline-indicator {
+  margin-top: 8rpx;
+}
+
+.offline-text {
+  font-size: 20rpx;
+  color: #FF6B6B;
+  background: #FFF5F5;
+  padding: 4rpx 8rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #FFE6E6;
 }
 
 /* 新增：增强的个人运势列表样式 */

@@ -1,8 +1,0 @@
-{
-  "navigationBarTitleText": "八字管理",
-  "navigationBarBackgroundColor": "#C8860D",
-  "navigationBarTextStyle": "white",
-  "backgroundColor": "#F0F8FF",
-  "enablePullDownRefresh": true,
-  "onReachBottomDistance": 50
-}
