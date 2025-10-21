@@ -131,17 +131,23 @@ Component({
 
         console.log('书籍推荐请求:', requestData);
 
-        const response = await wx.request({
-          url: `${apiBaseUrl}/api/v1/books/recommendations`,
-          method: 'POST',
-          header: {
-            'Content-Type': 'application/json'
-          },
-          data: requestData
+        // 使用Promise包装app.request
+        const response = await new Promise((resolve, reject) => {
+          app.request({
+            url: '/api/v1/books/recommendations',
+            method: 'POST',
+            data: requestData,
+            success: (res) => {
+              resolve(res);
+            },
+            fail: (err) => {
+              reject(err);
+            }
+          });
         });
 
-        if (response.statusCode === 200 && response.data.success) {
-          const recommendations = response.data.data.recommendations || [];
+        if (response.success) {
+          const recommendations = response.data.recommendations || [];
           
           // 保存新推荐的书籍ID到历史记录
           const newBookIds = recommendations.map(book => book.book_id);
@@ -154,7 +160,7 @@ Component({
 
           console.log('书籍推荐成功:', recommendations);
         } else {
-          throw new Error(response.data.error || '获取推荐失败');
+          throw new Error(response.error || '获取推荐失败');
         }
 
       } catch (error) {
@@ -227,28 +233,33 @@ Component({
     async generateAffiliateLink(book) {
       try {
         const app = getApp();
-        const apiBaseUrl = app.globalData.apiBaseUrl || 'http://localhost:8001';
         
         // 获取用户ID（可以是openid或其他唯一标识）
         const userId = wx.getStorageSync('user_openid') || 'anonymous';
         
-        const response = await wx.request({
-          url: `${apiBaseUrl}/api/v1/books/affiliate-link`,
-          method: 'POST',
-          header: {
-            'Content-Type': 'application/json'
-          },
-          data: {
-            book_id: book.book_id,
-            platform: book.platform || 'taobao',
-            user_id: userId
-          }
+        // 使用Promise包装app.request
+        const response = await new Promise((resolve, reject) => {
+          app.request({
+            url: '/api/v1/books/affiliate-link',
+            method: 'POST',
+            data: {
+              book_id: book.book_id,
+              platform: book.platform || 'taobao',
+              user_id: userId
+            },
+            success: (res) => {
+              resolve(res);
+            },
+            fail: (err) => {
+              reject(err);
+            }
+          });
         });
 
-        if (response.statusCode === 200) {
-          return response.data;
+        if (response.success) {
+          return response;
         } else {
-          throw new Error('API请求失败');
+          throw new Error(response.error || 'API请求失败');
         }
 
       } catch (error) {

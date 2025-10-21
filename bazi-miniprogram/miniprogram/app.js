@@ -45,26 +45,86 @@ App({
     // apiBaseUrl: 'http://119.91.146.128:8001',  // 临时使用IP地址（备案期间）
     // 正式域名：'https://api.bazi365.top' （备案完成后恢复）
     baziResult: null,  // 当前八字测算结果
-    currentUser: null
+    currentUser: null,
+    // API日志配置
+    apiLogger: {
+      enabled: true,        // 主开关，上线时设为false
+      logRequest: true,     // 记录请求信息
+      logResponse: true,    // 记录响应信息
+      logError: true,       // 记录错误信息
+      logTiming: true,      // 记录请求耗时
+      detailedLog: true     // 详细日志（包含完整数据）
+    }
   },
 
-  // 全局API请求方法
+  // 全局API请求方法（增强版 - 支持详细日志）
   request(options) {
-    const { url, method = 'GET', data = {}, success, fail } = options
+    const { url, method = 'GET', data = {}, success, fail, timeout = 10000 } = options
+    const logger = this.globalData.apiLogger
+    const startTime = Date.now()
+    const requestId = Math.random().toString(36).substring(2, 8)
+    
+    // 请求日志
+    if (logger.enabled && logger.logRequest) {
+      console.log(`🚀 [API请求-${requestId}] ${method} ${url}`)
+      if (logger.detailedLog) {
+        console.log(`📤 [请求参数-${requestId}]:`, data)
+        console.log(`⏰ [请求时间-${requestId}]:`, new Date().toLocaleString())
+      }
+    }
+    
+    const fullUrl = this.globalData.apiBaseUrl + url
     
     wx.request({
-      url: this.globalData.apiBaseUrl + url,
+      url: fullUrl,
       method: method,
       data: data,
+      timeout: timeout,
       header: {
         'content-type': method === 'POST' ? 'application/json' : 'application/x-www-form-urlencoded'
       },
       success: (res) => {
-        console.log('API请求成功:', url, res.data)
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        // 成功响应日志
+        if (logger.enabled && logger.logResponse) {
+          console.log(`✅ [API响应-${requestId}] ${method} ${url} (${res.statusCode})`)
+          if (logger.logTiming) {
+            console.log(`⏱️ [响应耗时-${requestId}]: ${duration}ms`)
+          }
+          if (logger.detailedLog) {
+            console.log(`📥 [响应数据-${requestId}]:`, res.data)
+          }
+        }
+        
+        // 兼容原有的简单日志（当详细日志关闭时）
+        if (!logger.enabled || !logger.detailedLog) {
+          console.log('API请求成功:', url, res.data)
+        }
+        
         if (success) success(res.data)
       },
       fail: (err) => {
-        console.error('API请求失败:', url, err)
+        const endTime = Date.now()
+        const duration = endTime - startTime
+        
+        // 错误日志
+        if (logger.enabled && logger.logError) {
+          console.error(`❌ [API错误-${requestId}] ${method} ${url}`)
+          if (logger.logTiming) {
+            console.error(`⏱️ [错误耗时-${requestId}]: ${duration}ms`)
+          }
+          if (logger.detailedLog) {
+            console.error(`🔥 [错误详情-${requestId}]:`, err)
+          }
+        }
+        
+        // 兼容原有的简单错误日志
+        if (!logger.enabled || !logger.detailedLog) {
+          console.error('API请求失败:', url, err)
+        }
+        
         wx.showToast({
           title: '网络请求失败',
           icon: 'none'
@@ -72,6 +132,18 @@ App({
         if (fail) fail(err)
       }
     })
+  },
+
+  // 快速控制API日志的方法
+  enableApiLogger(enabled = true) {
+    this.globalData.apiLogger.enabled = enabled
+    console.log(`🔧 API日志已${enabled ? '开启' : '关闭'}`)
+  },
+
+  // 设置API日志详细程度
+  setApiLogLevel(detailed = true) {
+    this.globalData.apiLogger.detailedLog = detailed
+    console.log(`🔧 API详细日志已${detailed ? '开启' : '关闭'}`)
   },
 
   // 保存八字测算结果到本地

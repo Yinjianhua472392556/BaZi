@@ -148,26 +148,24 @@ class EnhancedFortuneCalculator {
 
       console.log('🌐 发送运势API请求:', requestData);
 
-      const requestTask = wx.request({
-        url: `${this.API_BASE_URL}/api/v1/calculate-fortune`,
+      const app = getApp();
+      app.request({
+        url: '/api/v1/calculate-fortune',
         method: 'POST',
         data: requestData,
-        header: {
-          'Content-Type': 'application/json'
-        },
         timeout: this.REQUEST_TIMEOUT,
         success: (res) => {
           console.log('✅ 运势API响应:', res);
-          if (res.statusCode === 200 && res.data.success) {
+          if (res.success) {
             resolve({
               success: true,
-              data: res.data.data
+              data: res.data
             });
           } else {
-            console.error('❌ 运势API返回错误:', res.data);
+            console.error('❌ 运势API返回错误:', res);
             resolve({
               success: false,
-              error: res.data.error || '服务器返回错误'
+              error: res.error || '服务器返回错误'
             });
           }
         },
@@ -179,15 +177,6 @@ class EnhancedFortuneCalculator {
           });
         }
       });
-
-      // 设置超时
-      setTimeout(() => {
-        requestTask.abort();
-        resolve({
-          success: false,
-          error: '请求超时'
-        });
-      }, this.REQUEST_TIMEOUT);
     });
   }
 
@@ -206,26 +195,24 @@ class EnhancedFortuneCalculator {
 
       console.log('🌐 发送批量运势API请求:', requestData);
 
-      const requestTask = wx.request({
-        url: `${this.API_BASE_URL}/api/v1/batch-fortune`,
+      const app = getApp();
+      app.request({
+        url: '/api/v1/batch-fortune',
         method: 'POST',
         data: requestData,
-        header: {
-          'Content-Type': 'application/json'
-        },
         timeout: this.REQUEST_TIMEOUT,
         success: (res) => {
           console.log('✅ 批量运势API响应:', res);
-          if (res.statusCode === 200 && res.data.success) {
+          if (res.success) {
             resolve({
               success: true,
-              data: res.data.data
+              data: res.data
             });
           } else {
-            console.error('❌ 批量运势API返回错误:', res.data);
+            console.error('❌ 批量运势API返回错误:', res);
             resolve({
               success: false,
-              error: res.data.error || '服务器返回错误'
+              error: res.error || '服务器返回错误'
             });
           }
         },
@@ -237,15 +224,6 @@ class EnhancedFortuneCalculator {
           });
         }
       });
-
-      // 设置超时
-      setTimeout(() => {
-        requestTask.abort();
-        resolve({
-          success: false,
-          error: '请求超时'
-        });
-      }, this.REQUEST_TIMEOUT);
     });
   }
 
