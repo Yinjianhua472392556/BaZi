@@ -132,11 +132,6 @@
         </view>
       </view>
       
-      <!-- 错误提示 -->
-      <view class="fortune-error-display" wx:if="{{fortuneError}}">
-        <text class="error-message">⚠️ {{fortuneError}}</text>
-        <button class="retry-btn" bindtap="refreshFortune">重试</button>
-      </view>
       
       <!-- 管理按钮 -->
       <view class="fortune-actions">

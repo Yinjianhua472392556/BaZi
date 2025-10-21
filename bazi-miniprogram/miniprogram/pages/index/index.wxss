@@ -1008,36 +1008,6 @@
   color: #DC3545;
 }
 
-/* 新增：错误提示样式 */
-.fortune-error-display {
-  text-align: center;
-  padding: 25rpx;
-  background: #FFF5F5;
-  border-radius: 15rpx;
-  border: 2rpx solid #F5E6E8;
-  margin-bottom: 20rpx;
-}
-
-.error-message {
-  font-size: 24rpx;
-  color: #DC3545;
-  margin-bottom: 15rpx;
-  display: block;
-}
-
-.retry-btn {
-  background: #DC3545 !important;
-  color: white !important;
-  font-size: 22rpx;
-  padding: 12rpx 24rpx !important;
-  border-radius: 20rpx;
-  border: none;
-  box-shadow: 0 2rpx 8rpx rgba(220, 53, 69, 0.3);
-}
-
-.retry-btn::after {
-  border: none;
-}
 
 /* 新增：增强的提示信息样式 */
 .hint-content {

@@ -35,7 +35,8 @@ Page({
     showDailyFortune: true,
     todayDate: '',
     universalFortune: null,
-    personalFortunes: []
+    personalFortunes: [],
+    fortuneLoading: false
   },
 
   onLoad() {
@@ -202,16 +203,10 @@ Page({
           membersWithFortune: [],
           universalFortune: universalFortune,
           personalFortunes: [],
-          fortuneLoading: false,
-          fortuneError: batchResult.error || '运势服务暂时不可用'
+          fortuneLoading: false
         })
         
-        // 显示错误提示
-        wx.showToast({
-          title: '运势服务暂时不可用',
-          icon: 'none',
-          duration: 3000
-        })
+        // 静默处理，不显示错误提示
       }
       
     } catch (error) {
@@ -230,8 +225,7 @@ Page({
           membersWithFortune: membersWithFortune,
           universalFortune: universalFortune,
           personalFortunes: membersWithFortune,
-          fortuneLoading: false,
-          fortuneError: error.message
+          fortuneLoading: false
         })
         
         console.log('✅ 降级运势系统加载完成')
@@ -256,8 +250,7 @@ Page({
             lucky_numbers: [8]
           },
           personalFortunes: [],
-          fortuneLoading: false,
-          fortuneError: '运势计算服务暂时不可用'
+          fortuneLoading: false
         })
       }
     }
@@ -370,8 +363,7 @@ Page({
           },
           membersWithFortune: [],
           universalFortune: universalFortune,
-          fortuneLoading: false,
-          fortuneError: null
+          fortuneLoading: false
         })
       } else {
         // 使用本地家庭管理器的离线运势
@@ -387,8 +379,7 @@ Page({
           },
           membersWithFortune: membersWithFortune,
           universalFortune: BaziDisplayManager.getUniversalDailyFortune(),
-          fortuneLoading: false,
-          fortuneError: null
+          fortuneLoading: false
         })
       }
       
