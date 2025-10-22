@@ -151,8 +151,31 @@
       <view class="analysis-section">
         <view class="analysis-title">今日运势</view>
         <view class="analysis-content">
-          <view class="fortune-score">运势评分：{{resultData.today_fortune.score || 8}}/10</view>
-          <view class="fortune-desc">{{resultData.today_fortune.description || '今日运势不错...'}}</view>
+          <view class="fortune-score">运势评分：{{(resultData.daily_fortune && resultData.daily_fortune.overall_score) ? resultData.daily_fortune.overall_score : (resultData.today_fortune && resultData.today_fortune.score) ? resultData.today_fortune.score : 8}}/10</view>
+          <view class="fortune-desc">{{(resultData.daily_fortune && resultData.daily_fortune.detailed_analysis) ? resultData.daily_fortune.detailed_analysis : (resultData.today_fortune && resultData.today_fortune.description) ? resultData.today_fortune.description : '今日运势不错...'}}</view>
+          <!-- 如果有更详细的运势信息则显示 -->
+          <view wx:if="{{resultData.daily_fortune && resultData.daily_fortune.suggestions && resultData.daily_fortune.suggestions.length > 0}}" class="fortune-suggestions">
+            <view class="suggestions-title">💡 建议：</view>
+            <view wx:for="{{resultData.daily_fortune.suggestions}}" wx:key="index" class="suggestion-item">{{item}}</view>
+          </view>
+          <view wx:if="{{resultData.daily_fortune && resultData.daily_fortune.warnings && resultData.daily_fortune.warnings.length > 0}}" class="fortune-warnings">
+            <view class="warnings-title">⚠️ 注意：</view>
+            <view wx:for="{{resultData.daily_fortune.warnings}}" wx:key="index" class="warning-item">{{item}}</view>
+          </view>
+          <view wx:if="{{resultData.daily_fortune && resultData.daily_fortune.lucky_elements}}" class="lucky-info">
+            <view class="lucky-title">🍀 今日幸运：</view>
+            <view class="lucky-items">
+              <view wx:if="{{resultData.daily_fortune.lucky_elements.lucky_color}}" class="lucky-item">
+                颜色：{{resultData.daily_fortune.lucky_elements.lucky_color}}
+              </view>
+              <view wx:if="{{resultData.daily_fortune.lucky_elements.lucky_number}}" class="lucky-item">
+                数字：{{resultData.daily_fortune.lucky_elements.lucky_number}}
+              </view>
+              <view wx:if="{{resultData.daily_fortune.lucky_elements.lucky_direction}}" class="lucky-item">
+                方向：{{resultData.daily_fortune.lucky_elements.lucky_direction}}
+              </view>
+            </view>
+          </view>
         </view>
       </view>
 

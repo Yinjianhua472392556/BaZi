@@ -264,27 +264,80 @@ async def network_test():
         }
     }
 
-# 八字计算接口 - 使用真实算法
+# 统一八字计算接口 - 支持单人和批量计算
 @app.post("/api/v1/calculate-bazi")
-async def calculate_bazi(birth_data: BirthData):
-    """八字计算接口 - 真实算法版"""
+async def calculate_bazi_unified(request_data: dict):
+    """统一的八字计算接口 - 支持单人和批量计算"""
     try:
+        # 判断是单人还是批量请求
+        if request_data.get('batch', False):
+            # 批量计算逻辑
+            return await calculate_bazi_batch(request_data)
+        else:
+            # 单人计算逻辑（保持原有逻辑）
+            return await calculate_bazi_single(request_data)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"统一八字计算出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"计算出错: {str(e)}")
+
+async def calculate_bazi_single(request_data: dict):
+    """单人八字计算"""
+    try:
+        # 从字典中提取数据，兼容BirthData格式
+        year = request_data.get('year')
+        month = request_data.get('month')
+        day = request_data.get('day')
+        hour = request_data.get('hour', 12)
+        gender = request_data.get('gender', 'male')
+        name = request_data.get('name', '匿名用户')
+        calendar_type = request_data.get('calendarType', 'solar')
+        
         # 数据验证
-        if not all([birth_data.year, birth_data.month, birth_data.day]):
+        if not all([year, month, day]):
             raise HTTPException(status_code=400, detail="缺少必要的出生信息")
         
         # 年份合理性检查
         current_year = datetime.now().year
-        if birth_data.year < 1900 or birth_data.year > current_year:
+        if year < 1900 or year > current_year:
             raise HTTPException(status_code=400, detail="出生年份不在有效范围内(1900-当前年份)")
         
         if ALGORITHMS_AVAILABLE and bazi_calculator:
             # 使用真实算法计算
             try:
                 result = bazi_calculator.calculate_bazi(
-                    birth_data.year, birth_data.month, birth_data.day,
-                    birth_data.hour, birth_data.gender, birth_data.calendarType
+                    year, month, day, hour, gender, calendar_type
                 )
+                
+                # 计算今日运势 - 使用当前日期确保每天不同但同天一致
+                # 修复：使用统一的当前日期，确保同一天内所有路径的运势数据一致
+                import pytz
+
+                # 使用中国时区获取当前日期，确保时区一致性
+                china_tz = pytz.timezone('Asia/Shanghai')
+                today_date = datetime.now(china_tz).strftime("%Y-%m-%d")
+                
+                if fortune_calculator:
+                    try:
+                        # 转换八字数据格式以匹配FortuneCalculator的期望格式
+                        bazi_for_fortune = {
+                            "year_pillar": result["bazi"]["year"],
+                            "month_pillar": result["bazi"]["month"],
+                            "day_pillar": result["bazi"]["day"],
+                            "hour_pillar": result["bazi"]["hour"]
+                        }
+                        
+                        fortune_result = fortune_calculator.calculate_daily_fortune(
+                            bazi_for_fortune, today_date
+                        )
+                        if fortune_result["success"]:
+                            result["daily_fortune"] = fortune_result["data"]
+                            print(f"✅ 单人计算：{request_data.get('name', '用户')} 运势计算成功，运势日期: {today_date}")
+                    except Exception as fortune_error:
+                        print(f"运势计算失败: {str(fortune_error)}")
+                        # 运势计算失败不影响八字结果
                 
                 return {
                     "success": True,
@@ -300,16 +353,303 @@ async def calculate_bazi(birth_data: BirthData):
             except Exception as algo_error:
                 print(f"算法计算出错，使用降级方案: {str(algo_error)}")
                 # 降级到模拟数据
-                return await calculate_bazi_fallback(birth_data)
+                return await calculate_bazi_single_fallback(request_data)
         else:
             # 降级到模拟数据
-            return await calculate_bazi_fallback(birth_data)
+            return await calculate_bazi_single_fallback(request_data)
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"八字计算出错: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"计算出错: {str(e)}")
+        print(f"单人八字计算出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"单人计算出错: {str(e)}")
+
+async def calculate_bazi_batch(request_data: dict):
+    """批量八字计算"""
+    try:
+        members_data = request_data.get('members_data', [])
+        target_date = request_data.get('target_date', datetime.now().strftime("%Y-%m-%d"))
+        
+        if not members_data:
+            raise HTTPException(status_code=400, detail="批量计算需要提供成员数据")
+        
+        results = []
+        
+        for member in members_data:
+            try:
+                # 为每个成员计算完整的八字分析
+                member_id = member.get('id', 'unknown')
+                member_name = member.get('name', '未知')
+                
+                # 打印完整的成员数据用于调试
+                print(f"成员 {member_name} 完整数据: {json.dumps(member, indent=2, ensure_ascii=False)}")
+                
+                # 尝试多种数据源
+                year = member.get('year')
+                month = member.get('month')
+                day = member.get('day')
+                hour = member.get('hour', 12)
+                gender = member.get('gender', 'male')
+                calendar_type = member.get('calendarType', 'solar')
+                
+                # 如果直接字段为空，尝试从birthInfo中获取
+                if not all([year, month, day]) and 'birthInfo' in member:
+                    birth_info = member.get('birthInfo', {})
+                    print(f"成员 {member_name} 从birthInfo获取数据: {json.dumps(birth_info, indent=2, ensure_ascii=False)}")
+                    
+                    year = year or birth_info.get('year')
+                    month = month or birth_info.get('month')
+                    day = day or birth_info.get('day')
+                    hour = hour or birth_info.get('hour', 12)
+                    gender = gender or birth_info.get('gender', 'male')
+                    calendar_type = calendar_type or birth_info.get('calendarType', 'solar')
+                
+                print(f"成员 {member_name} 提取到的数据: year={year}, month={month}, day={day}, hour={hour}, gender={gender}, calendar_type={calendar_type}")
+                
+                # 数据验证和类型转换
+                if not all([year, month, day]):
+                    print(f"❌ 成员 {member_name} 缺少必要的出生信息: year={year}, month={month}, day={day}")
+                    # 不直接抛出异常，而是跳过这个成员
+                    results.append({
+                        "member_id": member_id,
+                        "member_name": member_name,
+                        "has_valid_fortune": False,
+                        "error": f"缺少必要的出生信息: year={year}, month={month}, day={day}"
+                    })
+                    continue
+                
+                # 确保数据类型为整数
+                try:
+                    year = int(year) if year is not None else None
+                    month = int(month) if month is not None else None
+                    day = int(day) if day is not None else None
+                    hour = int(hour) if hour is not None else 12
+                except (ValueError, TypeError) as e:
+                    print(f"❌ 成员 {member_name} 数据类型转换失败: {e}")
+                    results.append({
+                        "member_id": member_id,
+                        "member_name": member_name,
+                        "has_valid_fortune": False,
+                        "error": f"数据格式错误: {str(e)}"
+                    })
+                    continue
+                
+                # 再次验证转换后的数据
+                if None in [year, month, day] or year <= 0 or month <= 0 or day <= 0:
+                    print(f"❌ 成员 {member_name} 数据验证失败: year={year}, month={month}, day={day}")
+                    results.append({
+                        "member_id": member_id,
+                        "member_name": member_name,
+                        "has_valid_fortune": False,
+                        "error": f"出生日期无效: year={year}, month={month}, day={day}"
+                    })
+                    continue
+                
+                print(f"✅ 成员 {member_name} 数据验证成功: year={year}, month={month}, day={day}, hour={hour}, gender={gender}, calendar_type={calendar_type}")
+                
+                # 计算八字
+                if ALGORITHMS_AVAILABLE and bazi_calculator:
+                    bazi_result = bazi_calculator.calculate_bazi(
+                        year, month, day, hour, gender, calendar_type
+                    )
+                    
+                    # 计算目标日期的运势
+                    if fortune_calculator:
+                        fortune_result = fortune_calculator.calculate_daily_fortune(
+                            bazi_result, target_date
+                        )
+                        if fortune_result["success"]:
+                            bazi_result["daily_fortune"] = fortune_result["data"]
+                    
+                    results.append({
+                        "member_id": member_id,
+                        "member_name": member_name,
+                        **bazi_result,  # 包含bazi, paipan, wuxing, analysis等
+                        "has_valid_fortune": True
+                    })
+                else:
+                    # 降级方案
+                    fallback_result = await calculate_member_fallback(member, target_date)
+                    results.append(fallback_result)
+                    
+            except Exception as member_error:
+                print(f"成员 {member.get('name', 'unknown')} 计算失败: {str(member_error)}")
+                results.append({
+                    "member_id": member.get('id', 'unknown'),
+                    "member_name": member.get('name', '未知'),
+                    "has_valid_fortune": False,
+                    "error": str(member_error)
+                })
+        
+        # 生成家庭运势概览
+        family_overview = generate_family_overview(results, target_date)
+        
+        return {
+            "success": True,
+            "data": {
+                "batch_mode": True,
+                "target_date": target_date,
+                "members": results,
+                "family_overview": family_overview,
+                "total_members": len(results)
+            },
+            "timestamp": datetime.now().isoformat(),
+            "algorithm_version": "批量八字计算v2.0"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"批量八字计算出错: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"批量计算出错: {str(e)}")
+
+def generate_family_overview(results: List[Dict], target_date: str) -> Dict:
+    """生成家庭运势概览"""
+    if not results:
+        return {
+            "total_members": 0,
+            "average_score": 0,
+            "best_member": None,
+            "family_lucky_color": "绿色",
+            "suggestions": ["添加家庭成员开始使用"],
+            "active_members": 0,
+            "last_updated": datetime.now().timestamp()
+        }
+    
+    # 筛选有效运势的成员
+    valid_members = [r for r in results if r.get("has_valid_fortune", False) and r.get("daily_fortune")]
+    
+    if not valid_members:
+        return {
+            "total_members": len(results),
+            "average_score": 0,
+            "best_member": None,
+            "family_lucky_color": "绿色",
+            "suggestions": ["重新计算运势"],
+            "active_members": 0,
+            "last_updated": datetime.now().timestamp()
+        }
+    
+    # 计算平均分数
+    total_score = sum(m["daily_fortune"]["overall_score"] for m in valid_members)
+    average_score = round(total_score / len(valid_members), 1)
+    
+    # 找出运势最好的成员
+    best_member = max(valid_members, key=lambda x: x["daily_fortune"]["overall_score"])
+    
+    # 生成家庭建议
+    suggestions = []
+    if len(valid_members) == 1:
+        suggestions.append("添加更多家庭成员，获得完整的家庭运势分析")
+    elif len(valid_members) >= 2:
+        suggestions.append("全家人今天适合一起活动，增进感情")
+    
+    high_score_members = [m for m in valid_members if m["daily_fortune"]["overall_score"] >= 4]
+    if high_score_members:
+        names = [m["member_name"] for m in high_score_members]
+        suggestions.append(f"{'、'.join(names)}今日运势特别好")
+    
+    suggestions.append("每天查看运势，把握最佳时机")
+    
+    return {
+        "total_members": len(results),
+        "average_score": average_score,
+        "best_member": best_member,
+        "family_lucky_color": best_member["daily_fortune"]["lucky_elements"]["lucky_color"],
+        "suggestions": suggestions,
+        "active_members": len(valid_members),
+        "last_updated": datetime.now().timestamp()
+    }
+
+async def calculate_member_fallback(member: dict, target_date: str) -> dict:
+    """成员计算降级方案"""
+    return {
+        "member_id": member.get('id', 'unknown'),
+        "member_name": member.get('name', '未知'),
+        "bazi": {
+            "year": "甲子",
+            "month": "乙丑", 
+            "day": "丙寅",
+            "hour": "丁卯"
+        },
+        "wuxing": {
+            "木": 2,
+            "火": 2,
+            "土": 1,
+            "金": 1,
+            "水": 2
+        },
+        "daily_fortune": {
+            "date": target_date,
+            "overall_score": 3.5,
+            "detailed_scores": {
+                "wealth": 3.0,
+                "career": 3.5,
+                "health": 3.0,
+                "love": 3.8,
+                "study": 3.0
+            },
+            "lucky_elements": {
+                "lucky_color": "绿色",
+                "lucky_colors": ["绿色", "青色"],
+                "lucky_number": 3,
+                "lucky_numbers": [3, 8],
+                "lucky_direction": "东方",
+                "beneficial_wuxing": "木"
+            },
+            "suggestions": ["保持平常心"],
+            "warnings": [],
+            "detailed_analysis": "降级模式下的运势分析"
+        },
+        "has_valid_fortune": True
+    }
+
+async def calculate_bazi_single_fallback(request_data: dict):
+    """单人八字计算降级方案"""
+    name = request_data.get('name', '匿名用户')
+    
+    # 生成模拟的八字结果
+    mock_result = {
+        "bazi": {
+            "year": "甲子",
+            "month": "乙丑", 
+            "day": "丙寅",
+            "hour": "丁卯"
+        },
+        "wuxing": {
+            "木": 2,
+            "火": 2,
+            "土": 1,
+            "金": 1,
+            "水": 2
+        },
+        "analysis": {
+            "personality": "性格平和，做事踏实，有较强的责任心。",
+            "wuxing_analysis": "五行较为平衡，整体运势稳定。",
+            "career": "适合从事稳定性工作，如教育、行政等。",
+            "love": "感情生活较为顺利，容易遇到合适的伴侣。"
+        }
+    }
+    
+    # 添加用户信息
+    mock_result["user_info"] = {
+        "name": name,
+        "birth_date": f"{request_data.get('year', 2000)}-{request_data.get('month', 1):02d}-{request_data.get('day', 1):02d}",
+        "birth_time": f"{request_data.get('hour', 12):02d}:00",
+        "gender": request_data.get('gender', 'male')
+    }
+    
+    return {
+        "success": True,
+        "data": mock_result,
+        "timestamp": datetime.now().isoformat(),
+        "algorithm_version": "降级模拟数据",
+        "disclaimer": "当前使用模拟数据，仅供网络连接测试",
+        "server_info": {
+            "version": "fallback",
+            "local_ip": LOCAL_IP
+        }
+    }
 
 async def calculate_bazi_fallback(birth_data: BirthData):
     """八字计算降级方案 - 模拟数据"""
@@ -1093,10 +1433,6 @@ class FortuneRequest(BaseModel):
     bazi_data: Dict
     target_date: str
 
-class BatchFortuneRequest(BaseModel):
-    members_data: List[Dict]
-    target_date: str
-
 @app.post("/api/v1/calculate-fortune")
 async def calculate_daily_fortune(request_data: FortuneRequest):
     """单人每日运势计算接口"""
@@ -1121,29 +1457,6 @@ async def calculate_daily_fortune(request_data: FortuneRequest):
         print(f"运势计算出错: {str(e)}")
         raise HTTPException(status_code=500, detail=f"运势计算失败: {str(e)}")
 
-@app.post("/api/v1/batch-fortune")
-async def calculate_batch_fortune(request_data: BatchFortuneRequest):
-    """批量家庭运势计算接口"""
-    try:
-        if fortune_calculator:
-            result = fortune_calculator.calculate_batch_fortune(
-                request_data.members_data,
-                request_data.target_date
-            )
-            
-            return {
-                "success": result["success"],
-                "data": result.get("data"),
-                "error": result.get("error"),
-                "timestamp": datetime.now().isoformat(),
-                "algorithm_version": "后端批量运势计算v2.0"
-            }
-        else:
-            return await calculate_batch_fortune_fallback(request_data)
-        
-    except Exception as e:
-        print(f"批量运势计算出错: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"批量运势计算失败: {str(e)}")
 
 @app.post("/api/v1/calculate-bazi-with-fortune")
 async def calculate_bazi_with_fortune(birth_data: BirthData, target_date: Optional[str] = None):
@@ -1214,48 +1527,6 @@ async def calculate_fortune_fallback(request_data: FortuneRequest):
         "algorithm_version": "运势降级模拟数据"
     }
 
-async def calculate_batch_fortune_fallback(request_data: BatchFortuneRequest):
-    """批量运势计算降级方案"""
-    mock_results = []
-    
-    for i, member in enumerate(request_data.members_data):
-        mock_results.append({
-            "member_id": member.get("id", f"member_{i}"),
-            "member_name": member.get("name", f"成员{i+1}"),
-            "fortune": {
-                "date": request_data.target_date,
-                "overall_score": 3.5 + (i * 0.3),
-                "detailed_scores": {
-                    "wealth": 3.0 + (i * 0.2),
-                    "career": 4.0 + (i * 0.1),
-                    "health": 3.5 + (i * 0.15),
-                    "love": 4.0 + (i * 0.25),
-                    "study": 3.8 + (i * 0.1)
-                }
-            },
-            "has_valid_fortune": True
-        })
-    
-    family_overview = {
-        "total_members": len(mock_results),
-        "average_score": 4.0,
-        "best_member": mock_results[0] if mock_results else None,
-        "family_lucky_color": "绿色",
-        "suggestions": ["全家人今天适合一起活动"],
-        "active_members": len(mock_results)
-    }
-    
-    return {
-        "success": True,
-        "data": {
-            "date": request_data.target_date,
-            "members_fortune": mock_results,
-            "family_overview": family_overview,
-            "total_members": len(mock_results)
-        },
-        "timestamp": datetime.now().isoformat(),
-        "algorithm_version": "批量运势降级模拟数据"
-    }
 
 # 书籍联盟营销接口 - 新增功能
 @app.post("/api/v1/books/recommendations")

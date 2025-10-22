@@ -112,42 +112,18 @@ class FamilyBaziManager {
   }
   
   /**
-   * 获取所有成员的今日运势（简化版本）
+   * 获取所有成员的基本信息（不包含运势计算）
    * @param {Date} targetDate - 目标日期，默认今天
    * @returns {Array} 包含成员信息的列表
    */
   static getAllMembersFortuneToday(targetDate = new Date()) {
     const members = this.getAllMembers();
     
-    return members.map(member => {
-      // 简化的个人运势
-      const today = new Date();
-      const baseScore = 2.5 + ((today.getDate() + member.id.length) % 3) * 0.5;
-      const score = Math.max(1, Math.min(5, Math.round(baseScore * 10) / 10));
-      
-      return {
-        ...member,
-        daily_fortune: {
-          overall_score: score,
-          detailed_scores: {
-            wealth: score,
-            career: score,
-            health: score,
-            love: score,
-            study: score
-          },
-          lucky_elements: {
-            lucky_color: "绿色",
-            lucky_number: (today.getDate() + member.id.length) % 10,
-            lucky_direction: "东方"
-          },
-          suggestions: ["保持平常心"],
-          warnings: score < 3 ? ["注意身体"] : [],
-          detailed_analysis: `今日运势${score >= 4 ? '较好' : score >= 3 ? '平稳' : '一般'}，建议保持积极心态。`
-        },
-        hasValidFortune: true
-      };
-    });
+    return members.map(member => ({
+      ...member,
+      needsFortuneCalculation: true,  // 标记需要通过后端计算运势
+      targetDate: this.formatDate(targetDate)
+    }));
   }
   
   /**
@@ -258,6 +234,43 @@ class FamilyBaziManager {
   }
   
   /**
+   * 更新成员数据
+   * @param {String} memberId - 成员ID
+   * @param {Object} updatedData - 更新的数据
+   * @returns {Boolean} 更新成功
+   */
+  static updateMemberData(memberId, updatedData) {
+    try {
+      const members = this.getAllMembers();
+      const memberIndex = members.findIndex(m => m.id === memberId);
+      
+      if (memberIndex >= 0) {
+        // 合并更新数据
+        members[memberIndex] = {
+          ...members[memberIndex],
+          ...updatedData,
+          lastUsed: Date.now()
+        };
+        
+        this.saveToStorage(members);
+        
+        console.log('✅ 成员数据更新成功:', {
+          memberId,
+          updatedFields: Object.keys(updatedData)
+        });
+        
+        return true;
+      }
+      
+      console.warn('⚠️ 未找到指定成员:', memberId);
+      return false;
+    } catch (error) {
+      console.error('❌ 更新成员数据失败:', error);
+      return false;
+    }
+  }
+
+  /**
    * 更新成员自定义名称
    * @param {String} memberId - 成员ID
    * @param {String} newName - 新名称
@@ -315,7 +328,100 @@ class FamilyBaziManager {
   }
   
   /**
-   * 获取家庭运势概览（简化版本）
+   * 从后端获取家庭运势
+   * @param {String} targetDate - 目标日期，格式："2025-10-21"
+   * @returns {Promise} 家庭运势数据
+   */
+  static async getFamilyFortuneFromBackend(targetDate = null) {
+    const app = getApp();
+    const members = this.getAllMembers();
+    
+    if (members.length === 0) {
+      return {
+        success: true,
+        data: {
+          batch_mode: true,
+          target_date: targetDate || this.formatDate(new Date()),
+          members: [],
+          family_overview: {
+            total_members: 0,
+            average_score: 0,
+            best_member: null,
+            family_lucky_color: '绿色',
+            suggestions: ['暂无家庭成员，添加成员后查看运势'],
+            active_members: 0,
+            last_updated: Date.now() / 1000
+          },
+          total_members: 0
+        }
+      };
+    }
+    
+        // 构建批量请求 - 修复数据结构问题
+        const requestData = {
+            batch: true,
+            members_data: members.map(member => {
+                // 尝试从多个位置获取出生信息
+                const birthInfo = member.birthInfo || {};
+                
+                // 如果birthInfo中没有年月日，尝试从member本身获取
+                const year = birthInfo.year || member.year;
+                const month = birthInfo.month || member.month;
+                const day = birthInfo.day || member.day;
+                const hour = birthInfo.hour || member.hour || 12;
+                const gender = birthInfo.gender || member.gender || 'male';
+                const calendarType = birthInfo.calendarType || member.calendarType || 'solar';
+                
+                console.log(`🔍 成员 ${member.name} 数据构建:`, {
+                    id: member.id,
+                    name: member.name,
+                    year, month, day, hour, gender, calendarType,
+                    hasBirthInfo: !!member.birthInfo,
+                    birthInfoKeys: member.birthInfo ? Object.keys(member.birthInfo) : [],
+                    memberKeys: Object.keys(member)
+                });
+                
+                return {
+                    id: member.id,
+                    name: member.name,
+                    year: year,
+                    month: month,
+                    day: day,
+                    hour: hour,
+                    gender: gender,
+                    calendarType: calendarType
+                };
+            }),
+            target_date: targetDate || this.formatDate(new Date())
+        };
+        
+        console.log('📤 最终批量请求数据:', JSON.stringify(requestData, null, 2));
+    
+    return new Promise((resolve, reject) => {
+      app.request({
+        url: '/api/v1/calculate-bazi',
+        method: 'POST',
+        data: requestData,
+        success: (data) => {
+          // 更新成员使用统计
+          members.forEach(member => {
+            this.updateMemberUsageStats(member.id);
+            this.updateFortuneCheckStats(member.id);
+          });
+          
+          console.log('✅ 家庭运势获取成功:', data);
+          resolve(data);
+        },
+        fail: (error) => {
+          console.error('❌ 家庭运势获取失败:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
+  /**
+   * 获取家庭运势概览（降级方案 - 无运势数据时使用）
    * @returns {Object} 家庭运势概览
    */
   static getFamilyFortuneOverview() {
@@ -324,30 +430,34 @@ class FamilyBaziManager {
     
     if (activeMembers === 0) {
       return {
-        totalMembers: 0,
-        averageScore: 0,
+        total_members: 0,
+        average_score: 0,
+        best_member: null,
+        family_lucky_color: '绿色',
         suggestions: ['暂无家庭成员，添加成员后查看运势'],
-        familyLuckyColor: '绿色',
-        activeMembers: 0
+        active_members: 0,
+        last_updated: Date.now() / 1000
       };
     }
     
-    // 简化的运势概览计算
-    const averageScore = 3.5; // 固定平均分
+    // 简化的运势概览计算（降级方案）
+    const averageScore = 3.5;
     const luckyColors = ['红色', '蓝色', '绿色', '黄色', '紫色'];
     const today = new Date();
     const colorIndex = (today.getDate() + activeMembers) % luckyColors.length;
     
     return {
-      totalMembers: activeMembers,
-      averageScore: averageScore,
+      total_members: activeMembers,
+      average_score: averageScore,
+      best_member: null,
+      family_lucky_color: luckyColors[colorIndex],
       suggestions: [
         `家庭共有${activeMembers}位成员`,
-        '建议多关注家人健康',
-        '保持良好的家庭氛围'
+        '请重新获取运势数据',
+        '建议检查网络连接'
       ],
-      familyLuckyColor: luckyColors[colorIndex],
-      activeMembers: activeMembers
+      active_members: activeMembers,
+      last_updated: Date.now() / 1000
     };
   }
   

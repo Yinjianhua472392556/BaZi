@@ -546,6 +546,116 @@ page {
   margin-top: 10rpx;
 }
 
+/* 运势建议样式 */
+.fortune-suggestions {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+  border-radius: 12rpx;
+  border-left: 4rpx solid #4CAF50;
+}
+
+.suggestions-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #4CAF50;
+  margin-bottom: 15rpx;
+  display: flex;
+  align-items: center;
+}
+
+.suggestion-item {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 8rpx;
+  padding-left: 20rpx;
+  position: relative;
+}
+
+.suggestion-item::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #4CAF50;
+  font-weight: 700;
+}
+
+.suggestion-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 运势警告样式 */
+.fortune-warnings {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
+  border-radius: 12rpx;
+  border-left: 4rpx solid #FF9800;
+}
+
+.warnings-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #FF9800;
+  margin-bottom: 15rpx;
+  display: flex;
+  align-items: center;
+}
+
+.warning-item {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 8rpx;
+  padding-left: 20rpx;
+  position: relative;
+}
+
+.warning-item::before {
+  content: '!';
+  position: absolute;
+  left: 0;
+  color: #FF9800;
+  font-weight: 700;
+}
+
+.warning-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 幸运元素样式 */
+.lucky-info {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+  border-radius: 12rpx;
+  border-left: 4rpx solid #FFC107;
+}
+
+.lucky-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #FFC107;
+  margin-bottom: 15rpx;
+  display: flex;
+  align-items: center;
+}
+
+.lucky-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15rpx;
+}
+
+.lucky-item {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  background: rgba(255, 193, 7, 0.1);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  border: 1rpx solid rgba(255, 193, 7, 0.3);
+  display: inline-block;
+}
+
 .modal-footer {
   padding: 30rpx 40rpx;
   border-top: 1rpx solid rgba(0, 188, 212, 0.1);

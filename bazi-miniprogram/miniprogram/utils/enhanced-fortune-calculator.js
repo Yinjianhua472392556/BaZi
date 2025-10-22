@@ -181,7 +181,7 @@ class EnhancedFortuneCalculator {
   }
 
   /**
-   * 调用后端批量运势API
+   * 调用统一的八字计算API（批量模式）
    * @param {Array} membersData - 成员数据
    * @param {string} targetDate - 目标日期
    * @returns {Promise<Object>} API结果
@@ -189,27 +189,28 @@ class EnhancedFortuneCalculator {
   async callBatchFortuneAPI(membersData, targetDate) {
     return new Promise((resolve) => {
       const requestData = {
+        batch: true,
         members_data: membersData,
         target_date: targetDate
       };
 
-      console.log('🌐 发送批量运势API请求:', requestData);
+      console.log('🌐 发送批量八字计算API请求:', requestData);
 
       const app = getApp();
       app.request({
-        url: '/api/v1/batch-fortune',
+        url: '/api/v1/calculate-bazi',
         method: 'POST',
         data: requestData,
         timeout: this.REQUEST_TIMEOUT,
         success: (res) => {
-          console.log('✅ 批量运势API响应:', res);
+          console.log('✅ 批量八字计算API响应:', res);
           if (res.success) {
             resolve({
               success: true,
               data: res.data
             });
           } else {
-            console.error('❌ 批量运势API返回错误:', res);
+            console.error('❌ 批量八字计算API返回错误:', res);
             resolve({
               success: false,
               error: res.error || '服务器返回错误'
@@ -217,7 +218,7 @@ class EnhancedFortuneCalculator {
           }
         },
         fail: (error) => {
-          console.error('❌ 批量运势API请求失败:', error);
+          console.error('❌ 批量八字计算API请求失败:', error);
           resolve({
             success: false,
             error: error.errMsg || '网络请求失败'

@@ -130,12 +130,39 @@ Page({
       // 设置加载状态
       this.setData({ fortuneLoading: true })
       
-      // 准备批量运势计算数据
-      const membersData = allMembers.map(member => ({
-        id: member.id,
-        name: member.name,
-        bazi_data: BaziDataAdapter.extractFortuneCalculatorData(member.baziData)
-      }))
+      // 准备批量运势计算数据 - 修复数据结构问题
+      const membersData = allMembers.map(member => {
+        // 尝试从多个位置获取出生信息
+        const birthInfo = member.birthInfo || {};
+        
+        // 如果birthInfo中没有年月日，尝试从member本身获取
+        const year = birthInfo.year || member.year;
+        const month = birthInfo.month || member.month;
+        const day = birthInfo.day || member.day;
+        const hour = birthInfo.hour || member.hour || 12;
+        const gender = birthInfo.gender || member.gender || 'male';
+        const calendarType = birthInfo.calendarType || member.calendarType || 'solar';
+        
+        console.log(`🔍 首页成员 ${member.name} 数据构建:`, {
+          id: member.id,
+          name: member.name,
+          year, month, day, hour, gender, calendarType,
+          hasBirthInfo: !!member.birthInfo,
+          birthInfoKeys: member.birthInfo ? Object.keys(member.birthInfo) : [],
+          memberKeys: Object.keys(member)
+        });
+        
+        return {
+          id: member.id,
+          name: member.name,
+          year: year,
+          month: month,
+          day: day,
+          hour: hour,
+          gender: gender,
+          calendarType: calendarType
+        };
+      })
       
       console.log('🧮 准备批量计算运势:', membersData.length, '个成员')
       
@@ -146,7 +173,7 @@ Page({
         console.log('✅ 批量运势计算成功，数据来源:', batchResult.source)
         
         const familyData = batchResult.data
-        const membersWithFortune = familyData.members_fortune || []
+        const membersWithFortune = familyData.members || []
         const familyOverview = familyData.family_overview || {}
         
         // 增强显示数据
@@ -154,7 +181,7 @@ Page({
           const memberInfo = allMembers.find(m => m.id === memberFortune.member_id)
           return {
             ...memberInfo,
-            daily_fortune: memberFortune.fortune,
+            daily_fortune: memberFortune,
             hasValidFortune: memberFortune.has_valid_fortune,
             fortuneSource: batchResult.source
           }
@@ -440,14 +467,14 @@ Page({
     })
   },
 
-  // 查看成员详情
-  viewMemberDetail(memberData) {
+  // 查看成员详情 - 修复数据结构问题和今日运势一致性
+  async viewMemberDetail(memberData) {
     try {
       console.log('🔍 查看成员详情，原始数据:', memberData)
       
       // 验证数据完整性
-      if (!memberData || !memberData.baziData) {
-        console.error('❌ 成员数据不完整:', memberData)
+      if (!memberData) {
+        console.error('❌ 成员数据为空')
         wx.showToast({
           title: '数据不完整，无法查看详情',
           icon: 'error'
@@ -455,79 +482,284 @@ Page({
         return
       }
 
-      // 构造与历史记录页面一致的结果数据格式
+      // 显示加载状态
+      wx.showLoading({
+        title: '加载详情中...'
+      })
+
+      // 从多个可能的数据源提取信息
+      let bazi = null;
+      let wuxing = null;
+      let analysis = null;
+
+      // 尝试从 baziData 中获取八字信息
+      if (memberData.baziData) {
+        bazi = memberData.baziData.bazi || memberData.baziData.bazi_result;
+        wuxing = memberData.baziData.wuxing || memberData.baziData.wuxing_analysis;
+        analysis = memberData.baziData.analysis || memberData.baziData.comprehensive_analysis;
+      }
+
+      // 如果没有八字数据，尝试重新计算
+      if (!bazi) {
+        wx.hideLoading()
+        console.log('🔄 没有八字数据，尝试重新计算...')
+        this.recalculateMemberBazi(memberData);
+        return;
+      }
+
+      // 提取出生信息
+      const birthInfo = memberData.birthInfo || {};
+      const year = birthInfo.year || memberData.year;
+      const month = birthInfo.month || memberData.month;
+      const day = birthInfo.day || memberData.day;
+      const hour = birthInfo.hour || memberData.hour || 12;
+      const gender = birthInfo.gender || memberData.gender || 'male';
+      const calendarType = birthInfo.calendarType || memberData.calendarType || 'solar';
+
+      // 获取完整的八字分析结果（确保与"开始测算"使用完全相同的接口和算法）
+      let freshBaziResult = null;
+      try {
+        console.log('🔮 为家庭成员重新计算完整八字分析（包含今日运势）...')
+        
+        // 构建与"开始测算"完全相同的请求数据
+        const requestData = {
+          year: year,
+          month: month,
+          day: day,
+          hour: hour,
+          gender: gender,
+          name: memberData.name || '家庭成员',
+          calendarType: calendarType
+        };
+
+        // 调用与"开始测算"完全相同的后端API
+        const app = getApp();
+        const baziResult = await new Promise((resolve, reject) => {
+          app.request({
+            url: '/api/v1/calculate-bazi',
+            method: 'POST',
+            data: requestData,
+            success: (result) => {
+              if (result.success) {
+                resolve(result.data);
+              } else {
+                console.warn('八字重新计算返回失败，使用原有数据:', result.error);
+                resolve(null);
+              }
+            },
+            fail: (error) => {
+              console.warn('八字重新计算网络请求失败，使用原有数据:', error);
+              resolve(null);
+            }
+          });
+        });
+
+        freshBaziResult = baziResult;
+        console.log('✅ 家庭成员完整八字分析获取成功:', !!freshBaziResult);
+        
+        // 如果获取到新的数据，使用新数据；否则使用原有数据
+        if (freshBaziResult) {
+          bazi = freshBaziResult.bazi || bazi;
+          wuxing = freshBaziResult.wuxing || wuxing;
+          analysis = freshBaziResult.analysis || analysis;
+          
+          // 更新本地存储的成员数据（可选）
+          try {
+            const updatedMemberData = {
+              ...memberData,
+              baziData: {
+                ...memberData.baziData,
+                bazi: freshBaziResult.bazi,
+                wuxing: freshBaziResult.wuxing,
+                analysis: freshBaziResult.analysis,
+                lastUpdate: Date.now()
+              }
+            };
+            FamilyBaziManager.updateMemberData(memberData.id, updatedMemberData);
+            console.log('✅ 本地成员数据已更新');
+          } catch (updateError) {
+            console.warn('本地数据更新失败:', updateError);
+          }
+        }
+        
+      } catch (baziError) {
+        console.warn('❌ 重新计算八字失败，使用原有数据继续显示详情:', baziError);
+        freshBaziResult = null;
+      }
+
+      // 构造与result.js期望格式一致的数据结构
       const resultData = {
-        // 基础八字数据
-        bazi_result: memberData.baziData.bazi_result || {},
-        wuxing_analysis: memberData.baziData.wuxing_analysis || {},
-        comprehensive_analysis: memberData.baziData.comprehensive_analysis || {},
-        
-        // 确保有完整的出生信息
-        birth_info: memberData.baziData.birth_info || {},
-        birthInfo: memberData.birthInfo || {},
-        
-        // 运势分析数据
-        fortune_analysis: memberData.baziData.fortune_analysis || {},
-        name_suggestions: memberData.baziData.name_suggestions || {},
-        
-        // 用户信息（保持与历史记录一致）
-        user_info: memberData.userInfo || {},
-        
-        // 时间戳和ID
+        // 核心八字数据
+        bazi: bazi,
+        wuxing: wuxing,
+        analysis: analysis,
+
+        // 基础出生信息（多种格式确保兼容性）
+        year: year,
+        month: month,
+        day: day,
+        hour: hour,
+        gender: gender,
+        calendar_type: calendarType,
+        calendarType: calendarType,
+
+        // 出生信息对象
+        birth_info: {
+          year: year,
+          month: month,
+          day: day,
+          hour: hour,
+          gender: gender,
+          calendar_type: calendarType
+        },
+
+        // 兼容历史格式
+        birthInfo: {
+          date: `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+          time: `${hour.toString().padStart(2, '0')}:00`,
+          gender: gender,
+          name: memberData.name || '家庭成员',
+          calendarType: calendarType
+        },
+
+        // 用户信息
+        user_info: {
+          birth_date: `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+          gender: gender,
+          hour: hour
+        },
+
+        // 农历信息（如果有的话）
+        lunar_info: memberData.baziData?.lunar_info || {
+          year: year,
+          month: month,
+          day: day,
+          leap: false
+        },
+
+        // 公历信息
+        solar_info: {
+          year: year,
+          month: month,
+          day: day
+        },
+
+        // 八字结果（确保result.js能正确读取）
+        bazi_result: bazi,
+        wuxing_analysis: wuxing,
+        comprehensive_analysis: analysis,
+
+        // 今日运势（与"开始测算"保持一致） - 使用新计算的数据
+        daily_fortune: freshBaziResult?.daily_fortune || null,
+
+        // 其他信息
         timestamp: memberData.timestamp || Date.now(),
         id: memberData.id,
-        
-        // 标识来源
-        from: 'index_management',
-        
-        // 显示信息
-        display_name: memberData.name || '匿名用户',
-        
-        // 确保有必要的基础字段
-        year: memberData.baziData.year || memberData.birthInfo?.year,
-        month: memberData.baziData.month || memberData.birthInfo?.month,
-        day: memberData.baziData.day || memberData.birthInfo?.day,
-        hour: memberData.baziData.hour || memberData.birthInfo?.hour,
-        gender: memberData.baziData.gender || memberData.birthInfo?.gender
-      }
+        from: 'family_member',
+        display_name: memberData.name || '家庭成员'
+      };
 
-      // 数据完整性验证
-      const hasRequiredData = resultData.bazi_result && 
-                             (resultData.birth_info || resultData.birthInfo) &&
-                             (resultData.year && resultData.month && resultData.day !== undefined)
+      wx.hideLoading()
 
-      if (!hasRequiredData) {
-        console.error('❌ 构造的数据缺少必要字段:', {
-          hasBaziResult: !!resultData.bazi_result,
-          hasBirthInfo: !!(resultData.birth_info || resultData.birthInfo),
-          hasBasicFields: !!(resultData.year && resultData.month && resultData.day !== undefined),
-          resultData: resultData
-        })
-        
-        wx.showModal({
-          title: '数据错误',
-          content: '八字数据不完整，无法查看详情。请重新测算。',
-          showCancel: false
-        })
-        return
-      }
-
-      console.log('✅ 构造完整的结果数据:', {
-        hasBaziResult: !!resultData.bazi_result,
-        hasBirthInfo: !!(resultData.birth_info || resultData.birthInfo),
+      console.log('✅ 构造的结果数据结构:', {
+        hasBazi: !!resultData.bazi,
+        hasWuxing: !!resultData.wuxing,
+        hasAnalysis: !!resultData.analysis,
+        hasDailyFortune: !!resultData.daily_fortune,
         hasBasicFields: !!(resultData.year && resultData.month && resultData.day !== undefined),
-        dataStructure: Object.keys(resultData)
+        birthInfo: resultData.birthInfo,
+        userInfo: resultData.user_info
       })
 
       wx.navigateTo({
         url: `/pages/result/result?data=${encodeURIComponent(JSON.stringify(resultData))}`
       })
     } catch (error) {
+      wx.hideLoading()
       console.error('❌ 查看详情失败:', error)
       wx.showModal({
         title: '查看详情失败',
         content: `错误信息：${error.message || '未知错误'}`,
         showCancel: false
+      })
+    }
+  },
+
+  // 重新计算成员八字
+  async recalculateMemberBazi(memberData) {
+    try {
+      wx.showLoading({
+        title: '重新计算八字中...'
+      })
+
+      // 构建请求数据
+      const birthInfo = memberData.birthInfo || {};
+      const requestData = {
+        year: birthInfo.year || memberData.year,
+        month: birthInfo.month || memberData.month,
+        day: birthInfo.day || memberData.day,
+        hour: birthInfo.hour || memberData.hour || 12,
+        gender: birthInfo.gender || memberData.gender || 'male',
+        name: memberData.name || '家庭成员',
+        calendarType: birthInfo.calendarType || memberData.calendarType || 'solar'
+      };
+
+      console.log('🔄 重新计算八字，请求数据:', requestData)
+
+      const app = getApp();
+      app.request({
+        url: '/api/v1/calculate-bazi',
+        method: 'POST',
+        data: requestData,
+        success: (result) => {
+          wx.hideLoading()
+
+          if (result.success) {
+            console.log('✅ 重新计算成功')
+            
+            // 更新家庭成员数据
+            const updatedMemberData = {
+              ...memberData,
+              baziData: {
+                ...memberData.baziData,
+                bazi: result.data.bazi,
+                wuxing: result.data.wuxing,
+                analysis: result.data.analysis,
+                bazi_result: result.data.bazi,
+                wuxing_analysis: result.data.wuxing,
+                comprehensive_analysis: result.data.analysis
+              }
+            };
+
+            // 保存更新后的数据
+            FamilyBaziManager.updateMemberData(memberData.id, updatedMemberData);
+
+            // 重新调用查看详情
+            this.viewMemberDetail(updatedMemberData);
+          } else {
+            wx.showModal({
+              title: '重新计算失败',
+              content: result.error || '计算过程中出现错误',
+              showCancel: false
+            })
+          }
+        },
+        fail: (error) => {
+          wx.hideLoading()
+          console.error('❌ 重新计算失败:', error)
+          wx.showModal({
+            title: '重新计算失败',
+            content: '网络连接失败，请检查后端服务状态',
+            showCancel: false
+          })
+        }
+      })
+    } catch (error) {
+      wx.hideLoading()
+      console.error('❌ 重新计算过程出错:', error)
+      wx.showToast({
+        title: '计算失败',
+        icon: 'error'
       })
     }
   },
