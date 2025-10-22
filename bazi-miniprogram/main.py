@@ -1498,7 +1498,7 @@ async def get_character_combinations_fallback(combination_data: CharacterCombina
         "algorithm_version": "简化组合算法"
     }
 
-# 注：/api/v1/calculate-fortune 接口已移除 - 统一使用 /api/v1/calculate-bazi 接口
+# 统一使用 /api/v1/calculate-bazi 接口进行所有八字和运势计算
 
 
 @app.post("/api/v1/calculate-bazi-with-fortune")

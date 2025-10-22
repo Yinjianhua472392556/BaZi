@@ -33,18 +33,18 @@ cd bazi-miniprogram
 curl http://10.60.20.222:8001/health
 ```
 
-### 2. 单人运势计算
+### 2. 单人八字和运势计算
 ```bash
-curl -X POST "http://10.60.20.222:8001/api/v1/calculate-fortune" \
+curl -X POST "http://10.60.20.222:8001/api/v1/calculate-bazi" \
 -H "Content-Type: application/json" \
 -d '{
-  "bazi_data": {
-    "year_pillar": "甲子",
-    "month_pillar": "乙丑",
-    "day_pillar": "丙寅", 
-    "hour_pillar": "丁卯"
-  },
-  "target_date": "2025-10-16"
+  "year": 1990,
+  "month": 5,
+  "day": 15,
+  "hour": 12,
+  "gender": "male",
+  "calendarType": "solar",
+  "target_date": "2024-10-22"
 }'
 ```
 
@@ -85,10 +85,10 @@ curl -X POST "http://10.60.20.222:8001/api/v1/batch-fortune" \
 
 ### 核心功能测试 ✅
 
-#### 1. 单人运势计算
-- **API端点**: `/api/v1/calculate-fortune`
+#### 1. 单人八字和运势计算
+- **API端点**: `/api/v1/calculate-bazi`
 - **测试结果**: ✅ 成功
-- **返回数据**: 完整的运势分析，包括五行关系、评分、幸运元素等
+- **返回数据**: 完整的八字分析和运势计算，包括五行关系、评分、幸运元素等
 
 #### 2. 批量家庭运势计算
 - **API端点**: `/api/v1/batch-fortune`
