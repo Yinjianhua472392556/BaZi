@@ -1374,6 +1374,57 @@ Page({
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
   },
 
+  // 计算运势进度条显示
+  getFortuneProgressBar(score) {
+    const percentage = Math.round(score * 20); // 0-5分转换为0-100%
+    const filledCount = Math.round(percentage / 10); // 每10%一个█
+    const emptyCount = 10 - filledCount;
+    return '█'.repeat(filledCount) + '░'.repeat(emptyCount) + ` ${percentage}%`;
+  },
+
+  // ASCII按钮事件处理函数
+  handleViewDetail(e) {
+    const index = e.currentTarget.dataset.index;
+    const memberData = this.data.membersWithFortune[index];
+    
+    if (memberData) {
+      this.viewMemberDetail(memberData);
+    } else {
+      wx.showToast({
+        title: '数据获取失败',
+        icon: 'error'
+      });
+    }
+  },
+
+  handleEditNote(e) {
+    const memberId = e.currentTarget.dataset.memberId;
+    const memberName = e.currentTarget.dataset.memberName;
+    
+    if (memberId && memberName) {
+      this.editMemberNote(memberId, memberName);
+    } else {
+      wx.showToast({
+        title: '参数错误',
+        icon: 'error'
+      });
+    }
+  },
+
+  handleDeleteMember(e) {
+    const memberId = e.currentTarget.dataset.memberId;
+    const memberName = e.currentTarget.dataset.memberName;
+    
+    if (memberId && memberName) {
+      this.deleteMember(memberId, memberName);
+    } else {
+      wx.showToast({
+        title: '参数错误',
+        icon: 'error'
+      });
+    }
+  },
+
   onShareAppMessage() {
     return {
       title: '八字运势测算 - 探索您的命运密码',

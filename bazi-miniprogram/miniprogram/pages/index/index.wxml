@@ -82,44 +82,47 @@
           <text class="members-count">({{membersWithFortune.length}}人)</text>
         </view>
         
-        <view class="personal-fortune-item" wx:for="{{membersWithFortune}}" wx:key="id">
-          <view class="personal-header">
-            <text class="person-name">{{item.name}}</text>
-            <view class="person-actions">
-              <view class="person-score">
-                <text class="star {{idx < (item.daily_fortune.overall_score || 0) ? 'filled' : ''}}" 
-                      wx:for="{{[1,2,3,4,5]}}" wx:key="*this" wx:for-index="idx">★</text>
-                <text class="score-text">{{item.daily_fortune.overall_score || 0}}/5</text>
-              </view>
-              <button class="member-menu-btn" 
-                      bindtap="showMemberActions" 
-                      data-member-id="{{item.id}}"
-                      data-member-name="{{item.name}}"
-                      data-member-data="{{item}}">⋯</button>
-            </view>
+        <view class="ascii-fortune-card" wx:for="{{membersWithFortune}}" wx:key="id">
+          <view class="ascii-border-top">┌─────────────────────────────────┐</view>
+          <view class="ascii-header">
+            <text class="ascii-header-text">│ 👤 {{item.name}}</text>
+            <text class="ascii-score">⭐{{item.daily_fortune.overall_score || 0}} │</text>
+          </view>
+          <view class="ascii-separator">│ ────────────────────────────────│</view>
+          
+          <view class="ascii-progress" wx:if="{{item.hasValidFortune}}">
+            <text class="ascii-progress-text">│ 🎯 综合运势: {{getFortuneProgressBar(item.daily_fortune.overall_score || 0)}} │</text>
           </view>
           
-          <view class="personal-details" wx:if="{{item.hasValidFortune}}">
-            <view class="score-row">
-              <text class="score-item">💰 财运: {{item.daily_fortune.detailed_scores.wealth || 0}}分</text>
-              <text class="score-item">💼 事业: {{item.daily_fortune.detailed_scores.career || 0}}分</text>
-              <text class="score-item">💪 健康: {{item.daily_fortune.detailed_scores.health || 0}}分</text>
-            </view>
-            
-            <view class="lucky-elements" wx:if="{{item.daily_fortune.lucky_elements}}">
-              <text class="lucky-item">🍀 {{item.daily_fortune.lucky_elements.lucky_color}}</text>
-              <text class="lucky-item">🔢 {{item.daily_fortune.lucky_elements.lucky_numbers[0] || 8}}</text>
-            </view>
-            
-            <view class="suggestions" wx:if="{{item.daily_fortune.suggestions && item.daily_fortune.suggestions.length > 0}}">
-              <text class="suggestion-item" wx:for="{{item.daily_fortune.suggestions}}" wx:key="*this" wx:for-item="suggestion">
-                ✅ {{suggestion}}
-              </text>
-            </view>
+          <view class="ascii-scores" wx:if="{{item.hasValidFortune}}">
+            <text class="ascii-scores-line1">│ 💰 财运 {{item.daily_fortune.detailed_scores.wealth || 0}}  💼 事业 {{item.daily_fortune.detailed_scores.career || 0}} │</text>
+            <text class="ascii-scores-line2">│ ❤️ 健康 {{item.daily_fortune.detailed_scores.health || 0}}  📚 学习 {{item.daily_fortune.detailed_scores.study || item.daily_fortune.detailed_scores.love || 0}} │</text>
           </view>
           
-          <view class="fortune-error" wx:if="{{!item.hasValidFortune}}">
-            <text class="error-text">⚠️ 运势计算失败</text>
+          <view class="ascii-separator">│ ────────────────────────────────│</view>
+          
+          <view class="ascii-lucky" wx:if="{{item.hasValidFortune && item.daily_fortune.lucky_elements}}">
+            <text class="ascii-lucky-text">│ 🍀 幸运色: {{item.daily_fortune.lucky_elements.lucky_color}}  🔢 幸运数: {{item.daily_fortune.lucky_elements.lucky_numbers[0] || 8}} │</text>
+          </view>
+          
+          <view class="ascii-suggestions" wx:if="{{item.hasValidFortune && item.daily_fortune.suggestions && item.daily_fortune.suggestions.length > 0}}">
+            <text class="ascii-suggestion-text">│ 💡 今日宜: {{item.daily_fortune.suggestions[0] || ''}}{{item.daily_fortune.suggestions[1] ? '、' + item.daily_fortune.suggestions[1] : ''}} │</text>
+          </view>
+          
+          <view class="ascii-buttons">
+            <text class="ascii-buttons-text">│ </text>
+            <button class="ascii-btn" bindtap="handleViewDetail" data-index="{{index}}">[查看详情]</button>
+            <text class="ascii-buttons-space"> </text>
+            <button class="ascii-btn" bindtap="handleEditNote" data-member-id="{{item.id}}" data-member-name="{{item.name}}">[编辑备注]</button>
+            <text class="ascii-buttons-space"> </text>
+            <button class="ascii-btn" bindtap="handleDeleteMember" data-member-id="{{item.id}}" data-member-name="{{item.name}}">[删除]</button>
+            <text class="ascii-buttons-text"> │</text>
+          </view>
+          
+          <view class="ascii-border-bottom">└─────────────────────────────────┘</view>
+          
+          <view class="ascii-error" wx:if="{{!item.hasValidFortune}}">
+            <text class="ascii-error-text">│ ⚠️ 运势计算失败，请稍后重试 │</text>
           </view>
         </view>
       </view>

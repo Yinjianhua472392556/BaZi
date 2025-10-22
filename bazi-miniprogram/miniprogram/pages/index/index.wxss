@@ -1050,6 +1050,186 @@
 }
 
 
+/* ASCII风格卡片样式 */
+.ascii-fortune-card {
+  margin-bottom: 20rpx;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background: #1e1e1e;
+  border-radius: 8rpx;
+  padding: 15rpx;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.ascii-border-top,
+.ascii-border-bottom,
+.ascii-separator {
+  color: #ffffff;
+  font-size: 24rpx;
+  line-height: 1.2;
+  letter-spacing: 0;
+  font-weight: normal;
+  display: block;
+  text-align: left;
+}
+
+.ascii-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #ffffff;
+  font-size: 24rpx;
+  line-height: 1.2;
+  margin: 2rpx 0;
+}
+
+.ascii-header-text {
+  color: #61dafb;
+  font-weight: bold;
+}
+
+.ascii-score {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.ascii-progress {
+  margin: 2rpx 0;
+}
+
+.ascii-progress-text {
+  color: #98fb98;
+  font-size: 24rpx;
+  line-height: 1.2;
+  display: block;
+}
+
+.ascii-scores {
+  margin: 2rpx 0;
+}
+
+.ascii-scores-line1,
+.ascii-scores-line2 {
+  color: #87ceeb;
+  font-size: 24rpx;
+  line-height: 1.2;
+  display: block;
+  margin: 1rpx 0;
+}
+
+.ascii-lucky {
+  margin: 2rpx 0;
+}
+
+.ascii-lucky-text {
+  color: #dda0dd;
+  font-size: 24rpx;
+  line-height: 1.2;
+  display: block;
+}
+
+.ascii-suggestions {
+  margin: 2rpx 0;
+}
+
+.ascii-suggestion-text {
+  color: #f0e68c;
+  font-size: 24rpx;
+  line-height: 1.2;
+  display: block;
+}
+
+.ascii-buttons {
+  display: flex;
+  align-items: center;
+  margin: 2rpx 0;
+  flex-wrap: nowrap;
+}
+
+.ascii-buttons-text {
+  color: #ffffff;
+  font-size: 24rpx;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.ascii-buttons-space {
+  color: #ffffff;
+  font-size: 24rpx;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.ascii-btn {
+  background: none !important;
+  border: none !important;
+  color: #ff6b6b !important;
+  font-size: 24rpx !important;
+  line-height: 1.2 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+  text-decoration: underline;
+  min-width: auto;
+  flex-shrink: 0;
+}
+
+.ascii-btn::after {
+  border: none !important;
+}
+
+.ascii-btn:active {
+  background: none !important;
+  color: #ff9999 !important;
+  transform: none;
+}
+
+.ascii-error {
+  margin: 2rpx 0;
+}
+
+.ascii-error-text {
+  color: #ff6b6b;
+  font-size: 24rpx;
+  line-height: 1.2;
+  display: block;
+}
+
+/* 响应式适配 - ASCII卡片 */
+@media (max-width: 375px) {
+  .ascii-fortune-card {
+    padding: 10rpx;
+    margin-bottom: 15rpx;
+  }
+  
+  .ascii-border-top,
+  .ascii-border-bottom,
+  .ascii-separator,
+  .ascii-progress-text,
+  .ascii-scores-line1,
+  .ascii-scores-line2,
+  .ascii-lucky-text,
+  .ascii-suggestion-text,
+  .ascii-buttons-text,
+  .ascii-buttons-space,
+  .ascii-error-text {
+    font-size: 20rpx;
+  }
+  
+  .ascii-header {
+    font-size: 20rpx;
+  }
+  
+  .ascii-btn {
+    font-size: 20rpx !important;
+  }
+  
+  .ascii-buttons {
+    flex-wrap: wrap;
+    gap: 2rpx;
+  }
+}
+
 /* 响应式适配 - 家庭运势 */
 @media (max-width: 375px) {
   .family-score-display {
