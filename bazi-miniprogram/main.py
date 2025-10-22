@@ -454,18 +454,88 @@ async def calculate_bazi_batch(request_data: dict):
                     )
                     
                     # 计算目标日期的运势
+                    daily_fortune_data = None
+                    has_valid_fortune = False
+                    
                     if fortune_calculator:
+                        # 修复：转换八字数据格式以匹配FortuneCalculator的期望格式
+                        bazi_for_fortune = {
+                            "year_pillar": bazi_result["bazi"]["year"],
+                            "month_pillar": bazi_result["bazi"]["month"],
+                            "day_pillar": bazi_result["bazi"]["day"],
+                            "hour_pillar": bazi_result["bazi"]["hour"]
+                        }
+                        
                         fortune_result = fortune_calculator.calculate_daily_fortune(
-                            bazi_result, target_date
+                            bazi_for_fortune, target_date
                         )
                         if fortune_result["success"]:
-                            bazi_result["daily_fortune"] = fortune_result["data"]
+                            daily_fortune_data = fortune_result["data"]
+                            has_valid_fortune = True
+                            print(f"✅ 成员 {member_name} 运势计算成功，运势日期: {target_date}")
+                        else:
+                            error_msg = fortune_result.get('error', '未知错误')
+                            print(f"❌ 成员 {member_name} 运势计算失败: {error_msg}")
+                            print(f"   八字数据: {json.dumps(bazi_for_fortune, ensure_ascii=False)}")
+                            print(f"   目标日期: {target_date}")
+                            # 创建默认的运势数据结构
+                            daily_fortune_data = {
+                                "date": target_date,
+                                "overall_score": 0,
+                                "detailed_scores": {
+                                    "wealth": 0,
+                                    "career": 0,
+                                    "health": 0,
+                                    "love": 0,
+                                    "study": 0
+                                },
+                                "lucky_elements": {
+                                    "lucky_color": "绿色",
+                                    "lucky_colors": ["绿色"],
+                                    "lucky_number": 8,
+                                    "lucky_numbers": [8],
+                                    "lucky_direction": "东方",
+                                    "beneficial_wuxing": "木"
+                                },
+                                "suggestions": ["运势计算失败"],
+                                "warnings": [],
+                                "detailed_analysis": f"运势计算失败: {error_msg}"
+                            }
+                            has_valid_fortune = False
+                    else:
+                        # 没有运势计算器，创建默认数据
+                        daily_fortune_data = {
+                            "date": target_date,
+                            "overall_score": 0,
+                            "detailed_scores": {
+                                "wealth": 0,
+                                "career": 0,
+                                "health": 0,
+                                "love": 0,
+                                "study": 0
+                            },
+                            "lucky_elements": {
+                                "lucky_color": "绿色",
+                                "lucky_colors": ["绿色"],
+                                "lucky_number": 8,
+                                "lucky_numbers": [8],
+                                "lucky_direction": "东方",
+                                "beneficial_wuxing": "木"
+                            },
+                            "suggestions": ["运势服务不可用"],
+                            "warnings": [],
+                            "detailed_analysis": "运势计算服务不可用"
+                        }
+                        has_valid_fortune = False
                     
+                    # 修复：确保返回的数据结构与前端期望一致
                     results.append({
                         "member_id": member_id,
                         "member_name": member_name,
-                        **bazi_result,  # 包含bazi, paipan, wuxing, analysis等
-                        "has_valid_fortune": True
+                        "daily_fortune": daily_fortune_data,  # 直接提供daily_fortune字段
+                        "has_valid_fortune": has_valid_fortune,
+                        # 同时保留原有八字数据结构
+                        **bazi_result  # 包含bazi, paipan, wuxing, analysis等
                     })
                 else:
                     # 降级方案
@@ -1428,34 +1498,7 @@ async def get_character_combinations_fallback(combination_data: CharacterCombina
         "algorithm_version": "简化组合算法"
     }
 
-# 运势计算接口 - 新增功能
-class FortuneRequest(BaseModel):
-    bazi_data: Dict
-    target_date: str
-
-@app.post("/api/v1/calculate-fortune")
-async def calculate_daily_fortune(request_data: FortuneRequest):
-    """单人每日运势计算接口"""
-    try:
-        if fortune_calculator:
-            result = fortune_calculator.calculate_daily_fortune(
-                request_data.bazi_data, 
-                request_data.target_date
-            )
-            
-            return {
-                "success": result["success"],
-                "data": result.get("data"),
-                "error": result.get("error"),
-                "timestamp": datetime.now().isoformat(),
-                "algorithm_version": "后端运势计算v2.0"
-            }
-        else:
-            return await calculate_fortune_fallback(request_data)
-        
-    except Exception as e:
-        print(f"运势计算出错: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"运势计算失败: {str(e)}")
+# 注：/api/v1/calculate-fortune 接口已移除 - 统一使用 /api/v1/calculate-bazi 接口
 
 
 @app.post("/api/v1/calculate-bazi-with-fortune")
@@ -1495,37 +1538,7 @@ async def calculate_bazi_with_fortune(birth_data: BirthData, target_date: Option
         print(f"八字+运势计算出错: {str(e)}")
         raise HTTPException(status_code=500, detail=f"八字+运势计算失败: {str(e)}")
 
-async def calculate_fortune_fallback(request_data: FortuneRequest):
-    """运势计算降级方案"""
-    mock_fortune = {
-        "date": request_data.target_date,
-        "overall_score": 4.2,
-        "detailed_scores": {
-            "wealth": 4.0,
-            "career": 4.5,
-            "health": 3.8,
-            "love": 4.3,
-            "study": 4.1
-        },
-        "lucky_elements": {
-            "lucky_color": "红色",
-            "lucky_colors": ["红色", "紫色"],
-            "lucky_number": 3,
-            "lucky_numbers": [3, 8],
-            "lucky_direction": "南方",
-            "beneficial_wuxing": "火"
-        },
-        "suggestions": ["宜投资", "宜开拓", "宜主动出击"],
-        "warnings": ["注意身体健康", "宜多休息"],
-        "detailed_analysis": "今日运势良好，适合积极行动"
-    }
-    
-    return {
-        "success": True,
-        "data": mock_fortune,
-        "timestamp": datetime.now().isoformat(),
-        "algorithm_version": "运势降级模拟数据"
-    }
+# 注：calculate_fortune_fallback 函数已移除 - 统一使用 calculate_bazi_unified 接口
 
 
 # 书籍联盟营销接口 - 新增功能

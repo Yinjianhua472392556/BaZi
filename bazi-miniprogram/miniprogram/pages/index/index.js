@@ -176,14 +176,57 @@ Page({
         const membersWithFortune = familyData.members || []
         const familyOverview = familyData.family_overview || {}
         
-        // 增强显示数据
+        // 增强显示数据 - 修复数据结构不匹配问题
         const enhancedMembers = membersWithFortune.map(memberFortune => {
           const memberInfo = allMembers.find(m => m.id === memberFortune.member_id)
+          
+          // 修复：从memberFortune中正确提取daily_fortune数据
+          let daily_fortune_data = null;
+          if (memberFortune.daily_fortune) {
+            // 如果有daily_fortune字段，直接使用
+            daily_fortune_data = memberFortune.daily_fortune;
+          } else if (memberFortune.fortune) {
+            // 如果是fortune字段，映射为daily_fortune
+            daily_fortune_data = memberFortune.fortune;
+          } else {
+            // 创建默认的运势数据结构
+            daily_fortune_data = {
+              date: new Date().toISOString().split('T')[0],
+              overall_score: 0,
+              detailed_scores: {
+                wealth: 0,
+                career: 0,
+                health: 0,
+                love: 0,
+                study: 0
+              },
+              lucky_elements: {
+                lucky_color: "绿色",
+                lucky_colors: ["绿色"],
+                lucky_number: 8,
+                lucky_numbers: [8],
+                lucky_direction: "东方",
+                beneficial_wuxing: "木"
+              },
+              suggestions: ["数据获取失败"],
+              warnings: [],
+              detailed_analysis: "运势数据不可用"
+            };
+          }
+          
           return {
             ...memberInfo,
-            daily_fortune: memberFortune,
+            // 修复：正确设置daily_fortune字段
+            daily_fortune: daily_fortune_data,
             hasValidFortune: memberFortune.has_valid_fortune,
-            fortuneSource: batchResult.source
+            fortuneSource: batchResult.source,
+            // 调试信息
+            _debug: {
+              originalStructure: Object.keys(memberFortune),
+              hasDailyFortune: !!memberFortune.daily_fortune,
+              hasFortune: !!memberFortune.fortune,
+              memberFortuneId: memberFortune.member_id
+            }
           }
         })
         

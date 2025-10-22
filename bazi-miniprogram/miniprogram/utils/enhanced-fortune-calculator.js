@@ -134,35 +134,44 @@ class EnhancedFortuneCalculator {
   }
 
   /**
-   * 调用后端运势API
+   * 调用统一的八字计算API（单人模式）
    * @param {Object} baziData - 八字数据
    * @param {string} targetDate - 目标日期
    * @returns {Promise<Object>} API结果
    */
   async callFortuneAPI(baziData, targetDate) {
     return new Promise((resolve) => {
+      // 统一使用 /api/v1/calculate-bazi 接口，单人模式
       const requestData = {
-        bazi_data: baziData,
+        batch: false,
+        // 从八字数据中提取基础信息或使用默认值
+        year: baziData.year || 2000,
+        month: baziData.month || 1,
+        day: baziData.day || 1,
+        hour: baziData.hour || 12,
+        gender: baziData.gender || 'male',
+        name: baziData.name || '用户',
+        calendarType: baziData.calendarType || 'solar',
         target_date: targetDate
       };
 
-      console.log('🌐 发送运势API请求:', requestData);
+      console.log('🌐 发送统一八字计算API请求（单人）:', requestData);
 
       const app = getApp();
       app.request({
-        url: '/api/v1/calculate-fortune',
+        url: '/api/v1/calculate-bazi',
         method: 'POST',
         data: requestData,
         timeout: this.REQUEST_TIMEOUT,
         success: (res) => {
-          console.log('✅ 运势API响应:', res);
-          if (res.success) {
+          console.log('✅ 统一八字计算API响应（单人）:', res);
+          if (res.success && res.data.daily_fortune) {
             resolve({
               success: true,
-              data: res.data
+              data: res.data.daily_fortune
             });
           } else {
-            console.error('❌ 运势API返回错误:', res);
+            console.error('❌ 统一八字计算API返回错误:', res);
             resolve({
               success: false,
               error: res.error || '服务器返回错误'
@@ -170,7 +179,7 @@ class EnhancedFortuneCalculator {
           }
         },
         fail: (error) => {
-          console.error('❌ 运势API请求失败:', error);
+          console.error('❌ 统一八字计算API请求失败:', error);
           resolve({
             success: false,
             error: error.errMsg || '网络请求失败'
