@@ -1374,7 +1374,24 @@ Page({
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
   },
 
-  // 计算运势进度条显示
+  // 获取幸运色对应的十六进制颜色
+  getLuckyColorHex(colorName) {
+    const colorMap = {
+      '红色': '#FF6B6B',
+      '绿色': '#51CF66',
+      '蓝色': '#339AF0',
+      '黄色': '#FFD43B',
+      '黑色': '#495057',
+      '白色': '#F8F9FA',
+      '紫色': '#9775FA',
+      '橙色': '#FF922B',
+      '粉色': '#F783AC',
+      '灰色': '#ADB5BD'
+    };
+    return colorMap[colorName] || '#51CF66';
+  },
+
+  // 计算运势进度条显示（保留用于兼容）
   getFortuneProgressBar(score) {
     const percentage = Math.round(score * 20); // 0-5分转换为0-100%
     const filledCount = Math.round(percentage / 10); // 每10%一个█

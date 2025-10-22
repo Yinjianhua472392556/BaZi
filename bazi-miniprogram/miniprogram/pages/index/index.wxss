@@ -1050,183 +1050,598 @@
 }
 
 
-/* ASCII风格卡片样式 */
-.ascii-fortune-card {
-  margin-bottom: 20rpx;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  background: #1e1e1e;
-  border-radius: 8rpx;
-  padding: 15rpx;
-  overflow-x: auto;
-  white-space: nowrap;
+/* 现代风格运势卡片 */
+.modern-fortune-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 20rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
+  border: 1rpx solid #e9ecef;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-.ascii-border-top,
-.ascii-border-bottom,
-.ascii-separator {
-  color: #ffffff;
-  font-size: 24rpx;
-  line-height: 1.2;
-  letter-spacing: 0;
-  font-weight: normal;
-  display: block;
-  text-align: left;
+.modern-fortune-card:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
 }
 
-.ascii-header {
+/* 卡片头部 */
+.card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #ffffff;
-  font-size: 24rpx;
-  line-height: 1.2;
-  margin: 2rpx 0;
+  padding: 25rpx 30rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
-.ascii-header-text {
-  color: #61dafb;
-  font-weight: bold;
-}
-
-.ascii-score {
-  color: #ffd700;
-  font-weight: bold;
-}
-
-.ascii-progress {
-  margin: 2rpx 0;
-}
-
-.ascii-progress-text {
-  color: #98fb98;
-  font-size: 24rpx;
-  line-height: 1.2;
-  display: block;
-}
-
-.ascii-scores {
-  margin: 2rpx 0;
-}
-
-.ascii-scores-line1,
-.ascii-scores-line2 {
-  color: #87ceeb;
-  font-size: 24rpx;
-  line-height: 1.2;
-  display: block;
-  margin: 1rpx 0;
-}
-
-.ascii-lucky {
-  margin: 2rpx 0;
-}
-
-.ascii-lucky-text {
-  color: #dda0dd;
-  font-size: 24rpx;
-  line-height: 1.2;
-  display: block;
-}
-
-.ascii-suggestions {
-  margin: 2rpx 0;
-}
-
-.ascii-suggestion-text {
-  color: #f0e68c;
-  font-size: 24rpx;
-  line-height: 1.2;
-  display: block;
-}
-
-.ascii-buttons {
+.member-info {
   display: flex;
   align-items: center;
-  margin: 2rpx 0;
-  flex-wrap: nowrap;
+  gap: 20rpx;
 }
 
-.ascii-buttons-text {
-  color: #ffffff;
+.member-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: white;
+  border: 3rpx solid rgba(255, 255, 255, 0.3);
+}
+
+.member-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.member-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+}
+
+.member-age {
   font-size: 24rpx;
-  line-height: 1.2;
-  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  align-self: flex-start;
 }
 
-.ascii-buttons-space {
-  color: #ffffff;
+.overall-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.score-number {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+}
+
+.score-stars {
+  display: flex;
+  gap: 4rpx;
+}
+
+.score-stars .star {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.3s ease;
+}
+
+.score-stars .star.filled {
+  color: #ffd700;
+  text-shadow: 0 0 8rpx rgba(255, 215, 0, 0.8);
+}
+
+/* 运势详情 */
+.fortune-details {
+  padding: 30rpx;
+}
+
+.detailed-scores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  margin-bottom: 25rpx;
+}
+
+.score-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 16rpx;
+  border: 1rpx solid #dee2e6;
+}
+
+.score-icon {
+  font-size: 32rpx;
+  width: 40rpx;
+  text-align: center;
+}
+
+.score-label {
+  font-size: 26rpx;
+  color: #495057;
+  font-weight: 500;
+  flex: 1;
+}
+
+.score-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2c3e50;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 幸运元素 */
+.lucky-section {
+  display: flex;
+  gap: 15rpx;
+  margin-bottom: 25rpx;
+  flex-wrap: wrap;
+}
+
+.lucky-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 16rpx;
+  background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+  border-radius: 20rpx;
+  border: 1rpx solid #ffe082;
+  flex: 1;
+  min-width: 0;
+}
+
+.lucky-label {
+  font-size: 22rpx;
+  color: #ef6c00;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.lucky-value {
   font-size: 24rpx;
-  line-height: 1.2;
-  flex-shrink: 0;
+  font-weight: bold;
+  color: #e65100;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.ascii-btn {
-  background: none !important;
-  border: none !important;
-  color: #ff6b6b !important;
-  font-size: 24rpx !important;
-  line-height: 1.2 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
-  text-decoration: underline;
-  min-width: auto;
-  flex-shrink: 0;
+.color-tag {
+  color: white !important;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 20rpx;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.3);
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
 }
 
-.ascii-btn::after {
-  border: none !important;
+/* 五行分析 */
+.wuxing-section {
+  margin-bottom: 25rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+  border-radius: 16rpx;
+  border: 1rpx solid #c8e6c9;
 }
 
-.ascii-btn:active {
-  background: none !important;
-  color: #ff9999 !important;
-  transform: none;
+.section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 12rpx;
+  position: relative;
+  padding-left: 20rpx;
 }
 
-.ascii-error {
-  margin: 2rpx 0;
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8rpx;
+  height: 20rpx;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  border-radius: 4rpx;
 }
 
-.ascii-error-text {
-  color: #ff6b6b;
+.wuxing-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.wuxing-text {
   font-size: 24rpx;
-  line-height: 1.2;
-  display: block;
+  color: #388e3c;
+  flex: 1;
 }
 
-/* 响应式适配 - ASCII卡片 */
+.harmony-score {
+  font-size: 22rpx;
+  font-weight: bold;
+  color: #1b5e20;
+  background: rgba(76, 175, 80, 0.1);
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid rgba(76, 175, 80, 0.3);
+}
+
+/* 建议标签 */
+.suggestions-section {
+  margin-bottom: 25rpx;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.suggestion-tag {
+  font-size: 22rpx;
+  color: #2e7d32;
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  padding: 8rpx 16rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid #a5d6a7;
+  font-weight: 500;
+}
+
+/* 年运提示 */
+.yearly-fortune {
+  margin-bottom: 20rpx;
+}
+
+.fortune-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  padding: 16rpx 20rpx;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-radius: 16rpx;
+  border: 1rpx solid #ffcc02;
+}
+
+.tip-icon {
+  font-size: 24rpx;
+  margin-top: 2rpx;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #e65100;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* 操作按钮 */
+.card-actions {
+  display: flex;
+  gap: 15rpx;
+  padding: 25rpx 30rpx;
+  background: #f8f9fa;
+  border-top: 1rpx solid #e9ecef;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  padding: 20rpx 15rpx !important;
+  border-radius: 16rpx;
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::after {
+  border: none;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  box-shadow: 0 4rpx 15rpx rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.secondary {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important;
+  color: #e65100 !important;
+  box-shadow: 0 4rpx 15rpx rgba(252, 182, 159, 0.4);
+}
+
+.action-btn.danger {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%) !important;
+  color: white !important;
+  box-shadow: 0 4rpx 15rpx rgba(255, 107, 107, 0.4);
+}
+
+.action-btn:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.2);
+}
+
+.btn-icon {
+  font-size: 24rpx;
+}
+
+.btn-text {
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 30rpx;
+  background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+  border-radius: 16rpx;
+  border: 1rpx solid #ffcdd2;
+}
+
+.error-icon {
+  font-size: 32rpx;
+  color: #f44336;
+}
+
+.error-text {
+  font-size: 24rpx;
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+/* 响应式适配 - 现代卡片 */
 @media (max-width: 375px) {
-  .ascii-fortune-card {
-    padding: 10rpx;
-    margin-bottom: 15rpx;
+  .modern-fortune-card {
+    margin-bottom: 20rpx;
   }
   
-  .ascii-border-top,
-  .ascii-border-bottom,
-  .ascii-separator,
-  .ascii-progress-text,
-  .ascii-scores-line1,
-  .ascii-scores-line2,
-  .ascii-lucky-text,
-  .ascii-suggestion-text,
-  .ascii-buttons-text,
-  .ascii-buttons-space,
-  .ascii-error-text {
+  .card-header {
+    padding: 20rpx;
+  }
+  
+  .member-info {
+    gap: 15rpx;
+  }
+  
+  .member-avatar {
+    width: 60rpx;
+    height: 60rpx;
+    font-size: 24rpx;
+  }
+  
+  .member-name {
+    font-size: 28rpx;
+  }
+  
+  .member-age {
+    font-size: 20rpx;
+    padding: 4rpx 8rpx;
+  }
+  
+  .score-number {
+    font-size: 36rpx;
+  }
+  
+  .score-stars .star {
+    font-size: 16rpx;
+  }
+  
+  .fortune-details {
+    padding: 20rpx;
+  }
+  
+  .detailed-scores {
+    grid-template-columns: 1fr;
+    gap: 15rpx;
+    margin-bottom: 20rpx;
+  }
+  
+  .score-item {
+    padding: 15rpx;
+    gap: 10rpx;
+  }
+  
+  .score-icon {
+    font-size: 28rpx;
+    width: 35rpx;
+  }
+  
+  .score-label {
+    font-size: 22rpx;
+  }
+  
+  .score-value {
+    font-size: 28rpx;
+  }
+  
+  .lucky-section {
+    gap: 10rpx;
+    flex-direction: column;
+  }
+  
+  .lucky-item {
+    padding: 10rpx 12rpx;
+    gap: 6rpx;
+  }
+  
+  .lucky-label {
     font-size: 20rpx;
   }
   
-  .ascii-header {
+  .lucky-value {
+    font-size: 22rpx;
+  }
+  
+  .wuxing-section {
+    padding: 15rpx;
+    margin-bottom: 20rpx;
+  }
+  
+  .section-title {
+    font-size: 24rpx;
+    margin-bottom: 10rpx;
+    padding-left: 15rpx;
+  }
+  
+  .section-title::before {
+    width: 6rpx;
+    height: 16rpx;
+  }
+  
+  .wuxing-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8rpx;
+  }
+  
+  .wuxing-text {
+    font-size: 22rpx;
+  }
+  
+  .harmony-score {
+    font-size: 20rpx;
+    padding: 4rpx 8rpx;
+  }
+  
+  .suggestions-list {
+    gap: 8rpx;
+  }
+  
+  .suggestion-tag {
+    font-size: 20rpx;
+    padding: 6rpx 12rpx;
+  }
+  
+  .fortune-tip {
+    padding: 12rpx 15rpx;
+    gap: 8rpx;
+  }
+  
+  .tip-icon {
     font-size: 20rpx;
   }
   
-  .ascii-btn {
-    font-size: 20rpx !important;
+  .tip-text {
+    font-size: 22rpx;
   }
   
-  .ascii-buttons {
-    flex-wrap: wrap;
-    gap: 2rpx;
+  .card-actions {
+    padding: 20rpx;
+    gap: 10rpx;
+  }
+  
+  .action-btn {
+    padding: 15rpx 10rpx !important;
+    gap: 6rpx;
+  }
+  
+  .btn-icon {
+    font-size: 20rpx;
+  }
+  
+  .btn-text {
+    font-size: 20rpx;
+  }
+  
+  .error-state {
+    padding: 20rpx;
+    gap: 8rpx;
+  }
+  
+  .error-icon {
+    font-size: 28rpx;
+  }
+  
+  .error-text {
+    font-size: 22rpx;
+  }
+}
+
+/* 动画增强 */
+.modern-fortune-card {
+  animation: cardSlideIn 0.5s ease-out;
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.score-stars .star.filled {
+  animation: starGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes starGlow {
+  from {
+    text-shadow: 0 0 8rpx rgba(255, 215, 0, 0.8);
+  }
+  to {
+    text-shadow: 0 0 16rpx rgba(255, 215, 0, 1), 0 0 24rpx rgba(255, 215, 0, 0.5);
   }
 }
 
