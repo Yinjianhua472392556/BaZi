@@ -147,8 +147,13 @@
             <view class="wuxing-section" wx:if="{{item.daily_fortune.wuxing_analysis}}">
               <view class="section-title">五行运势</view>
               <view class="wuxing-info">
-                <text class="wuxing-text">本命{{item.daily_fortune.wuxing_analysis.personal_day_wuxing}}，今日{{item.daily_fortune.wuxing_analysis.daily_stem_wuxing}}{{item.daily_fortune.wuxing_analysis.daily_branch_wuxing}}</text>
-                <text class="harmony-score">和谐度：{{Math.round((item.daily_fortune.wuxing_analysis.overall_relation.harmony_score || 0.8) * 100)}}%</text>
+                <text class="wuxing-text">本命{{item.daily_fortune.wuxing_analysis.personal_day_wuxing || '火'}}，今日{{item.daily_fortune.wuxing_analysis.daily_stem_wuxing || '木'}}{{item.daily_fortune.wuxing_analysis.daily_branch_wuxing || '金'}}</text>
+                <text class="harmony-score" wx:if="{{item.daily_fortune.wuxing_analysis.overall_relation && item.daily_fortune.wuxing_analysis.overall_relation.harmony_score}}">
+                  和谐度：{{Math.round(item.daily_fortune.wuxing_analysis.overall_relation.harmony_score * 100)}}%
+                </text>
+                <text class="harmony-score" wx:else>
+                  {{item.daily_fortune.wuxing_analysis.overall_relation.description || '五行平衡'}}
+                </text>
               </view>
             </view>
 
@@ -172,15 +177,15 @@
           <!-- 操作按钮 -->
           <view class="card-actions">
             <button class="action-btn primary" bindtap="handleViewDetail" data-index="{{index}}">
-              <text class="btn-icon">👁️</text>
+              <text class="btn-icon">📊</text>
               <text class="btn-text">详情</text>
             </button>
             <button class="action-btn secondary" bindtap="handleEditNote" data-member-id="{{item.id}}" data-member-name="{{item.name}}">
-              <text class="btn-icon">✏️</text>
+              <text class="btn-icon">📝</text>
               <text class="btn-text">备注</text>
             </button>
             <button class="action-btn danger" bindtap="handleDeleteMember" data-member-id="{{item.id}}" data-member-name="{{item.name}}">
-              <text class="btn-icon">🗑️</text>
+              <text class="btn-icon">❌</text>
               <text class="btn-text">删除</text>
             </button>
           </view>

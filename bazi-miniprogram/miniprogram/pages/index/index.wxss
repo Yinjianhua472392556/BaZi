@@ -1052,18 +1052,18 @@
 
 /* 现代风格运势卡片 */
 .modern-fortune-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 20rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 8rpx 30rpx rgba(0, 0, 0, 0.12);
-  border: 1rpx solid #e9ecef;
+  background: #ffffff;
+  border-radius: 16rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+  border: 1rpx solid #f0f0f0;
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .modern-fortune-card:active {
-  transform: translateY(2rpx);
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+  transform: translateY(1rpx);
+  box-shadow: 0 6rpx 25rpx rgba(0, 0, 0, 0.12);
 }
 
 /* 卡片头部 */
@@ -1071,8 +1071,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 25rpx 30rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, #4c6ef5 0%, #3b82f6 100%);
   color: white;
 }
 
@@ -1165,9 +1165,10 @@
   align-items: center;
   gap: 12rpx;
   padding: 20rpx;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: #ffffff;
   border-radius: 16rpx;
-  border: 1rpx solid #dee2e6;
+  border: 2rpx solid #e3f2fd;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
 }
 
 .score-icon {
@@ -1178,19 +1179,15 @@
 
 .score-label {
   font-size: 26rpx;
-  color: #495057;
-  font-weight: 500;
+  color: #37474f;
+  font-weight: 600;
   flex: 1;
 }
 
 .score-value {
   font-size: 32rpx;
   font-weight: bold;
-  color: #2c3e50;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #1565c0;
 }
 
 /* 幸运元素 */
@@ -1206,24 +1203,25 @@
   align-items: center;
   gap: 8rpx;
   padding: 12rpx 16rpx;
-  background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+  background: #ffffff;
   border-radius: 20rpx;
-  border: 1rpx solid #ffe082;
+  border: 2rpx solid #ffc107;
   flex: 1;
   min-width: 0;
+  box-shadow: 0 2rpx 8rpx rgba(255, 193, 7, 0.15);
 }
 
 .lucky-label {
   font-size: 22rpx;
-  color: #ef6c00;
-  font-weight: 500;
+  color: #f57c00;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .lucky-value {
   font-size: 24rpx;
   font-weight: bold;
-  color: #e65100;
+  color: #ef6c00;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
