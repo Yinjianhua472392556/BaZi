@@ -81,12 +81,13 @@ class FortuneCalculator:
     }
     
     @classmethod
-    def calculate_daily_fortune(cls, personal_bazi: Dict, target_date: str) -> Dict:
+    def calculate_daily_fortune(cls, personal_bazi: Dict, target_date: str, user_age: int = 30) -> Dict:
         """
         计算每日运势
         Args:
             personal_bazi: 个人八字数据，格式: {"year_pillar": "甲子", "month_pillar": ..., "day_pillar": ..., "hour_pillar": ...}
             target_date: 目标日期，格式: "2025-10-16"
+            user_age: 用户年龄，用于个性化权重调整
         Returns:
             运势分析结果
         """
@@ -110,7 +111,8 @@ class FortuneCalculator:
             scores = cls.calculate_fortune_scores(
                 wuxing_analysis, 
                 ten_gods_analysis, 
-                solar_term_effect
+                solar_term_effect,
+                user_age
             )
             
             # 7. 生成建议和幸运元素
@@ -351,29 +353,70 @@ class FortuneCalculator:
         return "比肩"
     
     @classmethod
-    def calculate_fortune_scores(cls, wuxing_analysis: Dict, ten_gods_analysis: Dict, solar_term_effect: float) -> Dict:
-        """运势分数计算"""
-        base_score = 3  # 基础3分（满分5分）
+    def get_age_weights(cls, age: int) -> Dict[str, float]:
+        """根据年龄返回关注点权重"""
+        if age <= 30:
+            # 年轻人：重视发展和感情
+            return {
+                "wealth": 0.15,   # 财运不是重点
+                "career": 0.30,   # 事业发展重要
+                "health": 0.15,   # 身体还行
+                "love": 0.25,     # 感情很重要  
+                "study": 0.15     # 学习提升
+            }
+        elif age <= 50:
+            # 中年人：重视财富和事业
+            return {
+                "wealth": 0.30,   # 财富积累重要
+                "career": 0.30,   # 事业巅峰期
+                "health": 0.20,   # 健康开始重要
+                "love": 0.15,     # 感情相对稳定
+                "study": 0.05     # 学习需求降低
+            }
+        else:
+            # 中老年：重视健康和家庭
+            return {
+                "wealth": 0.20,   # 财富保值就行
+                "career": 0.10,   # 事业不重要了
+                "health": 0.40,   # 健康最重要
+                "love": 0.25,     # 家庭和谐重要
+                "study": 0.05     # 娱乐性学习
+            }
+
+    @classmethod
+    def calculate_fortune_scores(cls, wuxing_analysis: Dict, ten_gods_analysis: Dict, solar_term_effect: float, user_age: int = 30) -> Dict:
+        """年龄自适应的运势分数计算"""
         
-        # 五行关系影响
-        wuxing_bonus = (wuxing_analysis["stem_relation"]["strength"] + 
-                       wuxing_analysis["branch_relation"]["strength"]) / 2
+        # 1. 各项分数保持原有算法不变
+        wealth = cls.calculate_specific_score("wealth", wuxing_analysis, ten_gods_analysis)
+        career = cls.calculate_specific_score("career", wuxing_analysis, ten_gods_analysis) 
+        health = cls.calculate_specific_score("health", wuxing_analysis, ten_gods_analysis)
+        love = cls.calculate_specific_score("love", wuxing_analysis, ten_gods_analysis)
+        study = cls.calculate_specific_score("study", wuxing_analysis, ten_gods_analysis)
         
-        # 十神关系影响
-        ten_gods_bonus = ten_gods_analysis["effect"]["influence"]
+        # 2. 根据年龄获取权重
+        weights = cls.get_age_weights(user_age)
         
-        # 节气影响
-        season_bonus = solar_term_effect * 0.5
+        # 3. 加权计算overall
+        overall = (
+            wealth * weights["wealth"] + 
+            career * weights["career"] + 
+            health * weights["health"] + 
+            love * weights["love"] + 
+            study * weights["study"]
+        )
         
-        overall = cls.normalize_score(base_score + wuxing_bonus + ten_gods_bonus + season_bonus)
+        # 4. 微调和标准化
+        season_adjustment = (solar_term_effect - 0.5) * 0.1  # 降低影响
+        final_overall = cls.normalize_score(overall + season_adjustment)
         
         return {
-            "overall": overall,
-            "wealth": cls.calculate_specific_score("wealth", wuxing_analysis, ten_gods_analysis),
-            "career": cls.calculate_specific_score("career", wuxing_analysis, ten_gods_analysis),
-            "health": cls.calculate_specific_score("health", wuxing_analysis, ten_gods_analysis),
-            "love": cls.calculate_specific_score("love", wuxing_analysis, ten_gods_analysis),
-            "study": cls.calculate_specific_score("study", wuxing_analysis, ten_gods_analysis)
+            "overall": final_overall,
+            "wealth": wealth,
+            "career": career,
+            "health": health,
+            "love": love,
+            "study": study
         }
     
     @classmethod

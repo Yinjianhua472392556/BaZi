@@ -116,14 +116,19 @@
                 <view class="score-value">{{item.daily_fortune.detailed_scores.career || 0}}</view>
               </view>
               <view class="score-item">
-                <view class="score-icon">❤️</view>
+                <view class="score-icon">🏥</view>
                 <view class="score-label">健康</view>
                 <view class="score-value">{{item.daily_fortune.detailed_scores.health || 0}}</view>
               </view>
               <view class="score-item">
+                <view class="score-icon">❤️</view>
+                <view class="score-label">感情</view>
+                <view class="score-value">{{item.daily_fortune.detailed_scores.love || 0}}</view>
+              </view>
+              <view class="score-item">
                 <view class="score-icon">📚</view>
                 <view class="score-label">学习</view>
-                <view class="score-value">{{item.daily_fortune.detailed_scores.study || item.daily_fortune.detailed_scores.love || 0}}</view>
+                <view class="score-value">{{item.daily_fortune.detailed_scores.study || 0}}</view>
               </view>
             </view>
 

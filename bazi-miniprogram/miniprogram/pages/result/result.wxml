@@ -151,7 +151,7 @@
       <view class="analysis-section">
         <view class="analysis-title">今日运势</view>
         <view class="analysis-content">
-          <view class="fortune-score">运势评分：{{(resultData.daily_fortune && resultData.daily_fortune.overall_score) ? resultData.daily_fortune.overall_score : (resultData.today_fortune && resultData.today_fortune.score) ? resultData.today_fortune.score : 8}}/10</view>
+          <view class="fortune-score">运势评分：{{(resultData.daily_fortune && resultData.daily_fortune.overall_score) ? resultData.daily_fortune.overall_score : (resultData.today_fortune && resultData.today_fortune.score) ? resultData.today_fortune.score : 4.0}}/5</view>
           <view class="fortune-desc">{{(resultData.daily_fortune && resultData.daily_fortune.detailed_analysis) ? resultData.daily_fortune.detailed_analysis : (resultData.today_fortune && resultData.today_fortune.description) ? resultData.today_fortune.description : '今日运势不错...'}}</view>
           <!-- 如果有更详细的运势信息则显示 -->
           <view wx:if="{{resultData.daily_fortune && resultData.daily_fortune.suggestions && resultData.daily_fortune.suggestions.length > 0}}" class="fortune-suggestions">

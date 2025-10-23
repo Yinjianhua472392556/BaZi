@@ -329,12 +329,15 @@ async def calculate_bazi_single(request_data: dict):
                             "hour_pillar": result["bazi"]["hour"]
                         }
                         
+                        # 计算用户年龄
+                        user_age = current_year - year if year else 30
+                        
                         fortune_result = fortune_calculator.calculate_daily_fortune(
-                            bazi_for_fortune, today_date
+                            bazi_for_fortune, today_date, user_age
                         )
                         if fortune_result["success"]:
                             result["daily_fortune"] = fortune_result["data"]
-                            print(f"✅ 单人计算：{request_data.get('name', '用户')} 运势计算成功，运势日期: {today_date}")
+                            print(f"✅ 单人计算：{request_data.get('name', '用户')} 运势计算成功，运势日期: {today_date}, 年龄: {user_age}")
                     except Exception as fortune_error:
                         print(f"运势计算失败: {str(fortune_error)}")
                         # 运势计算失败不影响八字结果
