@@ -311,8 +311,7 @@ async def calculate_bazi_single(request_data: dict):
                     year, month, day, hour, gender, calendar_type
                 )
                 
-                # 计算今日运势 - 使用当前日期确保每天不同但同天一致
-                # 修复：使用统一的当前日期，确保同一天内所有路径的运势数据一致
+                # 修复：统一使用FortuneCalculator进行今日运势计算，确保与批量计算一致
                 import pytz
 
                 # 使用中国时区获取当前日期，确保时区一致性
@@ -329,18 +328,23 @@ async def calculate_bazi_single(request_data: dict):
                             "hour_pillar": result["bazi"]["hour"]
                         }
                         
-                        # 计算用户年龄
+                        # 计算用户年龄（与批量计算保持一致）
                         user_age = current_year - year if year else 30
                         
+                        # 使用FortuneCalculator计算运势（与批量计算完全一致）
                         fortune_result = fortune_calculator.calculate_daily_fortune(
                             bazi_for_fortune, today_date, user_age
                         )
                         if fortune_result["success"]:
                             result["daily_fortune"] = fortune_result["data"]
-                            print(f"✅ 单人计算：{request_data.get('name', '用户')} 运势计算成功，运势日期: {today_date}, 年龄: {user_age}")
+                            print(f"✅ 单人计算：{request_data.get('name', '用户')} 运势计算成功，使用FortuneCalculator，运势日期: {today_date}, 年龄: {user_age}")
+                        else:
+                            print(f"⚠️ 单人计算：FortuneCalculator运势计算失败: {fortune_result.get('error', '未知错误')}")
                     except Exception as fortune_error:
-                        print(f"运势计算失败: {str(fortune_error)}")
+                        print(f"❌ 单人计算：FortuneCalculator运势计算异常: {str(fortune_error)}")
                         # 运势计算失败不影响八字结果
+                else:
+                    print("⚠️ 单人计算：FortuneCalculator不可用，跳过运势计算")
                 
                 return {
                     "success": True,

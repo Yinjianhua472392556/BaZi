@@ -527,8 +527,8 @@ class BaziCalculator:
             # 计算大运流年
             dayun = self.calculate_dayun(bazi, calc_year, gender)
             
-            # 今日运势
-            today_fortune = self.calculate_today_fortune(bazi)
+            # 注：今日运势计算已移至FortuneCalculator，确保算法统一性
+            today_fortune = None
             
             # 构建paipan格式的结果，兼容naming_calculator的期望格式
             paipan = {
@@ -690,124 +690,9 @@ class BaziCalculator:
             "description": f"当前处于第{dayun_period}个大运期，建议把握机遇，稳步发展。"
         }
     
-    def calculate_today_fortune(self, bazi):
-        """计算今日运势 - 个性化版本"""
-        today = datetime.now()
-        day_gan = bazi["day"][0]
-        day_zhi = bazi["day"][1]
-        
-        # 根据日主天干地支和今日的综合关系计算运势
-        gan_index = self.tiangan.index(day_gan)
-        zhi_index = self.dizhi.index(day_zhi)
-        
-        # 计算个性化分数
-        base_score = (today.day + today.month + gan_index + zhi_index) % 5 + 6  # 6-10分
-        
-        # 根据日主特点的个性化今日运势描述
-        day_gan_descriptions = {
-            '甲': [
-                "今日木气旺盛，适合开展新计划。",
-                "今日创新运势佳，团队合作顺利。",
-                "今日领导力突出，把握发展机遇。",
-                "今日行动力强，但要避免急躁。",
-                "今日整体运势平稳，稳步前进。"
-            ],
-            '乙': [
-                "今日人际关系和谐，适合协调工作。",
-                "今日柔性力量显现，化解矛盾。",
-                "今日艺术灵感丰富，创作有利。",
-                "今日感性思维活跃，直觉准确。",
-                "今日运势温和，宜以柔制刚。"
-            ],
-            '丙': [
-                "今日热情高涨，表现机会多。",
-                "今日创意爆发，适合展示才华。",
-                "今日积极向上，感染力强。",
-                "今日行动迅速，但要控制冲动。",
-                "今日火气旺盛，注意情绪管理。"
-            ],
-            '丁': [
-                "今日文思敏捷，学习效果好。",
-                "今日细致入微，适合精细工作。",
-                "今日艺术天赋突出，创作丰富。",
-                "今日敏感度高，洞察力强。",
-                "今日运势温暖，如春风化雨。"
-            ],
-            '戊': [
-                "今日稳重踏实，基础工作顺利。",
-                "今日包容心强，团队和谐。",
-                "今日执行力佳，任务完成度高。",
-                "今日保守策略，稳中求进。",
-                "今日土运旺盛，积累有成。"
-            ],
-            '己': [
-                "今日服务精神强，助人为乐。",
-                "今日协调能力突出，化解纷争。",
-                "今日温和谦逊，人缘极佳。",
-                "今日内敛发力，默默耕耘。",
-                "今日运势平和，以德服人。"
-            ],
-            '庚': [
-                "今日执行力强，决策果断。",
-                "今日正义感突出，行事公正。",
-                "今日金运旺盛，财运不错。",
-                "今日刚强有力，攻坚克难。",
-                "今日运势锐利，直击要害。"
-            ],
-            '辛': [
-                "今日灵活机敏，变通能力强。",
-                "今日商业嗅觉敏锐，投资有利。",
-                "今日精致细腻，品味提升。",
-                "今日社交活跃，人脉拓展。",
-                "今日运势精巧，事半功倍。"
-            ],
-            '壬': [
-                "今日智慧如泉，思路清晰。",
-                "今日适应力强，变化中求机遇。",
-                "今日流动性好，信息畅通。",
-                "今日前瞻性强，布局长远。",
-                "今日水运活跃，灵感不断。"
-            ],
-            '癸': [
-                "今日内省深刻，自我提升。",
-                "今日积累智慧，厚积薄发。",
-                "今日直觉敏锐，洞察入微。",
-                "今日低调行事，暗中布局。",
-                "今日运势深沉，静水流深。"
-            ]
-        }
-        
-        # 个性化建议
-        day_gan_suggestions = {
-            '甲': "发挥领导才能，主动承担责任。",
-            '乙': "以柔克刚，善用协调能力。",
-            '丙': "保持热情，但要控制情绪。",
-            '丁': "注重细节，发挥创造力。",
-            '戊': "稳扎稳打，做好基础工作。",
-            '己': "服务他人，建立良好关系。",
-            '庚': "果断决策，但要考虑他人感受。",
-            '辛': "灵活变通，抓住商机。",
-            '壬': "开阔思路，适应变化。",
-            '癸': "深度思考，积蓄力量。"
-        }
-        
-        descriptions = day_gan_descriptions.get(day_gan, [
-            "今日运势独特，发挥个人特质。",
-            "今日机遇与挑战并存。",
-            "今日运势平稳，保持平常心。",
-            "今日适合内省，规划未来。",
-            "今日运势一般，稳步前行。"
-        ])
-        
-        suggestion = day_gan_suggestions.get(day_gan, "发挥个人优势，把握当下机遇。")
-        
-        description = descriptions[(base_score - 6) % len(descriptions)]
-        
-        return {
-            "score": base_score,
-            "description": description,
-            "suggestion": suggestion
-        }
+    # 注：calculate_today_fortune 方法已移除
+    # 现在统一使用 FortuneCalculator 计算运势，确保算法一致性
+    # 如需运势计算，请使用 fortune_calculator.py 中的 FortuneCalculator 类
     
     def calculate_month_pillar_with_jieqi(self, year, month, day, year_gan_index):
         """计算月柱 - 考虑节气影响"""
