@@ -131,7 +131,7 @@
             <view class="lucky-section" wx:if="{{item.daily_fortune.lucky_elements}}">
               <view class="lucky-item">
                 <text class="lucky-label">🍀 幸运色</text>
-                <text class="lucky-value color-tag" style="background-color: {{getLuckyColorHex(item.daily_fortune.lucky_elements.lucky_color)}}">{{item.daily_fortune.lucky_elements.lucky_color}}</text>
+                <text class="lucky-value color-tag" style="background-color: {{getLuckyColorHex(item.daily_fortune.lucky_elements.lucky_color)}}; color: white; border: 1rpx solid rgba(255,255,255,0.3);">{{item.daily_fortune.lucky_elements.lucky_color}}</text>
               </view>
               <view class="lucky-item">
                 <text class="lucky-label">🔢 幸运数</text>
@@ -148,12 +148,6 @@
               <view class="section-title">五行运势</view>
               <view class="wuxing-info">
                 <text class="wuxing-text">本命{{item.daily_fortune.wuxing_analysis.personal_day_wuxing || '火'}}，今日{{item.daily_fortune.wuxing_analysis.daily_stem_wuxing || '木'}}{{item.daily_fortune.wuxing_analysis.daily_branch_wuxing || '金'}}</text>
-                <text class="harmony-score" wx:if="{{item.daily_fortune.wuxing_analysis.overall_relation && item.daily_fortune.wuxing_analysis.overall_relation.harmony_score}}">
-                  和谐度：{{Math.round(item.daily_fortune.wuxing_analysis.overall_relation.harmony_score * 100)}}%
-                </text>
-                <text class="harmony-score" wx:else>
-                  {{item.daily_fortune.wuxing_analysis.overall_relation.description || '五行平衡'}}
-                </text>
               </view>
             </view>
 
