@@ -510,7 +510,7 @@ Page({
     })
   },
 
-  // 查看成员详情 - 修复数据结构问题和今日运势一致性
+  // 查看成员详情 - 修复数据不一致问题，使用首页已有的运势数据
   async viewMemberDetail(memberData) {
     try {
       console.log('🔍 查看成员详情，原始数据:', memberData)
@@ -559,75 +559,54 @@ Page({
       const gender = birthInfo.gender || memberData.gender || 'male';
       const calendarType = birthInfo.calendarType || memberData.calendarType || 'solar';
 
-      // 获取完整的八字分析结果（确保与"开始测算"使用完全相同的接口和算法）
-      let freshBaziResult = null;
-      try {
-        console.log('🔮 为家庭成员重新计算完整八字分析（包含今日运势）...')
-        
-        // 构建与"开始测算"完全相同的请求数据
-        const requestData = {
-          year: year,
-          month: month,
-          day: day,
-          hour: hour,
-          gender: gender,
-          name: memberData.name || '家庭成员',
-          calendarType: calendarType
-        };
-
-        // 调用与"开始测算"完全相同的后端API
-        const app = getApp();
-        const baziResult = await new Promise((resolve, reject) => {
-          app.request({
-            url: '/api/v1/calculate-bazi',
-            method: 'POST',
-            data: requestData,
-            success: (result) => {
-              if (result.success) {
-                resolve(result.data);
-              } else {
-                console.warn('八字重新计算返回失败，使用原有数据:', result.error);
+      // 修复关键问题：使用首页已有的运势数据，确保数据一致性
+      let dailyFortune = null;
+      
+      // 1. 优先使用首页已有的运势数据
+      if (memberData.daily_fortune) {
+        dailyFortune = memberData.daily_fortune;
+        console.log('✅ 使用首页已有的运势数据，确保一致性:', dailyFortune.overall_score);
+      } 
+      // 2. 如果没有运势数据，则需要获取（但不重新计算整个八字）
+      else {
+        console.log('🔍 首页无运势数据，尝试获取运势信息...');
+        try {
+          // 只获取运势数据，不重新计算八字
+          const app = getApp();
+          const fortuneResult = await new Promise((resolve) => {
+            app.request({
+              url: '/api/v1/calculate-bazi',
+              method: 'POST',
+              data: {
+                year: year,
+                month: month,
+                day: day,
+                hour: hour,
+                gender: gender,
+                name: memberData.name || '家庭成员',
+                calendarType: calendarType,
+                only_fortune: true  // 标记只需要运势数据
+              },
+              success: (result) => {
+                if (result.success && result.data.daily_fortune) {
+                  resolve(result.data.daily_fortune);
+                } else {
+                  console.warn('运势获取失败，使用默认运势数据');
+                  resolve(null);
+                }
+              },
+              fail: (error) => {
+                console.warn('运势获取请求失败，使用默认运势数据:', error);
                 resolve(null);
               }
-            },
-            fail: (error) => {
-              console.warn('八字重新计算网络请求失败，使用原有数据:', error);
-              resolve(null);
-            }
+            });
           });
-        });
-
-        freshBaziResult = baziResult;
-        console.log('✅ 家庭成员完整八字分析获取成功:', !!freshBaziResult);
-        
-        // 如果获取到新的数据，使用新数据；否则使用原有数据
-        if (freshBaziResult) {
-          bazi = freshBaziResult.bazi || bazi;
-          wuxing = freshBaziResult.wuxing || wuxing;
-          analysis = freshBaziResult.analysis || analysis;
           
-          // 更新本地存储的成员数据（可选）
-          try {
-            const updatedMemberData = {
-              ...memberData,
-              baziData: {
-                ...memberData.baziData,
-                bazi: freshBaziResult.bazi,
-                wuxing: freshBaziResult.wuxing,
-                analysis: freshBaziResult.analysis,
-                lastUpdate: Date.now()
-              }
-            };
-            FamilyBaziManager.updateMemberData(memberData.id, updatedMemberData);
-            console.log('✅ 本地成员数据已更新');
-          } catch (updateError) {
-            console.warn('本地数据更新失败:', updateError);
-          }
+          dailyFortune = fortuneResult;
+        } catch (fortuneError) {
+          console.warn('❌ 运势获取失败:', fortuneError);
+          dailyFortune = null;
         }
-        
-      } catch (baziError) {
-        console.warn('❌ 重新计算八字失败，使用原有数据继续显示详情:', baziError);
-        freshBaziResult = null;
       }
 
       // 构造与result.js期望格式一致的数据结构
@@ -692,8 +671,8 @@ Page({
         wuxing_analysis: wuxing,
         comprehensive_analysis: analysis,
 
-        // 今日运势（与"开始测算"保持一致） - 使用新计算的数据
-        daily_fortune: freshBaziResult?.daily_fortune || null,
+        // 今日运势（与"开始测算"保持一致） - 使用首页已有的数据确保一致性
+        daily_fortune: dailyFortune,
 
         // 其他信息
         timestamp: memberData.timestamp || Date.now(),

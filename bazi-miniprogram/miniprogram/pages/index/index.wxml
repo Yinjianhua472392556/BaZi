@@ -95,7 +95,7 @@
             <view class="overall-score">
               <view class="score-number">{{item.daily_fortune.overall_score || 0}}</view>
               <view class="score-stars">
-                <text class="star {{index < (item.daily_fortune.overall_score || 0) ? 'filled' : ''}}" 
+                <text class="star {{index < Math.floor(item.daily_fortune.overall_score || 0) ? 'filled' : (index < (item.daily_fortune.overall_score || 0) ? 'partial' : '')}}" 
                       wx:for="{{[1,2,3,4,5]}}" wx:key="index" wx:for-item="starIndex" wx:for-index="index">★</text>
               </view>
             </view>

@@ -322,7 +322,7 @@ class FortuneCalculator:
     
     @classmethod
     def get_ten_gods_relation(cls, personal_stem: str, daily_stem: str) -> str:
-        """获取十神关系"""
+        """获取十神关系 - 修复随机性问题，确保相同输入产生相同输出"""
         personal_wuxing = cls.DATA_MAPS["wuxing_map"][personal_stem]
         daily_wuxing = cls.DATA_MAPS["wuxing_map"][daily_stem]
         
@@ -333,22 +333,21 @@ class FortuneCalculator:
         
         relations = cls.DATA_MAPS["wuxing_relations"][personal_wuxing]
         
+        # 使用固定的种子值基于天干组合，确保相同输入产生相同输出
+        seed_value = (ord(personal_stem) + ord(daily_stem)) % 2
+        
         if relations["生"] == daily_wuxing:
             # 我生他 - 食伤
-            import random
-            return "食神" if random.random() > 0.5 else "伤官"
+            return "食神" if seed_value == 0 else "伤官"
         if relations["克"] == daily_wuxing:
             # 我克他 - 财星
-            import random
-            return "正财" if random.random() > 0.5 else "偏财"
+            return "正财" if seed_value == 0 else "偏财"
         if relations["被生"] == daily_wuxing:
             # 他生我 - 印星
-            import random
-            return "正印" if random.random() > 0.5 else "偏印"
+            return "正印" if seed_value == 0 else "偏印"
         if relations["被克"] == daily_wuxing:
             # 他克我 - 官杀
-            import random
-            return "正官" if random.random() > 0.5 else "偏官"
+            return "正官" if seed_value == 0 else "偏官"
         
         return "比肩"
     

@@ -1148,6 +1148,12 @@
   text-shadow: 0 0 8rpx rgba(255, 215, 0, 0.8);
 }
 
+.score-stars .star.partial {
+  color: #ffeb3b;
+  opacity: 0.6;
+  text-shadow: 0 0 4rpx rgba(255, 235, 59, 0.5);
+}
+
 /* 运势详情 */
 .fortune-details {
   padding: 30rpx;
