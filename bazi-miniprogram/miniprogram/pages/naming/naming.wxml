@@ -94,12 +94,12 @@
           </view>
           
           <!-- 农历日期选择器 -->
-          <view wx:else class="date-picker-container">
-            <view class="lunar-date-pickers">
+          <view wx:else class="lunar-picker-container">
+            <view class="lunar-pickers">
               <!-- 农历年选择器 -->
               <picker class="lunar-year-picker" value="{{lunarYearIndex}}" range="{{lunarYears}}" bindchange="onLunarYearChange">
                 <view class="picker">
-                  {{lunarYear || '年'}}
+                  {{lunarYear ? lunarYear + '年' : '年'}}
                 </view>
               </picker>
               
