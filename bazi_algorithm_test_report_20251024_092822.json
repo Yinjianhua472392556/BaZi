@@ -1,0 +1,314 @@
+{
+  "diversity_test": [
+    {
+      "name": "甲木日主",
+      "bazi": {
+        "year": "庚午",
+        "month": "己卯",
+        "day": "己卯",
+        "hour": "己巳"
+      },
+      "day_gan": "己",
+      "personality_length": 111,
+      "personality_keywords": [
+        "温和",
+        "包容",
+        "服务",
+        "谦逊"
+      ],
+      "career_keywords": [
+        "服务"
+      ],
+      "wuxing_dominant": "土",
+      "analysis_variety": 4.8
+    },
+    {
+      "name": "乙木日主",
+      "bazi": {
+        "year": "辛未",
+        "month": "甲午",
+        "day": "辛酉",
+        "hour": "乙未"
+      },
+      "day_gan": "辛",
+      "personality_length": 113,
+      "personality_keywords": [
+        "灵活",
+        "创新",
+        "机敏"
+      ],
+      "career_keywords": [
+        "服务",
+        "金融"
+      ],
+      "wuxing_dominant": "金",
+      "analysis_variety": 4.8
+    },
+    {
+      "name": "丙火日主",
+      "bazi": {
+        "year": "乙丑",
+        "month": "甲申",
+        "day": "己卯",
+        "hour": "癸酉"
+      },
+      "day_gan": "己",
+      "personality_length": 101,
+      "personality_keywords": [
+        "温和",
+        "包容",
+        "服务",
+        "创新",
+        "谦逊"
+      ],
+      "career_keywords": [
+        "服务",
+        "领导"
+      ],
+      "wuxing_dominant": "木",
+      "analysis_variety": 4.37
+    },
+    {
+      "name": "丁火日主",
+      "bazi": {
+        "year": "戊辰",
+        "month": "甲子",
+        "day": "甲寅",
+        "hour": "乙亥"
+      },
+      "day_gan": "甲",
+      "personality_length": 119,
+      "personality_keywords": [
+        "直爽",
+        "领导"
+      ],
+      "career_keywords": [
+        "创业",
+        "领导"
+      ],
+      "wuxing_dominant": "木",
+      "analysis_variety": 4.54
+    },
+    {
+      "name": "戊土日主",
+      "bazi": {
+        "year": "癸酉",
+        "month": "丙辰",
+        "day": "癸亥",
+        "hour": "乙卯"
+      },
+      "day_gan": "癸",
+      "personality_length": 115,
+      "personality_keywords": [
+        "细腻",
+        "内敛",
+        "深沉"
+      ],
+      "career_keywords": [
+        "科研"
+      ],
+      "wuxing_dominant": "水",
+      "analysis_variety": 4.76
+    },
+    {
+      "name": "己土日主",
+      "bazi": {
+        "year": "丁卯",
+        "month": "己酉",
+        "day": "壬午",
+        "hour": "辛丑"
+      },
+      "day_gan": "壬",
+      "personality_length": 107,
+      "personality_keywords": [
+        "热情",
+        "智慧",
+        "理性"
+      ],
+      "career_keywords": [
+        "贸易",
+        "领导"
+      ],
+      "wuxing_dominant": "火",
+      "analysis_variety": 4.37
+    },
+    {
+      "name": "庚金日主",
+      "bazi": {
+        "year": "辛未",
+        "month": "辛丑",
+        "day": "癸巳",
+        "hour": "庚申"
+      },
+      "day_gan": "癸",
+      "personality_length": 142,
+      "personality_keywords": [
+        "细腻",
+        "内敛",
+        "理性",
+        "深沉"
+      ],
+      "career_keywords": [
+        "科研"
+      ],
+      "wuxing_dominant": "金",
+      "analysis_variety": 4.77
+    },
+    {
+      "name": "辛金日主",
+      "bazi": {
+        "year": "己巳",
+        "month": "庚午",
+        "day": "丙寅",
+        "hour": "戊戌"
+      },
+      "day_gan": "丙",
+      "personality_length": 111,
+      "personality_keywords": [
+        "热情",
+        "创新"
+      ],
+      "career_keywords": [
+        "能源",
+        "文化",
+        "领导"
+      ],
+      "wuxing_dominant": "火",
+      "analysis_variety": 4.76
+    },
+    {
+      "name": "壬水日主",
+      "bazi": {
+        "year": "丙寅",
+        "month": "己亥",
+        "day": "丙子",
+        "hour": "庚寅"
+      },
+      "day_gan": "丙",
+      "personality_length": 67,
+      "personality_keywords": [
+        "热情",
+        "灵活",
+        "创新"
+      ],
+      "career_keywords": [
+        "能源",
+        "文化",
+        "领导"
+      ],
+      "wuxing_dominant": "木",
+      "analysis_variety": 4.32
+    },
+    {
+      "name": "癸水日主",
+      "bazi": {
+        "year": "甲戌",
+        "month": "丙寅",
+        "day": "辛未",
+        "hour": "甲午"
+      },
+      "day_gan": "辛",
+      "personality_length": 142,
+      "personality_keywords": [
+        "温和",
+        "灵活",
+        "创新",
+        "机敏"
+      ],
+      "career_keywords": [
+        "服务",
+        "金融"
+      ],
+      "wuxing_dominant": "木",
+      "analysis_variety": 5.03
+    }
+  ],
+  "consistency_test": true,
+  "fortune_diversity_test": [
+    {
+      "bazi_index": 1,
+      "overall_score": 3.6,
+      "detailed_scores": {
+        "wealth": 3.0,
+        "career": 3.0,
+        "health": 4.0,
+        "love": 3.9,
+        "study": 4.7
+      },
+      "suggestions_count": 3,
+      "warnings_count": 0,
+      "lucky_color": "黄色",
+      "analysis_length": 50
+    },
+    {
+      "bazi_index": 2,
+      "overall_score": 3.6,
+      "detailed_scores": {
+        "wealth": 3.0,
+        "career": 3.0,
+        "health": 4.0,
+        "love": 3.9,
+        "study": 4.7
+      },
+      "suggestions_count": 3,
+      "warnings_count": 0,
+      "lucky_color": "黄色",
+      "analysis_length": 50
+    },
+    {
+      "bazi_index": 3,
+      "overall_score": 3.5,
+      "detailed_scores": {
+        "wealth": 3.0,
+        "career": 4.3,
+        "health": 3.0,
+        "love": 3.6,
+        "study": 3.0
+      },
+      "suggestions_count": 0,
+      "warnings_count": 3,
+      "lucky_color": "黄色",
+      "analysis_length": 50
+    },
+    {
+      "bazi_index": 4,
+      "overall_score": 3.5,
+      "detailed_scores": {
+        "wealth": 3.0,
+        "career": 4.3,
+        "health": 3.0,
+        "love": 3.6,
+        "study": 3.0
+      },
+      "suggestions_count": 0,
+      "warnings_count": 3,
+      "lucky_color": "黄色",
+      "analysis_length": 50
+    },
+    {
+      "bazi_index": 5,
+      "overall_score": 3.4,
+      "detailed_scores": {
+        "wealth": 4.5,
+        "career": 3.0,
+        "health": 3.0,
+        "love": 3.5,
+        "study": 3.0
+      },
+      "suggestions_count": 5,
+      "warnings_count": 0,
+      "lucky_color": "黑色",
+      "analysis_length": 49
+    }
+  ],
+  "overall_assessment": {
+    "diversity_score": 23.259999999999998,
+    "consistency_score": 100,
+    "fortune_diversity_score": 5.000000000000004,
+    "overall_score": 40.804,
+    "recommendations": [
+      "增加八字分析的个性化内容库",
+      "优化运势计算算法，增加不同八字间的差异化"
+    ]
+  }
+}

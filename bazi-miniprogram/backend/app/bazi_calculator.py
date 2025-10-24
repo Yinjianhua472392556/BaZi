@@ -214,20 +214,105 @@ class BaziCalculator:
         return hour_gan + hour_zhi
     
     def get_enhanced_personality_analysis(self, day_gan, day_zhi, wuxing_count):
-        """增强版性格分析"""
+        """增强版性格分析 - 基于四柱组合的个性化分析"""
+        # 1. 基础日干特质
+        base_traits = self.get_day_gan_base_traits(day_gan)
+        
+        # 2. 五行强弱影响性格
+        wuxing_influence = self.analyze_wuxing_personality_influence(day_gan, wuxing_count)
+        
+        # 3. 地支组合对性格的影响
+        dizhi_influence = self.analyze_dizhi_personality_influence(day_zhi, wuxing_count)
+        
+        # 4. 生成综合性格分析
+        personality_parts = [
+            base_traits,
+            wuxing_influence,
+            dizhi_influence
+        ]
+        
+        # 过滤空值并组合
+        final_personality = "。".join([part for part in personality_parts if part])
+        
+        return final_personality
+
+    def get_day_gan_base_traits(self, day_gan):
+        """获取日干基础特质"""
         base_personality = {
-            '甲': "您具有木的阳刚之气，性格直爽坚韧，天生具备领导潜质。在团队中常常能够主动承担责任，但需要注意避免过于固执。建议多听取他人意见，发挥包容特质。",
-            '乙': "您具有木的阴柔之美，性格温和细腻，善于协调人际关系。具有很强的适应能力和同情心，但有时可能缺乏果断。建议在关键时刻要相信自己的判断。",
-            '丙': "您具有火的热情奔放，性格开朗积极，富有创新精神和感染力。天生乐观向上，但有时可能过于冲动。建议在做重要决定前多思考，控制情绪波动。",
-            '丁': "您具有火的温暖细致，性格敏感而富有艺术气质。注重细节，有很强的洞察力，但有时过于敏感多疑。建议培养内心的坚强，相信自己的能力。",
-            '戊': "您具有土的厚重稳健，性格踏实可靠，是天生的实干家。做事有条不紊，责任心强，但有时显得过于保守。建议适当接受新事物，保持开放心态。",
-            '己': "您具有土的温润包容，性格温和谦逊，善于倾听和理解他人。具有很强的服务精神，但有时缺乏主见。建议增强自信心，勇于表达自己的想法。",
-            '庚': "您具有金的刚强果断，性格坚毅正直，有很强的执行力和正义感。做事干脆利落，但有时可能过于严厉。建议在处理人际关系时多一些温和与灵活。",
-            '辛': "您具有金的精巧灵活，性格聪明机敏，善于变通和创新。具有敏锐的商业嗅觉，但有时可能过于计较得失。建议保持大格局，注重长远发展。",
-            '壬': "您具有水的智慧深远，性格聪慧理性，具有很强的适应能力和前瞻性。思维活跃，但有时可能过于理想化。建议将理想与现实相结合，脚踏实地。",
-            '癸': "您具有水的内敛深沉，性格细腻敏锐，善于观察和思考。具有很强的直觉力和洞察力，但有时显得过于消极。建议增强行动力，将想法付诸实践。"
+            '甲': "您具有木的阳刚之气，性格直爽坚韧，天生具备领导潜质。在团队中常常能够主动承担责任，但需要注意避免过于固执",
+            '乙': "您具有木的阴柔之美，性格温和细腻，善于协调人际关系。具有很强的适应能力和同情心，但有时可能缺乏果断",
+            '丙': "您具有火的热情奔放，性格开朗积极，富有创新精神和感染力。天生乐观向上，但有时可能过于冲动",
+            '丁': "您具有火的温暖细致，性格敏感而富有艺术气质。注重细节，有很强的洞察力，但有时过于敏感多疑",
+            '戊': "您具有土的厚重稳健，性格踏实可靠，是天生的实干家。做事有条不紊，责任心强，但有时显得过于保守",
+            '己': "您具有土的温润包容，性格温和谦逊，善于倾听和理解他人。具有很强的服务精神，但有时缺乏主见",
+            '庚': "您具有金的刚强果断，性格坚毅正直，有很强的执行力和正义感。做事干脆利落，但有时可能过于严厉",
+            '辛': "您具有金的精巧灵活，性格聪明机敏，善于变通和创新。具有敏锐的商业嗅觉，但有时可能过于计较得失",
+            '壬': "您具有水的智慧深远，性格聪慧理性，具有很强的适应能力和前瞻性。思维活跃，但有时可能过于理想化",
+            '癸': "您具有水的内敛深沉，性格细腻敏锐，善于观察和思考。具有很强的直觉力和洞察力，但有时显得过于消极"
         }
-        return base_personality.get(day_gan, "您的性格独特，具有鲜明的个人特色，善于在生活中展现自己的独特魅力。")
+        return base_personality.get(day_gan, "您的性格独特，具有鲜明的个人特色")
+
+    def analyze_wuxing_personality_influence(self, day_gan, wuxing_count):
+        """分析五行分布对性格的影响"""
+        if not wuxing_count:
+            return ""
+            
+        total = sum(wuxing_count.values())
+        if total == 0:
+            return ""
+        
+        # 找出最强和最弱的五行
+        max_element = max(wuxing_count.items(), key=lambda x: x[1])
+        min_element = min(wuxing_count.items(), key=lambda x: x[1])
+        
+        # 日干对应的五行
+        day_gan_wuxing = self.wuxing_tiangan[day_gan]
+        
+        influence_parts = []
+        
+        # 分析日干五行的强弱
+        day_gan_count = wuxing_count.get(day_gan_wuxing, 0)
+        if day_gan_count >= 3:
+            influence_parts.append(f"您的{day_gan_wuxing}行特别旺盛，这使您在{day_gan_wuxing}行的特质上表现得更加突出，执行力强，但需要注意平衡其他方面")
+        elif day_gan_count <= 1:
+            influence_parts.append(f"您的{day_gan_wuxing}行相对较弱，这使您更需要依靠他人的支持和帮助，建议多培养{day_gan_wuxing}行相关的品质")
+        
+        # 分析最旺五行的影响
+        if max_element[1] >= 3 and max_element[0] != day_gan_wuxing:
+            wuxing_traits = {
+                '木': "创新能力强，喜欢成长和发展，但有时过于理想主义",
+                '火': "热情洋溢，表达能力强，喜欢展示自己，但有时急躁",
+                '土': "稳重踏实，包容性强，注重安全感，但有时过于保守",
+                '金': "理性务实，决断力强，重视效率，但有时过于严苛",
+                '水': "智慧灵活，适应性强，善于变通，但有时缺乏坚持"
+            }
+            trait = wuxing_traits.get(max_element[0], "")
+            if trait:
+                influence_parts.append(f"八字中{max_element[0]}行最旺，使您{trait}")
+        
+        return "，".join(influence_parts)
+
+    def analyze_dizhi_personality_influence(self, day_zhi, wuxing_count):
+        """分析日支对性格的影响"""
+        dizhi_traits = {
+            '子': "机智灵活，善于沟通，但有时显得浮躁",
+            '丑': "踏实稳重，耐心持久，但有时过于固执",
+            '寅': "积极进取，勇于开拓，但有时冲动鲁莽",
+            '卯': "温和友善，富有创意，但有时缺乏主见",
+            '辰': "智慧务实，善于规划，但有时过于谨慎",
+            '巳': "聪明敏锐，善于表达，但有时过于自信",
+            '午': "热情开朗，积极向上，但有时情绪化",
+            '未': "温和体贴，善解人意，但有时优柔寡断",
+            '申': "聪明能干，适应性强，但有时过于现实",
+            '酉': "精明能干，注重细节，但有时过于挑剔",
+            '戌': "忠诚可靠，责任心强，但有时过于严肃",
+            '亥': "善良纯真，富有同情心，但有时过于天真"
+        }
+        
+        trait = dizhi_traits.get(day_zhi, "")
+        if trait:
+            return f"日支{day_zhi}使您{trait}"
+        return ""
     
     def get_detailed_wuxing_analysis(self, wuxing_count):
         """详细五行分析"""
@@ -261,33 +346,375 @@ class BaziCalculator:
         }
         return advice_map.get(weak_element, "建议保持五行平衡，适当调节生活方式。")
     
+    def identify_bazi_pattern(self, bazi, wuxing_count):
+        """识别八字格局 - 增强个性化的核心算法"""
+        day_gan = bazi["day"][0]
+        month_gan = bazi["month"][0]
+        
+        # 1. 计算日干强弱
+        day_strength = self.calculate_day_gan_strength(bazi, wuxing_count)
+        
+        # 2. 分析十神关系
+        ten_gods_info = self.analyze_ten_gods_comprehensive(bazi)
+        
+        # 3. 识别特殊格局
+        special_patterns = self.identify_special_patterns(bazi, day_strength)
+        
+        # 4. 确定主格局
+        main_pattern = self.determine_main_pattern(day_strength, ten_gods_info, special_patterns)
+        
+        return {
+            "main_pattern": main_pattern,
+            "day_strength": day_strength,
+            "ten_gods_info": ten_gods_info,
+            "special_patterns": special_patterns,
+            "pattern_analysis": self.generate_pattern_analysis(main_pattern, day_strength)
+        }
+
+    def calculate_day_gan_strength(self, bazi, wuxing_count):
+        """计算日干旺衰强度"""
+        day_gan = bazi["day"][0]
+        day_wuxing = self.wuxing_tiangan[day_gan]
+        
+        # 日干对应五行的个数
+        day_element_count = wuxing_count.get(day_wuxing, 0)
+        total_elements = sum(wuxing_count.values())
+        
+        if total_elements == 0:
+            return "中和"
+        
+        # 计算日干五行比例
+        ratio = day_element_count / total_elements
+        
+        # 分析月令支持
+        month_support = self.get_month_support_strength(bazi["month"][1], day_wuxing)
+        
+        # 综合评估
+        strength_score = ratio * 0.6 + month_support * 0.4
+        
+        if strength_score >= 0.6:
+            return "太旺"
+        elif strength_score >= 0.4:
+            return "偏旺"
+        elif strength_score >= 0.25:
+            return "中和"
+        elif strength_score >= 0.15:
+            return "偏弱"
+        else:
+            return "太弱"
+
+    def get_month_support_strength(self, month_zhi, day_wuxing):
+        """获取月令对日干的支持强度"""
+        month_wuxing = self.wuxing_dizhi[month_zhi]
+        
+        # 同类五行支持最强
+        if month_wuxing == day_wuxing:
+            return 1.0
+        
+        # 生我的五行支持较强
+        wuxing_relations = {
+            '木': {'生我': '水', '克我': '金'},
+            '火': {'生我': '木', '克我': '水'},
+            '土': {'生我': '火', '克我': '木'},
+            '金': {'生我': '土', '克我': '火'},
+            '水': {'生我': '金', '克我': '土'}
+        }
+        
+        relations = wuxing_relations.get(day_wuxing, {})
+        if month_wuxing == relations.get('生我'):
+            return 0.7
+        elif month_wuxing == relations.get('克我'):
+            return 0.2
+        else:
+            return 0.4
+
+    def analyze_ten_gods_comprehensive(self, bazi):
+        """全面分析十神关系"""
+        day_gan = bazi["day"][0]
+        
+        ten_gods_distribution = {}
+        for pillar_name, pillar in bazi.items():
+            if pillar_name != "day":  # 除了日柱的其他三柱
+                gan = pillar[0]
+                zhi = pillar[1]
+                
+                # 天干十神
+                gan_ten_god = self.get_ten_god_relation(day_gan, gan)
+                ten_gods_distribution[f"{pillar_name}_gan"] = gan_ten_god
+                
+                # 地支藏干十神（简化处理）
+                zhi_hidden_gan = self.get_zhi_hidden_main_gan(zhi)
+                zhi_ten_god = self.get_ten_god_relation(day_gan, zhi_hidden_gan)
+                ten_gods_distribution[f"{pillar_name}_zhi"] = zhi_ten_god
+        
+        return {
+            "distribution": ten_gods_distribution,
+            "dominant_ten_god": self.find_dominant_ten_god(ten_gods_distribution),
+            "ten_god_pattern": self.analyze_ten_god_pattern(ten_gods_distribution)
+        }
+
+    def get_ten_god_relation(self, day_gan, other_gan):
+        """获取十神关系"""
+        if day_gan == other_gan:
+            return "比肩"
+        
+        day_wuxing = self.wuxing_tiangan[day_gan]
+        other_wuxing = self.wuxing_tiangan[other_gan]
+        
+        # 判断阴阳性
+        day_index = self.tiangan.index(day_gan)
+        other_index = self.tiangan.index(other_gan)
+        day_yinyang = "阳" if day_index % 2 == 0 else "阴"
+        other_yinyang = "阳" if other_index % 2 == 0 else "阴"
+        
+        # 五行关系判断
+        wuxing_relations = {
+            '木': {'生': '火', '克': '土', '被生': '水', '被克': '金'},
+            '火': {'生': '土', '克': '金', '被生': '木', '被克': '水'},
+            '土': {'生': '金', '克': '水', '被生': '火', '被克': '木'},
+            '金': {'生': '水', '克': '木', '被生': '土', '被克': '火'},
+            '水': {'生': '木', '克': '火', '被生': '金', '被克': '土'}
+        }
+        
+        relations = wuxing_relations[day_wuxing]
+        
+        if other_wuxing == day_wuxing:
+            return "劫财" if day_yinyang != other_yinyang else "比肩"
+        elif other_wuxing == relations['生']:
+            return "食神" if day_yinyang == other_yinyang else "伤官"
+        elif other_wuxing == relations['克']:
+            return "正财" if day_yinyang != other_yinyang else "偏财"
+        elif other_wuxing == relations['被生']:
+            return "正印" if day_yinyang != other_yinyang else "偏印"
+        elif other_wuxing == relations['被克']:
+            return "正官" if day_yinyang != other_yinyang else "七杀"
+        
+        return "比肩"
+
+    def get_zhi_hidden_main_gan(self, zhi):
+        """获取地支藏干的主气"""
+        zhi_hidden_mapping = {
+            '子': '癸', '丑': '己', '寅': '甲', '卯': '乙', '辰': '戊', '巳': '丙',
+            '午': '丁', '未': '己', '申': '庚', '酉': '辛', '戌': '戊', '亥': '壬'
+        }
+        return zhi_hidden_mapping.get(zhi, '甲')
+
+    def find_dominant_ten_god(self, ten_gods_distribution):
+        """找出主导的十神"""
+        from collections import Counter
+        ten_god_counts = Counter(ten_gods_distribution.values())
+        if ten_god_counts:
+            return ten_god_counts.most_common(1)[0][0]
+        return "比肩"
+
+    def analyze_ten_god_pattern(self, ten_gods_distribution):
+        """分析十神组合模式"""
+        values = list(ten_gods_distribution.values())
+        
+        # 检查是否有特殊的十神组合
+        if "正官" in values and "正印" in values:
+            return "官印相生格"
+        elif "食神" in values and "正财" in values:
+            return "食神生财格"
+        elif "伤官" in values and "正财" in values:
+            return "伤官生财格"
+        elif values.count("正财") >= 2 or values.count("偏财") >= 2:
+            return "财星荟萃格"
+        elif values.count("正官") >= 2 or values.count("七杀") >= 2:
+            return "官杀混杂格"
+        else:
+            return "普通格局"
+
+    def identify_special_patterns(self, bazi, day_strength):
+        """识别特殊格局"""
+        patterns = []
+        
+        # 从格识别
+        if day_strength in ["太弱", "偏弱"]:
+            cong_pattern = self.identify_cong_patterns(bazi)
+            if cong_pattern:
+                patterns.append(cong_pattern)
+        
+        # 专旺格识别
+        if day_strength in ["太旺", "偏旺"]:
+            zhuan_wang_pattern = self.identify_zhuan_wang_patterns(bazi)
+            if zhuan_wang_pattern:
+                patterns.append(zhuan_wang_pattern)
+        
+        # 特殊神煞格局
+        special_shensha = self.identify_special_shensha(bazi)
+        patterns.extend(special_shensha)
+        
+        return patterns
+
+    def identify_cong_patterns(self, bazi):
+        """识别从格"""
+        day_gan = bazi["day"][0]
+        other_gans = [bazi["year"][0], bazi["month"][0], bazi["hour"][0]]
+        
+        # 分析其他天干的五行分布
+        other_wuxings = [self.wuxing_tiangan[gan] for gan in other_gans]
+        from collections import Counter
+        wuxing_counts = Counter(other_wuxings)
+        
+        # 如果某个五行占绝对优势，可能是从格
+        max_count = max(wuxing_counts.values()) if wuxing_counts else 0
+        if max_count >= 2:
+            dominant_wuxing = max(wuxing_counts.items(), key=lambda x: x[1])[0]
+            day_wuxing = self.wuxing_tiangan[day_gan]
+            
+            if dominant_wuxing != day_wuxing:
+                # 判断从格类型
+                if self.is_wealth_element(day_wuxing, dominant_wuxing):
+                    return "从财格"
+                elif self.is_official_element(day_wuxing, dominant_wuxing):
+                    return "从杀格"
+                elif self.is_food_injury_element(day_wuxing, dominant_wuxing):
+                    return "从儿格"
+        
+        return None
+
+    def identify_zhuan_wang_patterns(self, bazi):
+        """识别专旺格"""
+        day_gan = bazi["day"][0]
+        day_wuxing = self.wuxing_tiangan[day_gan]
+        
+        # 计算同类五行的比例
+        all_gans = [bazi["year"][0], bazi["month"][0], bazi["day"][0], bazi["hour"][0]]
+        same_wuxing_count = sum(1 for gan in all_gans if self.wuxing_tiangan[gan] == day_wuxing)
+        
+        if same_wuxing_count >= 3:
+            return f"{day_wuxing}专旺格"
+        
+        return None
+
+    def identify_special_shensha(self, bazi):
+        """识别特殊神煞格局"""
+        patterns = []
+        day_gan = bazi["day"][0]
+        day_zhi = bazi["day"][1]
+        
+        # 魁罡格
+        kuigang_combinations = ["庚辰", "庚戌", "戊戌", "壬辰"]
+        day_pillar = day_gan + day_zhi
+        if day_pillar in kuigang_combinations:
+            patterns.append("魁罡格")
+        
+        # 德秀格（简化判断）
+        if day_gan in ["甲", "戊"] and day_zhi == "寅":
+            patterns.append("德秀格")
+        
+        return patterns
+
+    def determine_main_pattern(self, day_strength, ten_gods_info, special_patterns):
+        """确定主要格局"""
+        # 优先考虑特殊格局
+        if special_patterns:
+            return special_patterns[0]
+        
+        # 根据十神组合确定格局
+        if ten_gods_info["ten_god_pattern"] != "普通格局":
+            return ten_gods_info["ten_god_pattern"]
+        
+        # 根据日干强弱确定基本格局
+        dominant_ten_god = ten_gods_info["dominant_ten_god"]
+        
+        if day_strength in ["太旺", "偏旺"]:
+            return f"身旺{dominant_ten_god}格"
+        elif day_strength in ["太弱", "偏弱"]:
+            return f"身弱{dominant_ten_god}格"
+        else:
+            return f"中和{dominant_ten_god}格"
+
+    def generate_pattern_analysis(self, main_pattern, day_strength):
+        """生成格局分析"""
+        pattern_descriptions = {
+            "从财格": "命主较弱，以财星为用，适合商业投资，重视物质收益，需要与财富相关的人士合作。",
+            "从杀格": "命主较弱，以官杀为用，适合在权威机构工作，需要权威人士提携，重视权力地位。",
+            "从儿格": "命主较弱，以食伤为用，适合创意表达，依靠才艺技能获得成功，重视创新思维。",
+            "木专旺格": "木气专旺，创新能力强，适合发展和成长相关行业，但需要控制固执倾向。",
+            "火专旺格": "火气专旺，表达能力强，适合传媒表演行业，但需要控制急躁情绪。",
+            "土专旺格": "土气专旺，稳重踏实，适合建筑房地产行业，但需要增强灵活性。",
+            "金专旺格": "金气专旺，执行力强，适合金融机械行业，但需要增加包容性。",
+            "水专旺格": "水气专旺，智慧灵活，适合流通贸易行业，但需要增强坚持力。",
+            "魁罡格": "个性刚强，具有领导才能，但需要注意脾气控制，适合权威性工作。",
+            "德秀格": "品德高尚，文采出众，适合文化教育工作，具有很好的社会声誉。",
+            "官印相生格": "贵人运强，学习能力佳，适合公职或管理工作，权力与智慧并重。",
+            "食神生财格": "通过才艺获得财富，适合创意产业，收入稳定且有创造性。",
+            "伤官生财格": "表达能力强，通过技能获得财富，适合技术服务行业。"
+        }
+        
+        # 默认分析
+        if main_pattern not in pattern_descriptions:
+            return f"您的命格为{main_pattern}，日干{day_strength}，需要根据具体的五行组合来调整人生策略。"
+        
+        return pattern_descriptions[main_pattern]
+
+    def is_wealth_element(self, day_wuxing, other_wuxing):
+        """判断是否为财星元素"""
+        wealth_relations = {
+            '木': ['土'], '火': ['金'], '土': ['水'], '金': ['木'], '水': ['火']
+        }
+        return other_wuxing in wealth_relations.get(day_wuxing, [])
+
+    def is_official_element(self, day_wuxing, other_wuxing):
+        """判断是否为官杀元素"""
+        official_relations = {
+            '木': ['金'], '火': ['水'], '土': ['木'], '金': ['火'], '水': ['土']
+        }
+        return other_wuxing in official_relations.get(day_wuxing, [])
+
+    def is_food_injury_element(self, day_wuxing, other_wuxing):
+        """判断是否为食伤元素"""
+        food_injury_relations = {
+            '木': ['火'], '火': ['土'], '土': ['金'], '金': ['水'], '水': ['木']
+        }
+        return other_wuxing in food_injury_relations.get(day_wuxing, [])
+
     def get_age_based_career_analysis(self, day_gan, wuxing_count, age):
-        """基于年龄的事业分析"""
+        """基于年龄和格局的事业分析 - 增强版"""
+        # 识别八字格局
+        bazi_pattern = self.identify_bazi_pattern({"day": day_gan + "子", "month": "甲寅", "year": "乙卯", "hour": "丙辰"}, wuxing_count)
+        
+        # 基础职业倾向
         base_career = {
-            '甲': "创业管理、教育培训、环保绿化",
-            '乙': "艺术设计、服务行业、文化传媒", 
-            '丙': "能源电力、娱乐传媒、广告策划",
-            '丁': "文化出版、美容护理、照明设计",
-            '戊': "建筑工程、房地产、农业种植",
-            '己': "餐饮服务、咨询顾问、行政管理",
-            '庚': "金属制造、机械工程、执法安全",
-            '辛': "金融投资、珠宝首饰、医疗健康",
-            '壬': "贸易物流、旅游交通、水利工程",
-            '癸': "科研技术、化工医药、信息网络"
+            '甲': "创业管理、教育培训、环保绿化、林业园艺",
+            '乙': "艺术设计、服务行业、文化传媒、纺织美容", 
+            '丙': "能源电力、娱乐传媒、广告策划、电子科技",
+            '丁': "文化出版、美容护理、照明设计、精密工艺",
+            '戊': "建筑工程、房地产、农业种植、陶瓷制造",
+            '己': "餐饮服务、咨询顾问、行政管理、食品加工",
+            '庚': "金属制造、机械工程、执法安全、汽车工业",
+            '辛': "金融投资、珠宝首饰、医疗健康、法律服务",
+            '壬': "贸易物流、旅游交通、水利工程、进出口",
+            '癸': "科研技术、化工医药、信息网络、学术研究"
         }
         
         career_base = base_career.get(day_gan, "多元化发展")
         
+        # 根据格局调整职业建议
+        pattern_career_advice = ""
+        if bazi_pattern and "main_pattern" in bazi_pattern:
+            main_pattern = bazi_pattern["main_pattern"]
+            if "财" in main_pattern:
+                pattern_career_advice = "，特别适合商业投资、财务管理、商贸流通等财富相关领域"
+            elif "官" in main_pattern:
+                pattern_career_advice = "，特别适合政府机关、大型企业管理、权威机构等需要权力影响力的领域"
+            elif "食" in main_pattern or "伤" in main_pattern:
+                pattern_career_advice = "，特别适合创意产业、技术服务、艺术表达等需要才华技能的领域"
+            elif "印" in main_pattern:
+                pattern_career_advice = "，特别适合教育培训、文化传承、学术研究等需要知识积累的领域"
+        
         # 根据年龄段调整建议
         if age <= 25:
-            return f"年轻有为，适合在{career_base}等领域积累经验。建议多学习新技能，为未来发展打好基础。当前是积累期，重点在于提升能力。"
+            return f"年轻有为，适合在{career_base}等领域积累经验{pattern_career_advice}。建议多学习新技能，参与实习和培训，为未来发展打好基础。当前是能力建设期，重点在于广泛学习和技能提升。"
         elif age <= 35:
-            return f"正值事业上升期，{career_base}领域有很好的发展前景。建议抓住机遇，在专业领域深耕细作，争取在行业中建立影响力。"
+            return f"正值事业上升期，{career_base}领域有很好的发展前景{pattern_career_advice}。建议抓住机遇，在专业领域深耕细作，争取在行业中建立影响力。这是奋斗期，要有明确的职业目标和发展规划。"
         elif age <= 50:
-            return f"事业成熟期，适合在{career_base}领域发挥领导作用。建议注重团队建设和人才培养，同时考虑多元化发展和投资理财。"
+            return f"事业成熟期，适合在{career_base}领域发挥领导作用{pattern_career_advice}。建议注重团队建设和人才培养，同时考虑多元化发展和投资理财。这是收获期，要平衡事业成就与家庭责任。"
         else:
-            return f"人生阅历丰富，可在{career_base}领域发挥传承作用。建议专注于经验传承和智慧分享，同时规划好退休后的生活安排。"
-    
+            return f"人生阅历丰富，可在{career_base}领域发挥传承作用{pattern_career_advice}。建议专注于经验传承和智慧分享，同时规划好退休后的生活安排。这是回馈期，重点在于传承价值和享受人生。"
+
     def get_age_based_love_analysis(self, day_gan, gender, age, wuxing_count):
         """基于年龄的感情分析"""
         base_traits = {
