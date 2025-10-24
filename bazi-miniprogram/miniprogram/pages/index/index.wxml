@@ -82,99 +82,83 @@
           <text class="members-count">({{membersWithFortune.length}}人)</text>
         </view>
         
-        <view class="modern-fortune-card" wx:for="{{membersWithFortune}}" wx:key="id">
-          <!-- 卡片头部 -->
-          <view class="card-header">
-            <view class="member-info">
+        <view class="balanced-fortune-card" wx:for="{{membersWithFortune}}" wx:key="id">
+          <!-- 平衡型卡片头部 -->
+          <view class="balanced-header">
+            <view class="member-section">
               <view class="member-avatar">{{item.name.charAt(0)}}</view>
-              <view class="member-details">
+              <view class="member-info">
                 <view class="member-name">{{item.name}}</view>
                 <view class="member-age" wx:if="{{item.dayun}}">{{item.dayun.current_age}}岁 · 第{{item.dayun.dayun_period}}大运期</view>
               </view>
             </view>
-            <view class="overall-score">
+            <view class="score-section">
               <view class="score-number">{{item.daily_fortune.overall_score || 0}}</view>
               <view class="score-stars">
-                <text class="star {{index < Math.floor(item.daily_fortune.overall_score || 0) ? 'filled' : (index < (item.daily_fortune.overall_score || 0) ? 'partial' : '')}}" 
+                <text class="star {{index < Math.floor(item.daily_fortune.overall_score || 0) ? 'filled' : ''}}" 
                       wx:for="{{[1,2,3,4,5]}}" wx:key="index" wx:for-item="starIndex" wx:for-index="index">★</text>
               </view>
             </view>
           </view>
 
-          <!-- 运势详情 -->
-          <view class="fortune-details" wx:if="{{item.hasValidFortune}}">
-            <!-- 详细评分 -->
-            <view class="detailed-scores">
-              <view class="score-item">
+          <!-- 平衡型运势详情 -->
+          <view class="balanced-details" wx:if="{{item.hasValidFortune}}">
+            <!-- 评分卡片 -->
+            <view class="scores-cards">
+              <view class="score-card">
                 <view class="score-icon">💰</view>
                 <view class="score-label">财运</view>
                 <view class="score-value">{{item.daily_fortune.detailed_scores.wealth || 0}}</view>
               </view>
-              <view class="score-item">
+              <view class="score-card">
                 <view class="score-icon">💼</view>
                 <view class="score-label">事业</view>
                 <view class="score-value">{{item.daily_fortune.detailed_scores.career || 0}}</view>
               </view>
-              <view class="score-item">
+              <view class="score-card">
                 <view class="score-icon">🏥</view>
                 <view class="score-label">健康</view>
                 <view class="score-value">{{item.daily_fortune.detailed_scores.health || 0}}</view>
               </view>
-              <view class="score-item">
+              <view class="score-card">
                 <view class="score-icon">❤️</view>
                 <view class="score-label">感情</view>
                 <view class="score-value">{{item.daily_fortune.detailed_scores.love || 0}}</view>
               </view>
-              <view class="score-item">
+              <view class="score-card">
                 <view class="score-icon">📚</view>
                 <view class="score-label">学习</view>
                 <view class="score-value">{{item.daily_fortune.detailed_scores.study || 0}}</view>
               </view>
             </view>
 
-            <!-- 幸运元素 -->
+            <!-- 幸运信息卡片 -->
             <view class="lucky-section" wx:if="{{item.daily_fortune.lucky_elements}}">
-              <view class="lucky-item">
+              <view class="lucky-card">
                 <text class="lucky-label">🍀 幸运色</text>
-                <text class="lucky-value color-tag" style="background-color: {{getLuckyColorHex(item.daily_fortune.lucky_elements.lucky_color)}}; color: white; border: 1rpx solid rgba(255,255,255,0.3);">{{item.daily_fortune.lucky_elements.lucky_color}}</text>
+                <text class="lucky-value">{{item.daily_fortune.lucky_elements.lucky_color}}</text>
               </view>
-              <view class="lucky-item">
+              <view class="lucky-card">
                 <text class="lucky-label">🔢 幸运数</text>
                 <text class="lucky-value">{{item.daily_fortune.lucky_elements.lucky_number || item.daily_fortune.lucky_elements.lucky_numbers[0] || 8}}</text>
               </view>
-              <view class="lucky-item">
+              <view class="lucky-card">
                 <text class="lucky-label">🧭 方位</text>
                 <text class="lucky-value">{{item.daily_fortune.lucky_elements.lucky_direction || '东方'}}</text>
               </view>
             </view>
 
-            <!-- 五行分析 -->
-            <view class="wuxing-section" wx:if="{{item.daily_fortune.wuxing_analysis}}">
-              <view class="section-title">五行运势</view>
-              <view class="wuxing-info">
-                <text class="wuxing-text">本命{{item.daily_fortune.wuxing_analysis.personal_day_wuxing || '火'}}，今日{{item.daily_fortune.wuxing_analysis.daily_stem_wuxing || '木'}}{{item.daily_fortune.wuxing_analysis.daily_branch_wuxing || '金'}}</text>
-              </view>
-            </view>
-
             <!-- 今日建议 -->
             <view class="suggestions-section" wx:if="{{item.daily_fortune.suggestions && item.daily_fortune.suggestions.length > 0}}">
-              <view class="section-title">今日宜</view>
+              <view class="section-title">💡 今日宜</view>
               <view class="suggestions-list">
-                <text class="suggestion-tag" wx:for="{{item.daily_fortune.suggestions}}" wx:key="index">{{item}}</text>
-              </view>
-            </view>
-
-            <!-- 年运提示 -->
-            <view class="yearly-fortune" wx:if="{{item.analysis && item.analysis.yearly_fortune}}">
-              <view class="fortune-tip">
-                <text class="tip-icon">🌟</text>
-                <text class="tip-text">{{item.analysis.yearly_fortune.substring(0, 30)}}...</text>
+                <text class="suggestion-tag" wx:for="{{item.daily_fortune.suggestions}}" wx:key="index" wx:if="{{index < 4}}">{{item}}</text>
               </view>
             </view>
           </view>
 
           <!-- 操作按钮 -->
-          <view class="card-actions">
+          <view class="balanced-actions">
             <button class="action-btn primary" bindtap="handleViewDetail" data-index="{{index}}">
               <text class="btn-icon">📊</text>
               <text class="btn-text">详情</text>
@@ -184,7 +168,7 @@
               <text class="btn-text">备注</text>
             </button>
             <button class="action-btn danger" bindtap="handleDeleteMember" data-member-id="{{item.id}}" data-member-name="{{item.name}}">
-              <text class="btn-icon">❌</text>
+              <text class="btn-icon">🗑️</text>
               <text class="btn-text">删除</text>
             </button>
           </view>
